@@ -62,6 +62,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <Script id="theme" strategy="beforeInteractive">
           {themeScript}
         </Script>
+        <Script src="/insights.js" strategy="afterInteractive" />
         <Providers>
           {children}
           <CommandPalette
