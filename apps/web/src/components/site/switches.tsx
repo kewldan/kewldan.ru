@@ -11,9 +11,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { type Locale, LOCALE_COOKIE, localeMeta, locales } from "@/i18n/config";
+import { LANGUAGE_SWITCH, type Locale, LOCALE_COOKIE, localeMeta, locales } from "@/i18n/config";
 import { useI18n } from "@/i18n/provider";
-import { readTheme, resolvedTheme, setTheme, subscribeTheme, type Theme } from "@/lib/theme";
+import { readTheme, resolvedTheme, setTheme, subscribeTheme, type Theme, THEME_SWITCH } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
 /** "paper" for the neo-brutal header, "stage" for the dark keynote pages. */
@@ -64,6 +64,16 @@ const useMounted = () =>
     () => true,
     () => false,
   );
+
+/** The switches that are turned on (see LANGUAGE_SWITCH and THEME_SWITCH). */
+export function Switches({ tone = "paper" }: { tone?: Tone }) {
+  return (
+    <>
+      {LANGUAGE_SWITCH && <LocaleSwitch tone={tone} />}
+      {THEME_SWITCH && <ThemeSwitch tone={tone} />}
+    </>
+  );
+}
 
 export function LocaleSwitch({ tone = "paper" }: { tone?: Tone }) {
   const { locale, t } = useI18n();

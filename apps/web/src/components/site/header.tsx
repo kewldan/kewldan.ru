@@ -10,7 +10,7 @@ import type { Link } from "@/lib/api/generated/Link";
 import { ease, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
-import { LocaleSwitch, ThemeSwitch } from "./switches";
+import { Switches } from "./switches";
 
 type Props = { handle: string; nav: Link[]; marquee: string[] };
 
@@ -36,8 +36,7 @@ export function SiteHeader({ handle, nav, marquee }: Props) {
           ))}
         </nav>
         <div className="flex items-center gap-2.5">
-          <LocaleSwitch />
-          <ThemeSwitch />
+          <Switches />
           <MobileNav nav={nav} />
         </div>
       </header>
@@ -146,8 +145,7 @@ function FloatingNav({ handle, nav }: { handle: string; nav: Link[] }) {
               })}
             </nav>
             <div className="flex items-center gap-2">
-              <LocaleSwitch />
-              <ThemeSwitch />
+              <Switches />
               <MobileNav nav={nav} />
             </div>
           </div>

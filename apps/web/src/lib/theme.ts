@@ -6,10 +6,19 @@
 export type Theme = "light" | "dark" | "system";
 
 const KEY = "theme";
+
+/**
+ * The theme switch is hidden for now: the site shows its original look, light
+ * paper with the dark keynote on /watched. Flip to true to bring the switch
+ * (light, dark, system) back.
+ */
+export const THEME_SWITCH = false;
 const DARK = "(prefers-color-scheme: dark)";
 
 /** Runs in <head> before the page paints, so the wrong theme never flashes. */
-export const themeScript = `(()=>{try{var t=localStorage.getItem("${KEY}")||"system",d=t==="dark"||(t==="system"&&matchMedia("${DARK}").matches),r=document.documentElement;r.dataset.theme=d?"dark":"light";r.style.colorScheme=d?"dark":"light"}catch(e){}})()`;
+export const themeScript = THEME_SWITCH
+  ? `(()=>{try{var t=localStorage.getItem("${KEY}")||"system",d=t==="dark"||(t==="system"&&matchMedia("${DARK}").matches),r=document.documentElement;r.dataset.theme=d?"dark":"light";r.style.colorScheme=d?"dark":"light"}catch(e){}})()`
+  : `document.documentElement.dataset.theme="light";document.documentElement.dataset.themeFixed=""`;
 
 export function readTheme(): Theme {
   try {

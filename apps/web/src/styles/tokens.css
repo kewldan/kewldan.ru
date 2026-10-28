@@ -347,8 +347,9 @@
   --link-hover: #8c95ff;
 }
 
-/* Watched is a keynote page: in the light theme it becomes a light keynote. */
-:root[data-theme="light"]:has([data-surface="stage"]) {
+/* Watched is a keynote page: a light theme the visitor picked makes it a light
+   keynote; the fixed default keeps it dark, as designed. */
+:root[data-theme="light"]:not([data-theme-fixed]):has([data-surface="stage"]) {
   --stage: var(--p-gray-50);
   --stage-fg: var(--p-gray-990);
   --stage-dim: var(--p-gray-600);

@@ -1,6 +1,13 @@
 export const locales = ["en", "ru"] as const;
 export type Locale = (typeof locales)[number];
 export const defaultLocale: Locale = "en";
+
+/**
+ * The language switch is hidden for now and every visitor gets English.
+ * Flip to true to bring back /ru, the switch and browser-language detection.
+ */
+export const LANGUAGE_SWITCH = false;
+export const publicLocales: readonly Locale[] = LANGUAGE_SWITCH ? locales : [defaultLocale];
 export const LOCALE_COOKIE = "locale";
 
 export const hasLocale = (value: string): value is Locale => (locales as readonly string[]).includes(value);

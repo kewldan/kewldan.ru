@@ -1,9 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-import { defaultLocale, hasLocale, LOCALE_COOKIE, type Locale } from "@/i18n/config";
+import { defaultLocale, hasLocale, LANGUAGE_SWITCH, LOCALE_COOKIE, type Locale, publicLocales } from "@/i18n/config";
 
 /** The saved choice first, then the browser's languages. */
 function pickLocale(req: NextRequest): Locale {
+  if (!LANGUAGE_SWITCH) return defaultLocale;
   const saved = req.cookies.get(LOCALE_COOKIE)?.value;
   if (saved && hasLocale(saved)) return saved;
   const accepted = (req.headers.get("accept-language") ?? "")
@@ -16,9 +17,11 @@ function pickLocale(req: NextRequest): Locale {
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const first = pathname.split("/")[1] ?? "";
-  if (hasLocale(first)) return;
+  if (hasLocale(first) && publicLocales.includes(first)) return;
   const url = req.nextUrl.clone();
-  url.pathname = `/${pickLocale(req)}${pathname === "/" ? "" : pathname}`;
+  // A hidden locale (/ru while the switch is off) keeps its path in English.
+  const rest = hasLocale(first) ? pathname.slice(first.length + 1) : pathname;
+  url.pathname = `/${pickLocale(req)}${rest === "/" ? "" : rest}`;
   return NextResponse.redirect(url);
 }
 

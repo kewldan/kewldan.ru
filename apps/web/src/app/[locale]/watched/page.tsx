@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
-import { LocaleSwitch, ThemeSwitch } from "@/components/site/switches";
+import { Switches } from "@/components/site/switches";
 import { WatchedView } from "@/components/watched/watched-view";
 import { hasLocale } from "@/i18n/config";
 import { dictionaries } from "@/i18n/dictionaries";
@@ -28,8 +28,7 @@ export default async function WatchedPage({ params }: PageProps<"/[locale]/watch
         <div className="wrap flex items-center justify-between gap-3 py-3 text-sm">
           <b className="text-[15px] font-semibold">{profile.handle}</b>
           <div className="flex items-center gap-1.5">
-            <LocaleSwitch tone="stage" />
-            <ThemeSwitch tone="stage" />
+            <Switches tone="stage" />
             <Link href={`/${locale}`} className="ml-2 py-2 text-stage-chip transition-colors hover:text-stage-fg">
               {t.nav.backHome}
             </Link>

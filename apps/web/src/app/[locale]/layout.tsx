@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import Script from "next/script";
 
 import { Providers } from "@/components/providers";
-import { hasLocale, locales } from "@/i18n/config";
+import { hasLocale, locales, publicLocales } from "@/i18n/config";
 import { dictionaries } from "@/i18n/dictionaries";
 import { getContent } from "@/lib/api/content";
 import { themeScript } from "@/lib/theme";
@@ -46,7 +46,8 @@ export async function generateMetadata({ params }: LayoutProps<"/[locale]">): Pr
     title: { default: title, template: `%s · ${profile.handle}` },
     description: profile.description,
     authors: [{ name: profile.name, url: profile.siteUrl }],
-    alternates: { languages: Object.fromEntries(locales.map((l) => [l, `/${l}`])) },
+    alternates:
+      publicLocales.length > 1 ? { languages: Object.fromEntries(publicLocales.map((l) => [l, `/${l}`])) } : undefined,
     openGraph: {
       type: "website",
       title,
