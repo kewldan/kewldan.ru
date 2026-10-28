@@ -55,6 +55,8 @@ enum BusEvent {
     Count { instance: u64, n: u32 },
 }
 
+// One per process, so the size gap between variants costs nothing.
+#[allow(clippy::large_enum_variant)]
 enum Backend {
     Memory,
     Valkey {
