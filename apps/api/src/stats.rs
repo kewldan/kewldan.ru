@@ -11,8 +11,6 @@ use anyhow::Context;
 use serde::Deserialize;
 use serde_json::{Value, json};
 
-use crate::content::Locale;
-
 pub struct Stats {
     values: RwLock<BTreeMap<String, u64>>,
 }
@@ -45,8 +43,8 @@ impl Stats {
     }
 
     /// Replaces every known `{key}` in `template` with its number, formatted
-    /// for `locale`.
-    pub fn render(&self, template: &str, locale: Locale) -> String {
+    /// ("2,195").
+    pub fn render(&self, template: &str) -> String {
         let values = self.values.read().unwrap();
         let mut out = String::with_capacity(template.len());
         let mut rest = template;
@@ -58,7 +56,7 @@ impl Stats {
                 .and_then(|end| values.get(&after[..end]).map(|v| (end, *v)))
             {
                 Some((end, value)) => {
-                    out.push_str(&format_number(value, locale));
+                    out.push_str(&format_number(value));
                     rest = &after[end + 1..];
                 }
                 None => {
@@ -72,12 +70,9 @@ impl Stats {
     }
 }
 
-/// `2195` → `2,195` in English, `2 195` (non-breaking space) in Russian.
-pub fn format_number(n: u64, locale: Locale) -> String {
-    let sep = match locale {
-        Locale::En => ",",
-        Locale::Ru => "\u{a0}",
-    };
+/// `2195` → `2,195`.
+pub fn format_number(n: u64) -> String {
+    let sep = ",";
     let digits = n.to_string();
     let mut out = String::new();
     for (i, c) in digits.chars().enumerate() {
@@ -456,19 +451,15 @@ mod tests {
     }
 
     #[test]
-    fn formats_per_locale() {
-        assert_eq!(format_number(2195, Locale::En), "2,195");
-        assert_eq!(format_number(2195, Locale::Ru), "2\u{a0}195");
-        assert_eq!(format_number(1_234_567, Locale::En), "1,234,567");
-        assert_eq!(format_number(42, Locale::Ru), "42");
+    fn formats_thousands() {
+        assert_eq!(format_number(2195), "2,195");
+        assert_eq!(format_number(1_234_567), "1,234,567");
+        assert_eq!(format_number(42), "42");
     }
 
     #[test]
     fn renders_known_keys_only() {
-        let out = stats().render(
-            r#"{"v":"{gh.contributions}","s":"{steam.games} games {x}"}"#,
-            Locale::En,
-        );
+        let out = stats().render(r#"{"v":"{gh.contributions}","s":"{steam.games} games {x}"}"#);
         assert_eq!(out, r#"{"v":"2,195","s":"90 games {x}"}"#);
     }
 

@@ -1,7 +1,7 @@
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/reveal";
 import { Rich } from "@/components/rich";
 import { SectionLabel } from "@/components/section-label";
-import type { Dictionary } from "@/i18n/dictionaries/en";
+import type { Copy } from "@/lib/copy";
 import type { About as AboutContent } from "@/lib/api/generated/About";
 import { cn } from "@/lib/utils";
 
@@ -21,7 +21,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
-export function About({ about, t }: { about: AboutContent; t: Dictionary["about"] }) {
+export function About({ about, t }: { about: AboutContent; t: Copy["about"] }) {
   return (
     <section id="about" className="wrap grid-index border-t-[1.5px] border-ink py-section">
       <SectionLabel label={about.label} />

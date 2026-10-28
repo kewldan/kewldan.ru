@@ -279,26 +279,11 @@ async fn watched_list_is_public_and_edits_need_the_token() {
 }
 
 #[tokio::test]
-async fn content_is_served_per_locale_with_stats_filled_in() {
+async fn content_has_stats_filled_in() {
     let addr = spawn().await;
-    let (status, en) = request(addr, "GET", "/api/content?locale=en", None, None).await;
+    let (status, body) = request(addr, "GET", "/api/content", None, None).await;
     assert_eq!(status, 200);
-    let en: Value = serde_json::from_str(&en).unwrap();
-    assert_eq!(en["numbers"]["value"], json!("2,195"));
-
-    let (_, ru) = request(addr, "GET", "/api/content?locale=ru", None, None).await;
-    let ru: Value = serde_json::from_str(&ru).unwrap();
-    assert_eq!(ru["numbers"]["value"], json!("2\u{a0}195"));
-    assert_eq!(ru["contact"]["teaser"], json!("И ещё кое-что."));
-    assert!(
-        !ru.to_string().contains("{gh."),
-        "every placeholder is filled"
-    );
-
-    assert_eq!(
-        request(addr, "GET", "/api/content?locale=de", None, None)
-            .await
-            .0,
-        404
-    );
+    let content: Value = serde_json::from_str(&body).unwrap();
+    assert_eq!(content["numbers"]["value"], json!("2,195"));
+    assert!(!body.contains("{gh."), "every placeholder is filled");
 }

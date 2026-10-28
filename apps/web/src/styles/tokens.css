@@ -206,9 +206,8 @@
   --color-input: var(--ink);
   --color-ring: var(--focus);
 
-  /* Instrument has no Cyrillic; Onest and Cormorant fill in glyph by glyph. */
-  --font-paper: var(--font-instrument-sans), var(--font-onest), "Helvetica Neue", Arial, sans-serif;
-  --font-serif: var(--font-instrument-serif), var(--font-cormorant), Georgia, serif;
+  --font-paper: var(--font-instrument-sans), "Helvetica Neue", Arial, sans-serif;
+  --font-serif: var(--font-instrument-serif), Georgia, serif;
   --font-stage: var(--font-geist), "Helvetica Neue", Arial, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
   --font-sans: var(--font-paper);

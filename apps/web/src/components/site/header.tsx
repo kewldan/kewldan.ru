@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { useI18n } from "@/i18n/provider";
+import { t } from "@/lib/copy";
 import type { Link } from "@/lib/api/generated/Link";
 import { ease, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
@@ -14,15 +14,7 @@ import { Switches } from "./switches";
 
 type Props = { handle: string; nav: Link[]; marquee: string[] };
 
-/** Content links like "/watched" get the current locale in front. */
-function useHref() {
-  const { locale } = useI18n();
-  return (href: string) => (href.startsWith("/") ? `/${locale}${href}` : href);
-}
-
 export function SiteHeader({ handle, nav, marquee }: Props) {
-  const { t } = useI18n();
-  const href = useHref();
   return (
     <>
       <Marquee words={marquee} />
@@ -30,7 +22,7 @@ export function SiteHeader({ handle, nav, marquee }: Props) {
         <Logo handle={handle} />
         <nav aria-label={t.nav.sections} className="hidden gap-x-5.5 text-[15px] lg:flex">
           {nav.map((l) => (
-            <a key={l.href} href={href(l.href)} className="py-2.5 transition-colors hover:text-cobalt">
+            <a key={l.href} href={l.href} className="py-2.5 transition-colors hover:text-cobalt">
               {l.label}
             </a>
           ))}
@@ -98,8 +90,6 @@ function useActiveSection(ids: string[]) {
  * reading down and returns on the slightest scroll up.
  */
 function FloatingNav({ handle, nav }: { handle: string; nav: Link[] }) {
-  const { t } = useI18n();
-  const href = useHref();
   const { scrollY, scrollYProgress } = useScroll();
   const progress = useSpring(scrollYProgress, { stiffness: 260, damping: 40, restDelta: 0.001 });
   const [shown, setShown] = useState(false);
@@ -129,7 +119,7 @@ function FloatingNav({ handle, nav }: { handle: string; nav: Link[] }) {
               {nav.map((l) => {
                 const on = l.href === `#${active}`;
                 return (
-                  <a key={l.href} href={href(l.href)} className="relative px-3 py-2 text-sm">
+                  <a key={l.href} href={l.href} className="relative px-3 py-2 text-sm">
                     {on && (
                       <motion.span
                         layoutId="nav-active"
@@ -157,8 +147,6 @@ function FloatingNav({ handle, nav }: { handle: string; nav: Link[] }) {
 }
 
 function MobileNav({ nav }: { nav: Link[] }) {
-  const { t } = useI18n();
-  const href = useHref();
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -172,7 +160,7 @@ function MobileNav({ nav }: { nav: Link[] }) {
           {nav.map((l, i) => (
             <SheetClose asChild key={l.href}>
               <motion.a
-                href={href(l.href)}
+                href={l.href}
                 initial={{ opacity: 0, x: -16 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.04 * i + 0.1, duration: 0.4, ease: ease.out }}

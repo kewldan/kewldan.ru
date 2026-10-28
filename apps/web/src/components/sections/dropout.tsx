@@ -9,39 +9,15 @@ import { useEffect, useRef, useState } from "react";
 import type { Dropout as DropoutContent } from "@/lib/api/generated/Dropout";
 import { ease } from "@/lib/motion";
 
-/** An 8-beep chirp every 1.8 s, synthesised so there is no audio file to ship. */
-function useRingtone() {
-  const ring = useRef<{ ctx: AudioContext; id: ReturnType<typeof setInterval> } | null>(null);
-  const stop = () => {
-    if (!ring.current) return;
-    clearInterval(ring.current.id);
-    void ring.current.ctx.close().catch(() => {});
-    ring.current = null;
-  };
+/** The call's ringtone: fetched on the first call only, looped while it rings. */
+function useRingtone(src: string) {
+  const audio = useRef<HTMLAudioElement | null>(null);
+  const stop = () => audio.current?.pause();
   const start = () => {
-    stop();
-    try {
-      const ctx = new AudioContext();
-      const burst = () => {
-        const t = ctx.currentTime;
-        for (let i = 0; i < 8; i++) {
-          const o = ctx.createOscillator();
-          const g = ctx.createGain();
-          o.type = "square";
-          o.frequency.value = i % 2 ? 660 : 520;
-          g.gain.setValueAtTime(0.0001, t + i * 0.09);
-          g.gain.exponentialRampToValueAtTime(0.05, t + i * 0.09 + 0.01);
-          g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.09 + 0.085);
-          o.connect(g).connect(ctx.destination);
-          o.start(t + i * 0.09);
-          o.stop(t + i * 0.09 + 0.09);
-        }
-      };
-      burst();
-      ring.current = { ctx, id: setInterval(burst, 1800) };
-    } catch {
-      /* no audio: the call is still funny muted */
-    }
+    audio.current ??= Object.assign(new Audio(src), { loop: true, preload: "auto" });
+    audio.current.currentTime = 0;
+    // Muted tabs or blocked autoplay: the call is still funny in silence.
+    void audio.current.play().catch(() => {});
   };
   useEffect(() => stop, []);
   return { start, stop };
@@ -49,7 +25,7 @@ function useRingtone() {
 
 export function Dropout({ dropout }: { dropout: DropoutContent }) {
   const [ringing, setRinging] = useState(false);
-  const ringtone = useRingtone();
+  const ringtone = useRingtone(dropout.ringtone);
   const lenis = useLenis();
 
   useEffect(() => {

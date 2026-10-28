@@ -29,8 +29,6 @@
 - 🦀 **Rust content API.** Every word of the site lives in one JSON file, checked against typed structs at startup; the TypeScript types are generated from Rust.
 - 🌀 **Smooth by default.** Lenis scrolling, Motion springs and scroll-linked scenes, and all of it respects `prefers-reduced-motion`.
 - 📱 **Adaptive.** Fluid type and layout from 320 px phones to wide screens.
-- 🌗 **Light and dark.** A theme switch (light, dark or system) that never flashes on load.
-- 🇷🇺 🇬🇧 **Two languages.** `/en` and `/ru`, picked from the browser and remembered; flags are Apple emoji served through the site itself.
 - 📊 **Live numbers.** GitHub contributions, repos and PRs, Steam games and hours: the API refreshes them every 6 hours.
 - 🖼️ **Share cards.** Open Graph images for both pages and both languages, rendered from the same content.
 
@@ -41,6 +39,7 @@ apps/
   api/   🦀 Rust (axum): /api/content, /api/watched, /api/pixels/ws, admin routes
          content/en.json   ← all site copy lives here
   web/   ⚛️ Next.js 16, React 19, Tailwind 4, shadcn/ui, Motion, Lenis
+         src/lib/copy.ts   ← interface strings (buttons, statuses)
 deploy/  🚚 nginx config and the server-side deploy script
 docker-compose.yml   🐳 production stack behind the server-wide Traefik
 ```
@@ -82,23 +81,13 @@ the footer's **Admin** link takes the token once and keeps it on that device.
 </details>
 
 <details>
-<summary><b>🌍 Languages</b></summary>
-
-Site copy lives in `apps/api/content/{en,ru}.json`; interface labels (buttons,
-statuses, plurals) in `apps/web/src/i18n/dictionaries`. Routes are
-`/[locale]/…`; `src/proxy.ts` sends `/` to the saved or browser language.
-Instrument has no Cyrillic, so Onest and Cormorant fill in Russian glyphs.
-
-</details>
-
-<details>
 <summary><b>📊 Live stats</b></summary>
 
 Content strings hold placeholders like `{gh.contributions}` or `{steam.games}`.
 `apps/api/content/stats.json` has the fallback numbers; `apps/api/src/stats.rs`
 refreshes them from GitHub (public API, or GraphQL with `GITHUB_TOKEN` for
 contributions and private repos) and Steam (`STEAM_API_KEY` + `STEAM_ID`), and
-fills them in per locale (`2,195` / `2 195`). Current values: `GET /api/stats`.
+fills them in (`2,195`). Current values: `GET /api/stats`.
 
 </details>
 
@@ -106,9 +95,8 @@ fills them in per locale (`2,195` / `2 195`). Current values: `GET /api/stats`.
 <summary><b>🎨 Design tokens</b></summary>
 
 `apps/web/src/styles/tokens.css` has three tiers: primitives → semantic roles →
-Tailwind theme and shadcn slots. The dark theme only remaps semantic tokens
-(`--paper`, `--ink`, `--surface`…); `--on-accent` keeps text dark on the
-yellow, pink and green fills in both themes. Motion timing lives in
+Tailwind theme and shadcn slots. A dark theme is wired up (it only remaps
+semantic tokens) but switched off: `THEME_SWITCH` in `apps/web/src/lib/theme.ts`. Motion timing lives in
 `apps/web/src/lib/motion.ts` and mirrors the CSS easing tokens.
 
 </details>
@@ -136,7 +124,7 @@ cd apps/api && cargo fmt --check && cargo clippy --all-targets -- -D warnings &&
 | Route | |
 | --- | --- |
 | `GET /api/health` | `{"status":"ok","board":"valkey"}` |
-| `GET /api/content?locale=ru` | Site content for `en` or `ru`, stats filled in, with `ETag` |
+| `GET /api/content` | Site content with stats filled in, with `ETag` |
 | `GET /api/stats` | The live (or fallback) numbers behind the placeholders |
 | `GET /api/watched` | Rated titles, newest first |
 | `GET /api/pixels` | Board snapshot |
@@ -171,7 +159,7 @@ GitHub secrets: `DEPLOY_SSH_KEY`, `DEPLOY_KNOWN_HOSTS`, `DEPLOY_USER`,
 Optional, for live stats: `GITHUB_TOKEN` (fine-grained, read-only) and
 `STEAM_API_KEY` + `STEAM_ID` in the same `.env`.
 
-Edit copy without a release: change `apps/api/content/*.json` on the server, then
+Edit copy without a release: change `apps/api/content/en.json` on the server, then
 
 ```bash
 curl -XPOST -H "Authorization: Bearer $ADMIN_TOKEN" https://kewldan.ru/api/admin/content/reload

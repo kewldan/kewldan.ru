@@ -5,4 +5,8 @@ export type Dropout = { button: string, note: string,
 /**
  * Who is calling, for screen readers.
  */
-caller: string, meme: Media, };
+caller: string, meme: Media, 
+/**
+ * Audio file played (looped) while the call rings.
+ */
+ringtone: string, };

@@ -13,7 +13,7 @@ use std::{
 
 use axum::{
     Json, Router,
-    extract::{ConnectInfo, FromRequestParts, Query, Request, State},
+    extract::{ConnectInfo, FromRequestParts, Request, State},
     http::{HeaderMap, HeaderValue, StatusCode, header, request::Parts},
     middleware::{self, Next},
     response::{IntoResponse, Response},
@@ -23,7 +23,7 @@ use serde_json::json;
 use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 
 pub use config::Config;
-use content::{Library, Locale};
+use content::Library;
 use pixels::Hub;
 
 #[derive(Clone)]
@@ -89,27 +89,11 @@ async fn health(State(app): State<AppState>) -> Json<serde_json::Value> {
     Json(json!({ "status": "ok", "board": app.hub.backend_name() }))
 }
 
-#[derive(serde::Deserialize)]
-struct ContentQuery {
-    locale: Option<String>,
-}
-
-/// `GET /api/content?locale=ru`, with ETag revalidation. Stats placeholders
-/// are filled in here, so the ETag changes when the numbers do.
-async fn get_content(
-    State(app): State<AppState>,
-    Query(q): Query<ContentQuery>,
-    headers: HeaderMap,
-) -> Response {
-    let locale = match q.locale.as_deref() {
-        None => Locale::En,
-        Some(code) => match Locale::parse(code) {
-            Some(l) => l,
-            None => return (StatusCode::NOT_FOUND, "unknown locale").into_response(),
-        },
-    };
+/// `GET /api/content`, with ETag revalidation. Stats placeholders are
+/// filled in here, so the ETag changes when the numbers do.
+async fn get_content(State(app): State<AppState>, headers: HeaderMap) -> Response {
     let library = Arc::clone(&app.content.read().unwrap());
-    let body = app.stats.render(&library.locales[&locale].json, locale);
+    let body = app.stats.render(&library.snapshot.json);
     let etag = HeaderValue::from_str(&format!("\"{:016x}\"", content::fnv1a(body.as_bytes())))
         .expect("etag is ascii");
     let cache = HeaderValue::from_static("public, max-age=60, stale-while-revalidate=600");

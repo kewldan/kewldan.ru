@@ -16,18 +16,14 @@ const load = async (file: string, name: string, weight: Weight, style: Font["sty
 
 /**
  * Static TTFs for the share images (Satori cannot read WOFF2 or pick a
- * variable-font instance). Onest and Cormorant fill in Cyrillic glyphs that
- * the Instrument families lack.
+ * variable-font instance).
  */
 export async function ogFonts(): Promise<Font[]> {
   return Promise.all([
     load("InstrumentSans-Condensed-SemiBold.ttf", "InstrumentDisplay", 600),
     load("InstrumentSans-Medium.ttf", "InstrumentSans", 500),
     load("InstrumentSans-SemiBold.ttf", "InstrumentSans", 600),
-    load("Onest-Medium.ttf", "Onest", 500),
-    load("Onest-SemiBold.ttf", "Onest", 600),
     load("InstrumentSerif-Italic.ttf", "InstrumentSerif", 400, "italic"),
-    load("CormorantGaramond-MediumItalic.ttf", "Cormorant", 500, "italic"),
     load("JetBrainsMono-Regular.ttf", "Mono", 400),
     load("JetBrainsMono-Bold.ttf", "Mono", 700),
     load("Geist-Medium.ttf", "Geist", 500),
@@ -37,11 +33,11 @@ export async function ogFonts(): Promise<Font[]> {
 
 export const ogSize = { width: 1200, height: 630 };
 
-/** Family stacks: Latin from Instrument, Cyrillic from Onest / Cormorant. */
+/** Font families as Satori knows them. */
 export const ogFamily = {
-  display: "InstrumentDisplay, Onest",
-  paper: "InstrumentSans, Onest",
-  serif: "InstrumentSerif, Cormorant",
+  display: "InstrumentDisplay",
+  paper: "InstrumentSans",
+  serif: "InstrumentSerif",
   mono: "Mono",
   stage: "Geist",
 };

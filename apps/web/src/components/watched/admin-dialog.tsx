@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useI18n } from "@/i18n/provider";
+import { t } from "@/lib/copy";
 import { adminApi } from "@/lib/watched";
 
 /**
@@ -12,7 +12,6 @@ import { adminApi } from "@/lib/watched";
  * can add, edit and delete titles.
  */
 export function AdminDialog({ token, onToken }: { token: string | null; onToken: (t: string | null) => void }) {
-  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const [err, setErr] = useState("");

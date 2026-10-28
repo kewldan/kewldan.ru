@@ -386,7 +386,8 @@
     "button": "— Отчислиться",
     "note": "не нажимай",
     "caller": "смерть в нищите",
-    "meme": { "src": "/media/call-meme.webp", "alt": "Входящий звонок. Звонит: смерть в нищите. На аватарке лев. Обе кнопки зелёные.", "width": 740, "height": 1140 }
+    "meme": { "src": "/media/call-meme.webp", "alt": "Входящий звонок. Звонит: смерть в нищите. На аватарке лев. Обе кнопки зелёные.", "width": 740, "height": 1140 },
+    "ringtone": "/media/ringtone.mp3"
   },
   "footer": {
     "copyright": "© 2026 kewldan",

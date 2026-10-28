@@ -1,7 +1,7 @@
 "use client";
 
-import { AnimatePresence, motion } from "motion/react";
-import { useState } from "react";
+import { AnimatePresence, motion, useInView } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 
 import type { Contact as ContactContent } from "@/lib/api/generated/Contact";
 import { ease, rise, stagger } from "@/lib/motion";
@@ -10,13 +10,28 @@ import { SlideLinks } from "./work/slide-links";
 import { Stage } from "./work/stage";
 
 const GRADIENT = "linear-gradient(100deg,#ffb36b 0%,#ff5f8f 34%,#8a6bff 68%,#3fb6ff 100%)";
+/** How long "One more thing." holds the stage before the offer appears. */
+const PAUSE_MS = 1200;
 
-/** "One more thing." Click it and the real ask appears. */
+/**
+ * "One more thing." holds the stage for a beat, then the real ask appears on
+ * its own; a click skips the wait. Scrolling away before then cancels it.
+ */
 export function Contact({ contact, email }: { contact: ContactContent; email: string | null }) {
   const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { amount: 0.6 });
+
+  useEffect(() => {
+    if (!inView || open) return;
+    const id = setTimeout(() => setOpen(true), PAUSE_MS);
+    return () => clearTimeout(id);
+  }, [inView, open]);
+
   return (
     <Stage id="contact">
       <div
+        ref={ref}
         className="wrap flex min-h-130 flex-col items-center justify-center gap-5 py-slide text-center"
         style={{ "--g": GRADIENT } as React.CSSProperties}
       >

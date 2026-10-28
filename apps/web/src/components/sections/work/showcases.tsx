@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { useI18n } from "@/i18n/provider";
+import { fmt, t } from "@/lib/copy";
 import type { Media } from "@/lib/api/generated/Media";
 import type { Showcase as ShowcaseData } from "@/lib/api/generated/Showcase";
 import { ease, rise, spring, stagger, viewport } from "@/lib/motion";
@@ -122,7 +122,6 @@ function Duo({ back, front }: { back: Media; front: Media }) {
 
 /** Pipeline steps; a pulse keeps walking through them while visible. */
 function Flow({ steps, theme }: { steps: string[]; theme: Theme }) {
-  const { t, fmt } = useI18n();
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { margin: "-20% 0px" });
   const [active, setActive] = useState(-1);
@@ -196,7 +195,6 @@ function Tiles({ tiles }: { tiles: { title: string; body: string }[] }) {
 
 /** Switch → wire → OR → wire → lamp, the signal travelling left to right. */
 function LogicDemo({ hintOff, hintOn, theme }: { hintOff: string; hintOn: string; theme: Theme }) {
-  const { t } = useI18n();
   const [on, setOn] = useState(false);
   const wire = (delay: number) => (
     <span className="relative h-1.5 flex-1 overflow-hidden rounded-[3px] bg-stage-frame">
@@ -297,7 +295,6 @@ function BigNumbers({ items, theme }: { items: { value: string; label: string }[
 
 /** A shell command you can click to copy. */
 export function CopyCommand({ command }: { command: string }) {
-  const { t, fmt } = useI18n();
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(command);

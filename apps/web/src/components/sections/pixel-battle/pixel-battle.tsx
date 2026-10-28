@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { useI18n } from "@/i18n/provider";
+import { fmt, plural, t } from "@/lib/copy";
 import { spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
@@ -34,7 +34,6 @@ function line(x0: number, y0: number, x1: number, y1: number) {
 }
 
 export function PixelBattle() {
-  const { t, fmt, plural } = useI18n();
   const px = usePixelBoard();
   const canvas = useRef<HTMLCanvasElement>(null);
   const [color, setColor] = useState(0);

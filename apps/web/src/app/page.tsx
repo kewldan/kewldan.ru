@@ -11,16 +11,11 @@ import { Timeline } from "@/components/sections/timeline";
 import { Work } from "@/components/sections/work/work";
 import { SiteFooter } from "@/components/site/footer";
 import { SiteHeader } from "@/components/site/header";
-import { hasLocale } from "@/i18n/config";
-import { dictionaries } from "@/i18n/dictionaries";
 import { getContent } from "@/lib/api/content";
-import { notFound } from "next/navigation";
+import { t } from "@/lib/copy";
 
-export default async function Home({ params }: PageProps<"/[locale]">) {
-  const { locale } = await params;
-  if (!hasLocale(locale)) notFound();
-  const c = await getContent(locale);
-  const t = dictionaries[locale];
+export default async function Home() {
+  const c = await getContent();
   return (
     <>
       <SiteHeader handle={c.profile.handle} nav={c.nav} marquee={c.marquee} />

@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { CountUp } from "@/components/sections/work/keynote";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useI18n } from "@/i18n/provider";
+import { fmt, plural, t } from "@/lib/copy";
 import type { Title } from "@/lib/api/generated/Title";
 import type { WatchedPage } from "@/lib/api/generated/WatchedPage";
 import { ease, rise, spring, stagger, viewport } from "@/lib/motion";
@@ -31,7 +31,6 @@ const sorters: Record<Sort, (a: Title, b: Title) => number> = {
 };
 
 function useMeta() {
-  const { t, fmt } = useI18n();
   return (x: Title) =>
     [
       x.kind === "series"
@@ -44,7 +43,6 @@ function useMeta() {
 }
 
 export function WatchedView({ page, initial }: { page: WatchedPage; initial: Title[] | null }) {
-  const { t, fmt, plural, intl } = useI18n();
   const [items, setItems] = useState<Title[]>(initial ?? []);
   const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = useState<Sort>("recent");
@@ -147,7 +145,7 @@ export function WatchedView({ page, initial }: { page: WatchedPage; initial: Tit
           <span className="text-stage-dim">
             {stats.avg
               ? fmt(t.watched.average, {
-                  avg: stats.avg.toLocaleString(intl, { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
+                  avg: stats.avg.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
                 })
               : t.watched.scored}
           </span>
@@ -313,7 +311,6 @@ export function WatchedView({ page, initial }: { page: WatchedPage; initial: Tit
 
 /** Scores 1–10 as bars that grow in once, coloured by tier. */
 function Histogram({ hist, max }: { hist: number[]; max: number }) {
-  const { t } = useI18n();
   return (
     <div
       className="mt-7 flex w-full max-w-190 flex-col gap-2.5"
@@ -342,7 +339,6 @@ function Histogram({ hist, max }: { hist: number[]; max: number }) {
 }
 
 function Spotlight({ best }: { best: Title }) {
-  const { t, fmt } = useI18n();
   const meta = useMeta();
   const glow = (e: React.PointerEvent<HTMLDivElement>) => {
     const el = e.currentTarget;
@@ -394,7 +390,6 @@ function Credit({
   onEdit: () => void;
   onRemove: () => void;
 }) {
-  const { t, fmt } = useI18n();
   const meta = useMeta();
   return (
     <motion.li

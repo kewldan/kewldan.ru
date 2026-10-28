@@ -9,7 +9,7 @@
 //! renders: `**bold**`, `_serif italic accent_` and `==highlighter box==`.
 
 use std::{
-    collections::{BTreeMap, HashMap, HashSet},
+    collections::{BTreeMap, HashSet},
     path::Path,
     sync::Arc,
 };
@@ -18,34 +18,8 @@ use anyhow::{Context, bail};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
-const EMBEDDED: [(Locale, &str); 2] = [
-    (Locale::En, include_str!("../content/en.json")),
-    (Locale::Ru, include_str!("../content/ru.json")),
-];
+const EMBEDDED: &str = include_str!("../content/en.json");
 const EMBEDDED_STATS: &str = include_str!("../content/stats.json");
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, TS)]
-#[serde(rename_all = "lowercase")]
-#[ts(export)]
-pub enum Locale {
-    En,
-    Ru,
-}
-
-impl Locale {
-    pub const ALL: [Locale; 2] = [Locale::En, Locale::Ru];
-
-    pub fn code(self) -> &'static str {
-        match self {
-            Locale::En => "en",
-            Locale::Ru => "ru",
-        }
-    }
-
-    pub fn parse(code: &str) -> Option<Self> {
-        Self::ALL.into_iter().find(|l| l.code() == code)
-    }
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -468,6 +442,8 @@ pub struct Dropout {
     /// Who is calling, for screen readers.
     pub caller: String,
     pub meme: Media,
+    /// Audio file played (looped) while the call rings.
+    pub ringtone: String,
 }
 
 /// Copy for `/watched`; the titles themselves come from `/api/watched`.
@@ -491,7 +467,7 @@ pub struct Footer {
     pub source: Link,
 }
 
-/// One locale's content, serialized once. The JSON still holds stats
+/// The content, serialized once. The JSON still holds stats
 /// placeholders like `{gh.contributions}`; `crate::stats` fills them per
 /// request.
 #[derive(Debug)]
@@ -510,71 +486,43 @@ impl Snapshot {
     }
 }
 
-/// Every locale plus the fallback numbers for the placeholders; swapped
+/// The content plus the fallback numbers for its placeholders; swapped
 /// atomically on reload.
 #[derive(Debug)]
 pub struct Library {
-    pub locales: HashMap<Locale, Snapshot>,
+    pub snapshot: Snapshot,
     pub stats: BTreeMap<String, u64>,
 }
 
 impl Library {
-    pub fn parse(sources: &[(Locale, String)], stats: &str) -> anyhow::Result<Self> {
+    pub fn parse(raw: &str, stats: &str) -> anyhow::Result<Self> {
         let stats: BTreeMap<String, u64> =
             serde_json::from_str(stats).context("stats.json must map keys to numbers")?;
-        let mut locales = HashMap::new();
-        for (locale, raw) in sources {
-            let snap =
-                Snapshot::parse(raw).with_context(|| format!("in {}.json", locale.code()))?;
-            for key in placeholders(&snap.json) {
-                if !stats.contains_key(key) {
-                    bail!(
-                        "{}.json uses {{{key}}}, which stats.json does not define",
-                        locale.code()
-                    );
-                }
+        let snapshot = Snapshot::parse(raw).context("in en.json")?;
+        for key in placeholders(&snapshot.json) {
+            if !stats.contains_key(key) {
+                bail!("en.json uses {{{key}}}, which stats.json does not define");
             }
-            locales.insert(*locale, snap);
         }
-        let ids = |l: Locale| -> Vec<&str> {
-            locales[&l]
-                .content
-                .work
-                .projects
-                .iter()
-                .map(|p| p.id.as_str())
-                .collect()
-        };
-        if ids(Locale::En) != ids(Locale::Ru) {
-            bail!("en.json and ru.json must list the same projects in the same order");
-        }
-        Ok(Self { locales, stats })
+        Ok(Self { snapshot, stats })
     }
 
     pub fn embedded() -> anyhow::Result<Self> {
-        let sources: Vec<_> = EMBEDDED
-            .iter()
-            .map(|(l, s)| (*l, (*s).to_owned()))
-            .collect();
-        Self::parse(&sources, EMBEDDED_STATS)
+        Self::parse(EMBEDDED, EMBEDDED_STATS)
     }
 
-    /// Reads `{en,ru,stats}.json` from `dir`, or uses the embedded copies.
+    /// Reads `en.json` and `stats.json` from `dir`, or uses the embedded copies.
     pub async fn load(dir: Option<&Path>) -> anyhow::Result<Self> {
         let Some(dir) = dir else {
             return Self::embedded();
         };
-        let read = |name: String| async move {
-            let path = dir.join(&name);
+        let read = |name: &'static str| async move {
+            let path = dir.join(name);
             tokio::fs::read_to_string(&path)
                 .await
                 .with_context(|| format!("reading {}", path.display()))
         };
-        let mut sources = Vec::new();
-        for locale in Locale::ALL {
-            sources.push((locale, read(format!("{}.json", locale.code())).await?));
-        }
-        Self::parse(&sources, &read("stats.json".into()).await?)
+        Self::parse(&read("en.json").await?, &read("stats.json").await?)
     }
 }
 
@@ -632,14 +580,12 @@ mod tests {
     #[test]
     fn embedded_content_is_valid() {
         let lib = Library::embedded().expect("content must parse");
-        for locale in Locale::ALL {
-            assert!(!lib.locales[&locale].content.work.projects.is_empty());
-        }
+        assert!(!lib.snapshot.content.work.projects.is_empty());
     }
 
     #[test]
     fn rejects_unknown_category() {
-        let mut v: serde_json::Value = serde_json::from_str(EMBEDDED[0].1).unwrap();
+        let mut v: serde_json::Value = serde_json::from_str(EMBEDDED).unwrap();
         v["more"]["items"][0]["categories"] = serde_json::json!(["nope"]);
         let err = Snapshot::parse(&v.to_string()).unwrap_err();
         assert!(format!("{err:#}").contains("unknown category"));
@@ -647,13 +593,9 @@ mod tests {
 
     #[test]
     fn rejects_undefined_placeholders() {
-        let mut v: serde_json::Value = serde_json::from_str(EMBEDDED[0].1).unwrap();
+        let mut v: serde_json::Value = serde_json::from_str(EMBEDDED).unwrap();
         v["numbers"]["value"] = serde_json::json!("{gh.nope}");
-        let sources = [
-            (Locale::En, v.to_string()),
-            (Locale::Ru, EMBEDDED[1].1.to_owned()),
-        ];
-        let err = Library::parse(&sources, EMBEDDED_STATS).unwrap_err();
+        let err = Library::parse(&v.to_string(), EMBEDDED_STATS).unwrap_err();
         assert!(format!("{err:#}").contains("gh.nope"));
     }
 

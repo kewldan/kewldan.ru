@@ -3,12 +3,12 @@
 import { CalendarIcon } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import { enUS, ru } from "react-day-picker/locale";
+import { enUS } from "react-day-picker/locale";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useI18n } from "@/i18n/provider";
+import { fmt, t } from "@/lib/copy";
 import type { Kind } from "@/lib/api/generated/Kind";
 import type { Title } from "@/lib/api/generated/Title";
 import type { TitleInput } from "@/lib/api/generated/TitleInput";
@@ -41,7 +41,6 @@ type Props = {
 };
 
 export function TitleForm({ token, editing, onSaved, onCancel }: Props) {
-  const { t, fmt, locale, intl } = useI18n();
   const f = t.watched.form;
   const [form, setForm] = useState<Omit<TitleInput, "year"> & { year: string }>(() =>
     editing === "new"
@@ -199,7 +198,7 @@ export function TitleForm({ token, editing, onSaved, onCancel }: Props) {
               className={cn(input, "flex items-center justify-between gap-2 text-left")}
             >
               {picked
-                ? picked.toLocaleDateString(intl, { day: "numeric", month: "long", year: "numeric" })
+                ? picked.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" })
                 : f.pickDate}
               <CalendarIcon className="size-4 text-stage-dim" />
             </PopoverTrigger>
@@ -217,7 +216,7 @@ export function TitleForm({ token, editing, onSaved, onCancel }: Props) {
                   set("watched", isoDay(d));
                   setDateOpen(false);
                 }}
-                locale={locale === "ru" ? ru : enUS}
+                locale={enUS}
                 disabled={{ after: new Date() }}
                 className="bg-transparent font-stage"
               />

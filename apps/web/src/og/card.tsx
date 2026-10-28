@@ -192,7 +192,7 @@ const score = (n: number) => (n >= 9 ? "#5ef0c2" : n >= 7 ? "#6f8dff" : n >= 5 ?
 /** The Watched share card: dark keynote, gradient title, the score scale. */
 export function WatchedCard({ content, domain }: { content: Content; domain: string }) {
   const { watched, profile } = content;
-  // "Watched." fits at full size; "Посмотрел." needs a smaller one.
+  // Shrinks a longer title so it still fits the card.
   const titleSize = Math.min(230, Math.floor(1088 / (watched.title.length * 0.58)));
   return (
     <div

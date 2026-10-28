@@ -1,10 +1,10 @@
-import type { Plural } from "../config";
-
-/** Interface strings. Site copy lives in the API (apps/api/content). */
-export const en = {
+/**
+ * Interface strings: buttons, statuses, labels, plurals. Everything the site
+ * says about Daniel lives in the API (apps/api/content/en.json).
+ */
+export const t = {
   nav: { sections: "Sections", menu: "Menu", backHome: "← kewldan.ru" },
   theme: { label: "Theme", light: "Light", dark: "Dark", system: "System" },
-  language: { label: "Language" },
   photoPlaceholder: "Photo placeholder",
   pixels: {
     board: "Shared pixel board, 64 by 32. Click or drag to paint.",
@@ -16,7 +16,7 @@ export const en = {
     inkLabel: "Ink: {n} of {max} pixels",
     connecting: "Connecting to the board…",
     live: "Live · {people} here now · everyone sees every pixel",
-    people: { one: "{n} person", other: "{n} people" } as Plural,
+    people: { one: "{n} person", other: "{n} people" },
     offline: "Offline here · your pixels stay in this browser",
   },
   about: {
@@ -42,7 +42,7 @@ export const en = {
   more: { all: "All", filter: "Filter projects", open: "open" },
   stack: { usedIn: "Used in" },
   watched: {
-    titles: { one: "{n} title.", other: "{n} titles." } as Plural,
+    titles: { one: "{n} title.", other: "{n} titles." },
     average: "Average {avg} out of 10.",
     scored: "Scored from 1 to 10.",
     movies: "movies",
@@ -118,4 +118,12 @@ export const en = {
   },
 };
 
-export type Dictionary = typeof en;
+export type Copy = typeof t;
+
+/** `"{n} of {max}"` style substitution. */
+export const fmt = (s: string, vars: Record<string, string | number>) =>
+  s.replace(/\{(\w+)\}/g, (_, k: string) => String(vars[k] ?? `{${k}}`));
+
+/** English plurals: one, or everything else. */
+export const plural = (n: number, forms: { one: string; other: string }) =>
+  (n === 1 ? forms.one : forms.other).replace("{n}", n.toLocaleString("en-US"));
