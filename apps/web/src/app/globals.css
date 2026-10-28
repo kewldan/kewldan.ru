@@ -71,13 +71,26 @@
   }
 }
 
+/*
+ * The scrollbar's room is always kept, so locking the scroll (the dropout
+ * call, dialogs) does not make the page jump sideways. Hence `hidden`, not
+ * `clip`: a gutter is only kept for a scroll container. Radix would also pad
+ * the body by the scrollbar's width; the gutter already did.
+ */
+html {
+  scrollbar-gutter: stable;
+}
+body[data-scroll-locked] {
+  margin-right: 0 !important;
+}
+
 /* Lenis (smooth scroll) */
 html.lenis,
 html.lenis body {
   height: auto;
 }
 .lenis:not(.lenis-autoToggle).lenis-stopped {
-  overflow: clip;
+  overflow: hidden;
 }
 .lenis [data-lenis-prevent] {
   overscroll-behavior: contain;
