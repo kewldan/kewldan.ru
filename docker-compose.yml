@@ -63,7 +63,10 @@ services:
       # Живые цифры: без токенов берётся то, что GitHub отдаёт публично.
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
       STEAM_API_KEY: ${STEAM_API_KEY:-}
+      # Несколько аккаунтов Steam: STEAM_ID через запятую или STEAM_ID1, STEAM_ID2.
       STEAM_ID: ${STEAM_ID:-}
+      STEAM_ID1: ${STEAM_ID1:-}
+      STEAM_ID2: ${STEAM_ID2:-}
       LOG_FORMAT: json
       TZ: ${TZ:-Europe/Moscow}
     volumes:

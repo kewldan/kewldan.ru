@@ -96,8 +96,8 @@ pub struct Sources {
     /// Read-only token; unlocks contribution counts and private repos.
     pub github_token: Option<String>,
     pub steam_key: Option<String>,
-    /// 64-bit SteamID of the profile.
-    pub steam_id: Option<String>,
+    /// 64-bit SteamIDs; several accounts are merged into one set of numbers.
+    pub steam_ids: Vec<String>,
     pub every: Duration,
 }
 
@@ -122,8 +122,12 @@ pub fn spawn_refresh(stats: std::sync::Arc<Stats>, sources: Sources) {
                     tracing::warn!(error = %format!("{err:#}"), "stats: GitHub refresh failed")
                 }
             }
-            if let (Some(key), Some(id)) = (&sources.steam_key, &sources.steam_id) {
-                match steam(&http, key, id).await {
+            if let Some(key) = sources
+                .steam_key
+                .as_deref()
+                .filter(|_| !sources.steam_ids.is_empty())
+            {
+                match steam(&http, key, &sources.steam_ids).await {
                     Ok(fresh) => stats.update(fresh),
                     Err(err) => {
                         tracing::warn!(error = %format!("{err:#}"), "stats: Steam refresh failed")
@@ -179,8 +183,13 @@ query($login: String!, $from: DateTime!, $to: DateTime!) {
         .error_for_status()?
         .json()
         .await?;
+    // GraphQL answers partially: an organisation that refuses the token
+    // (say, over its lifetime) nulls only the fields that touch its repos.
     if let Some(errors) = res.get("errors") {
-        anyhow::bail!("GraphQL: {errors}");
+        if res["data"]["user"].is_null() {
+            anyhow::bail!("GraphQL: {errors}");
+        }
+        tracing::warn!(%errors, "stats: GitHub answered partially");
     }
     let user = &res["data"]["user"];
     let cc = &user["contributionsCollection"];
@@ -253,11 +262,13 @@ async fn github_public(
     Ok(out)
 }
 
-async fn steam(
-    http: &reqwest::Client,
-    key: &str,
-    id: &str,
-) -> anyhow::Result<BTreeMap<String, u64>> {
+/// One account's library: app id → minutes played, plus its Steam level.
+struct Library {
+    playtime: BTreeMap<u64, u64>,
+    level: Option<u64>,
+}
+
+async fn steam_library(http: &reqwest::Client, key: &str, id: &str) -> anyhow::Result<Library> {
     let games: Value = http
         .get("https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/")
         .query(&[
@@ -278,25 +289,61 @@ async fn steam(
         .error_for_status()?
         .json()
         .await?;
-    let response = &games["response"];
-    let count = response["game_count"]
-        .as_u64()
-        .context("profile or game details are private")?;
-    let mut out = BTreeMap::new();
-    out.insert("steam.games".into(), count);
-    if let Some(minutes) = response["games"]
+    let list = games["response"]["games"]
         .as_array()
-        .into_iter()
-        .flatten()
-        .find(|g| g["appid"].as_u64() == Some(CS2_APP_ID))
-        .and_then(|g| g["playtime_forever"].as_u64())
-    {
+        .with_context(|| format!("{id}: profile or game details are private"))?;
+    let playtime = list
+        .iter()
+        .filter_map(|g| {
+            Some((
+                g["appid"].as_u64()?,
+                g["playtime_forever"].as_u64().unwrap_or(0),
+            ))
+        })
+        .collect();
+    Ok(Library {
+        playtime,
+        level: level["response"]["player_level"].as_u64(),
+    })
+}
+
+/// Several accounts as one: a game owned twice counts once, hours add up,
+/// and the level is the highest of them.
+fn merge_libraries(libraries: &[Library]) -> BTreeMap<String, u64> {
+    let mut playtime: BTreeMap<u64, u64> = BTreeMap::new();
+    for lib in libraries {
+        for (app, minutes) in &lib.playtime {
+            *playtime.entry(*app).or_default() += minutes;
+        }
+    }
+    let mut out = BTreeMap::new();
+    out.insert("steam.games".into(), playtime.len() as u64);
+    if let Some(minutes) = playtime.get(&CS2_APP_ID) {
         out.insert("steam.cs2".into(), minutes / 60);
     }
-    if let Some(l) = level["response"]["player_level"].as_u64() {
-        out.insert("steam.level".into(), l);
+    if let Some(level) = libraries.iter().filter_map(|l| l.level).max() {
+        out.insert("steam.level".into(), level);
     }
-    Ok(out)
+    out
+}
+
+async fn steam(
+    http: &reqwest::Client,
+    key: &str,
+    ids: &[String],
+) -> anyhow::Result<BTreeMap<String, u64>> {
+    let mut libraries = Vec::new();
+    for id in ids {
+        match steam_library(http, key, id).await {
+            Ok(lib) => libraries.push(lib),
+            // One private account should not hide the others.
+            Err(err) => {
+                tracing::warn!(error = %format!("{err:#}"), "stats: skipping a Steam account")
+            }
+        }
+    }
+    anyhow::ensure!(!libraries.is_empty(), "no Steam account could be read");
+    Ok(merge_libraries(&libraries))
 }
 
 /// Just enough calendar maths for "a year ago" and "years since", without a
@@ -416,6 +463,22 @@ mod tests {
         let snap = s.snapshot();
         assert_eq!(snap["gh.contributions"], 3000);
         assert_eq!(snap["gh.prs"], 65);
+    }
+
+    #[test]
+    fn merges_steam_accounts() {
+        let a = Library {
+            playtime: BTreeMap::from([(CS2_APP_ID, 600), (427_520, 60)]),
+            level: Some(12),
+        };
+        let b = Library {
+            playtime: BTreeMap::from([(CS2_APP_ID, 120), (548_430, 30)]),
+            level: Some(5),
+        };
+        let out = merge_libraries(&[a, b]);
+        assert_eq!(out["steam.games"], 3, "CS2 on both accounts counts once");
+        assert_eq!(out["steam.cs2"], 12, "10 h + 2 h");
+        assert_eq!(out["steam.level"], 12);
     }
 
     #[test]

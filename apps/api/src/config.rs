@@ -17,7 +17,8 @@ pub struct Config {
     /// serves the copies compiled into the binary.
     pub content_dir: Option<PathBuf>,
     /// `GITHUB_LOGIN` (default `kewldan`), `GITHUB_TOKEN`, `STEAM_API_KEY`,
-    /// `STEAM_ID`, `STATS_REFRESH_SECS` (default 6 hours).
+    /// `STEAM_ID` (comma-separated) and/or `STEAM_ID1`..`STEAM_ID9`,
+    /// `STATS_REFRESH_SECS` (default 6 hours).
     pub stats: crate::stats::Sources,
     /// `STATS_REFRESH=0` turns the background refresh off (tests, offline).
     pub stats_refresh: bool,
@@ -47,7 +48,22 @@ impl Config {
                 github_login: var("GITHUB_LOGIN").unwrap_or_else(|| "kewldan".into()),
                 github_token: var("GITHUB_TOKEN"),
                 steam_key: var("STEAM_API_KEY"),
-                steam_id: var("STEAM_ID"),
+                // STEAM_ID may list several ids; STEAM_ID1..9 add more.
+                steam_ids: {
+                    let mut ids: Vec<String> = std::iter::once(var("STEAM_ID"))
+                        .chain((1..=9).map(|i| var(&format!("STEAM_ID{i}"))))
+                        .flatten()
+                        .flat_map(|v| {
+                            v.split(',')
+                                .map(|s| s.trim().to_owned())
+                                .collect::<Vec<_>>()
+                        })
+                        .filter(|s| !s.is_empty())
+                        .collect();
+                    ids.sort();
+                    ids.dedup();
+                    ids
+                },
                 every: std::time::Duration::from_secs(
                     var("STATS_REFRESH_SECS")
                         .and_then(|v| v.parse().ok())
@@ -79,7 +95,7 @@ impl Config {
                 github_login: "kewldan".into(),
                 github_token: None,
                 steam_key: None,
-                steam_id: None,
+                steam_ids: Vec::new(),
                 every: std::time::Duration::from_secs(3600),
             },
             stats_refresh: false,
