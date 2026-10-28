@@ -58,8 +58,12 @@
     outline: 3px solid var(--focus);
     outline-offset: 3px;
   }
-  /* Dark pages (Watched) also darken the overscroll area. */
-  body:has([data-surface="stage"]) {
+  /*
+   * Dark pages (Watched, case studies) also darken the overscroll area. Next.js
+   * keeps pages you have left in the DOM under `display: none`, so only a
+   * surface that is shown counts; otherwise home stays dark after a visit.
+   */
+  body:has([data-surface="stage"]:not([style*="display: none"], [style*="display: none"] *)) {
     background: var(--stage);
   }
   ::selection {

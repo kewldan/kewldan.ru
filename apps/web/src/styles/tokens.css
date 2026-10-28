@@ -357,8 +357,11 @@
 }
 
 /* Watched is a keynote page: a light theme the visitor picked makes it a light
-   keynote; the fixed default keeps it dark, as designed. */
-:root[data-theme="light"]:not([data-theme-fixed]):has([data-surface="stage"]) {
+   keynote; the fixed default keeps it dark, as designed. Pages Next.js keeps
+   hidden after you leave them do not count (see globals.css). */
+:root[data-theme="light"]:not([data-theme-fixed]):has(
+    [data-surface="stage"]:not([style*="display: none"], [style*="display: none"] *)
+  ) {
   --stage: var(--p-gray-50);
   --stage-fg: var(--p-gray-990);
   --stage-dim: var(--p-gray-600);
