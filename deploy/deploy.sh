@@ -21,6 +21,12 @@ docker compose pull --quiet web api
 echo "→ поднимаю стек"
 docker compose up -d --remove-orphans
 
+# Тот же образ и под тегом latest: тогда ручной `docker compose up -d` (скажем,
+# после правки .env) поднимет текущую версию, а не древний latest.
+for svc in web api; do
+	docker tag "ghcr.io/kewldan/kewldan.ru/$svc:$IMAGE_TAG" "ghcr.io/kewldan/kewldan.ru/$svc:latest"
+done
+
 # Конфиг nginx примонтирован файлом: контейнер не пересоздаётся, и правки
 # в deploy/nginx подхватываются только перечитыванием конфига.
 if docker compose exec -T proxy nginx -t >/dev/null 2>&1; then
