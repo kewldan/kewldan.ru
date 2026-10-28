@@ -2,13 +2,14 @@
 
 import { animate, motion, useInView, useMotionValue, useReducedMotion, useTransform } from "motion/react";
 import Image from "next/image";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { RevealGroup, RevealItem } from "@/components/motion/reveal";
 import { SectionLabel } from "@/components/section-label";
 import { accentBg } from "@/lib/accent";
 import type { Car as CarContent } from "@/lib/api/generated/Car";
 import type { OffScreen as OffScreenContent } from "@/lib/api/generated/OffScreen";
+import { t } from "@/lib/copy";
 import { ease, spring, viewport } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
@@ -121,11 +122,20 @@ const FEATHER = 12;
  * The dream car. Scroll it into view and the tail-light bar lights up from
  * left to right: the lit shot sits on top of the dark one and a soft-edged
  * mask sweeps across it. Scroll away and the lights go out, ready to run again.
+ * A click switches them by hand until the car leaves the screen.
  */
 function Car({ car }: { car: CarContent }) {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLButtonElement>(null);
   const inView = useInView(ref, { amount: 0.6 });
   const reduced = useReducedMotion();
+  const [manual, setManual] = useState<boolean | null>(null);
+  // Off screen, the scroll is in charge again.
+  const [wasInView, setWasInView] = useState(inView);
+  if (inView !== wasInView) {
+    setWasInView(inView);
+    if (!inView) setManual(null);
+  }
+  const lit = manual ?? inView;
   const off = LIGHTS.from - FEATHER;
   const on = LIGHTS.to + FEATHER;
   const edge = useMotionValue(off);
@@ -133,18 +143,27 @@ function Car({ car }: { car: CarContent }) {
 
   useEffect(() => {
     if (reduced) {
-      edge.set(inView ? on : off);
+      edge.set(lit ? on : off);
       return;
     }
-    const controls = inView
-      ? animate(edge, on, { duration: 1.4, ease: ease.out, delay: 0.2 })
+    const controls = lit
+      ? animate(edge, on, { duration: manual === null ? 1.4 : 0.9, ease: ease.out, delay: manual === null ? 0.2 : 0 })
       : animate(edge, off, { duration: 0.35, ease: "easeIn" });
     return () => controls.stop();
-  }, [inView, reduced, edge, on, off]);
+  }, [lit, manual, reduced, edge, on, off]);
 
   const img = "block h-auto w-full select-none";
   return (
-    <div ref={ref} className="relative">
+    <motion.button
+      ref={ref}
+      type="button"
+      aria-pressed={lit}
+      aria-label={t.offScreen.lights}
+      onClick={() => setManual(!lit)}
+      whileTap={{ scale: 0.985 }}
+      transition={spring.press}
+      className="relative block w-full cursor-pointer"
+    >
       <Image
         src={car.image.src}
         alt={car.image.alt}
@@ -165,6 +184,6 @@ function Car({ car }: { car: CarContent }) {
           sizes="(min-width: 1024px) 640px, 100vw"
         />
       </motion.div>
-    </div>
+    </motion.button>
   );
 }

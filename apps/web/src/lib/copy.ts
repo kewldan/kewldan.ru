@@ -76,6 +76,7 @@ export const t = {
     upSince: "Up since {when}. Checked {ago}.",
     downSince: "Down since {when}. Checked {ago}.",
   },
+  offScreen: { lights: "Tail lights" },
   about: {
     now: "Right now",
     character: "Character",
