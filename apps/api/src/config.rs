@@ -38,6 +38,8 @@ pub struct Config {
     /// `TELEGRAM_BOT_TOKEN` for the contact form, and `TELEGRAM_OWNER` (default
     /// `kewldan`): the username whose `/start` makes the bot deliver to them.
     pub telegram: Option<crate::contact::Telegram>,
+    /// `TMDB_TOKEN`, a read access token: posters for Watched.
+    pub tmdb_token: Option<String>,
 }
 
 impl Config {
@@ -93,6 +95,7 @@ impl Config {
                 token,
                 owner: var("TELEGRAM_OWNER").unwrap_or_else(|| "kewldan".into()),
             }),
+            tmdb_token: var("TMDB_TOKEN"),
         })
     }
 
@@ -117,6 +120,7 @@ impl Config {
             trust_proxy: false,
             json_logs: false,
             telegram: None,
+            tmdb_token: None,
         }
     }
 

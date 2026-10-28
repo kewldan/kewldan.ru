@@ -7,6 +7,7 @@ pub mod content;
 pub mod pixels;
 pub mod stats;
 pub mod status;
+pub mod tmdb;
 pub mod watched;
 
 use std::{
@@ -39,6 +40,7 @@ pub struct AppState {
     pub watched: Arc<watched::Store>,
     pub auth: Arc<auth::Auth>,
     pub contact: Arc<contact::Contact>,
+    pub tmdb: Option<Arc<tmdb::Tmdb>>,
 }
 
 impl AppState {
@@ -78,7 +80,12 @@ impl AppState {
         if config.stats_refresh {
             contact::spawn_bot(Arc::clone(&contact));
         }
+        let tmdb = match config.tmdb_token.clone() {
+            Some(token) => Some(Arc::new(tmdb::Tmdb::new(token)?)),
+            None => None,
+        };
         Ok(Self {
+            tmdb,
             contact,
             config: Arc::new(config),
             content,
@@ -107,6 +114,8 @@ pub fn router(state: AppState) -> Router {
         )
         .route("/pixels/clear", post(pixels::clear))
         .route("/pixels/reset", post(pixels::reset))
+        .route("/tmdb/search", get(tmdb::search))
+        .route("/watched/posters", post(tmdb::backfill))
         .route("/pixels/rewind", post(pixels::rewind))
         .route("/pixels/erase", post(pixels::erase))
         .route_layer(middleware::from_fn_with_state(state.clone(), require_admin));

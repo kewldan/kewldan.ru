@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -20,6 +21,7 @@ import {
   errorKey,
   fmtScore,
   fmtWhen,
+  posterUrl,
   tier,
   whenKey,
 } from "@/lib/watched";
@@ -327,6 +329,7 @@ export function WatchedView({ page, initial }: { page: WatchedPage; initial: Tit
       <footer className="border-t border-stage-rule">
         <div className="wrap flex flex-wrap justify-between gap-3 py-5 text-[12.5px] text-stage-dim">
           <span>© 2026 kewldan</span>
+          {admin && <FindPosters token={token} onDone={setItems} />}
           <AdminDialog
             admin={admin}
             token={token}
@@ -448,18 +451,30 @@ function Credit({
       >
         {fmtScore(x.rating)}
       </p>
-      <div className="min-w-0">
-        <h3 className="text-[clamp(22px,2.6vw,32px)] leading-[1.1] font-semibold tracking-[-0.035em] [overflow-wrap:anywhere]">
-          {x.title}
-        </h3>
-        <p className="mt-1.5 flex flex-wrap gap-x-2.5 gap-y-1 text-sm text-stage-dim">
-          <span>{meta(x)}</span>
-          {x.status === "watching" && <span className="text-[#e0a800]">{t.watched.watchingNow}</span>}
-          {x.status === "paused" && <span className="text-[#e0a800]">{t.watched.paused}</span>}
-          {x.status === "dropped" && <span className="text-[#ff453a]">{t.watched.dropped}</span>}
-          {x.status === "want" && <span className="text-stage-link">{t.watched.wantTag}</span>}
-        </p>
-        {x.note && <p className="mt-2 max-w-[62ch] text-base leading-[1.45] text-stage-note">{x.note}</p>}
+      <div className="flex min-w-0 gap-4">
+        {x.poster && (
+          <Image
+            src={posterUrl(x.poster)}
+            alt=""
+            width={56}
+            height={84}
+            sizes="56px"
+            className="h-21 w-14 shrink-0 rounded-md object-cover ring-1 ring-white/10"
+          />
+        )}
+        <div className="min-w-0">
+          <h3 className="text-[clamp(22px,2.6vw,32px)] leading-[1.1] font-semibold tracking-[-0.035em] [overflow-wrap:anywhere]">
+            {x.title}
+          </h3>
+          <p className="mt-1.5 flex flex-wrap gap-x-2.5 gap-y-1 text-sm text-stage-dim">
+            <span>{meta(x)}</span>
+            {x.status === "watching" && <span className="text-[#e0a800]">{t.watched.watchingNow}</span>}
+            {x.status === "paused" && <span className="text-[#e0a800]">{t.watched.paused}</span>}
+            {x.status === "dropped" && <span className="text-[#ff453a]">{t.watched.dropped}</span>}
+            {x.status === "want" && <span className="text-stage-link">{t.watched.wantTag}</span>}
+          </p>
+          {x.note && <p className="mt-2 max-w-[62ch] text-base leading-[1.45] text-stage-note">{x.note}</p>}
+        </div>
       </div>
       <p className="col-start-2 font-mono text-[12.5px] text-stage-dim tabular-nums md:col-start-auto md:text-right">
         {fmtWhen(x.watched)}
@@ -483,6 +498,31 @@ function Credit({
         )}
       </div>
     </motion.li>
+  );
+}
+
+/** Admin only: a TMDB poster for every title that has none yet. */
+function FindPosters({ token, onDone }: { token: Credential; onDone: (items: Title[]) => void }) {
+  const [busy, setBusy] = useState(false);
+  const run = async () => {
+    setBusy(true);
+    try {
+      const { filled, missed } = await adminApi.findPosters(token);
+      toast(fmt(plural(filled, t.watched.postersFound), { n: filled }), {
+        description: missed.length ? fmt(t.watched.postersMissed, { titles: missed.join(", ") }) : undefined,
+      });
+      const res = await fetch("/api/watched", { cache: "no-store" });
+      if (res.ok) onDone(((await res.json()) as { items: Title[] }).items);
+    } catch {
+      toast(t.watched.postersFailed);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <button onClick={run} disabled={busy} className="text-stage-chip hover:text-stage-fg disabled:opacity-60">
+      {busy ? t.watched.findingPosters : t.watched.findPosters}
+    </button>
   );
 }
 

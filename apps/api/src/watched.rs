@@ -67,6 +67,10 @@ pub struct TitleInput {
     /// "winter 2023/24 – spring 2026". Empty for titles not seen yet.
     #[serde(default)]
     pub watched: String,
+    /// TMDB poster path (`/abc.jpg`); see [`crate::tmdb`].
+    #[serde(default)]
+    #[ts(optional = nullable)]
+    pub poster: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
@@ -107,6 +111,17 @@ impl TitleInput {
         }
         if self.year.is_some_and(|y| !(1880..2100).contains(&y)) {
             return Err("year");
+        }
+        self.poster = self
+            .poster
+            .map(|p| p.trim().to_owned())
+            .filter(|p| !p.is_empty());
+        if self
+            .poster
+            .as_deref()
+            .is_some_and(|p| !crate::tmdb::valid_poster(p))
+        {
+            return Err("poster");
         }
         if self.kind == Kind::Movie {
             self.seasons.clear();
@@ -179,6 +194,11 @@ impl Store {
             }
         }
         Ok(())
+    }
+
+    /// Writes a title back as it is, e.g. with a poster found later.
+    pub async fn save(&self, title: &Title) -> anyhow::Result<()> {
+        self.put(title).await
     }
 
     async fn remove(&self, id: &str) -> anyhow::Result<bool> {
@@ -302,6 +322,7 @@ mod tests {
             seasons: "1".into(),
             note: String::new(),
             watched: " 2024 ".into(),
+            poster: None,
         }
     }
 

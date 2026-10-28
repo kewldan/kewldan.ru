@@ -1,4 +1,5 @@
 import type { Title } from "@/lib/api/generated/Title";
+import type { TmdbHit } from "@/lib/api/generated/TmdbHit";
 import type { TitleInput } from "@/lib/api/generated/TitleInput";
 
 /** Score tier → gradient and solid colour tokens; no score is grey. */
@@ -117,7 +118,13 @@ export const adminApi = {
   create: (token: Credential, t: TitleInput) => call<Title>(token, "POST", "/watched", t),
   update: (token: Credential, id: string, t: TitleInput) => call<Title>(token, "PUT", `/watched/${id}`, t),
   remove: (token: Credential, id: string) => call<void>(token, "DELETE", `/watched/${id}`),
+  tmdb: (token: Credential, q: string) => call<TmdbHit[]>(token, "GET", `/tmdb/search?q=${encodeURIComponent(q)}`),
+  findPosters: (token: Credential) => call<{ filled: number; missed: string[] }>(token, "POST", "/watched/posters"),
 };
+
+/** A TMDB poster, resized by TMDB; Next.js re-encodes it from there. */
+export const posterUrl = (path: string, size: "w92" | "w185" | "w342" = "w185") =>
+  `https://image.tmdb.org/t/p/${size}${path}`;
 
 /** Moderation for the pixel board. */
 export const pixelAdmin = {

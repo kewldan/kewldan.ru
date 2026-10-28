@@ -159,6 +159,8 @@ export const t = {
     form: {
       title: "Title",
       titlePlaceholder: "What did you watch?",
+      tmdb: "From TMDB",
+      noPoster: "Remove the poster",
       type: "Type",
       year: "Year",
       score: "Score",
@@ -186,7 +188,13 @@ export const t = {
       full: "The list is full. Delete a few titles first.",
       token: "The admin token is no longer valid.",
       save: "Could not save. Try again in a moment.",
+      poster: "That poster path looks wrong.",
     },
+    findPosters: "Find posters",
+    findingPosters: "Looking on TMDB…",
+    postersFound: { one: "Found {n} poster.", other: "Found {n} posters." },
+    postersMissed: "No match for: {titles}.",
+    postersFailed: "TMDB did not answer. Is TMDB_TOKEN set?",
   },
   admin: {
     link: "Admin",

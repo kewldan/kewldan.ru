@@ -18,4 +18,8 @@ seasons: string, note: string,
  * When, in words: "2024", "01.10.2026", "a few years ago",
  * "winter 2023/24 – spring 2026". Empty for titles not seen yet.
  */
-watched: string, };
+watched: string, 
+/**
+ * TMDB poster path (`/abc.jpg`); see [`crate::tmdb`].
+ */
+poster?: string | null, };

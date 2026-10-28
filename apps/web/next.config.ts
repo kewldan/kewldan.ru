@@ -38,6 +38,8 @@ const nextConfig: NextConfig = {
   },
   images: {
     formats: ["image/avif", "image/webp"],
+    // Watched posters; the server fetches and caches them, visitors never hit TMDB.
+    remotePatterns: [new URL("https://image.tmdb.org/t/p/**")],
   },
 };
 

@@ -1,7 +1,8 @@
 "use client";
 
 import { CalendarIcon } from "lucide-react";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { enUS } from "react-day-picker/locale";
 
@@ -12,10 +13,11 @@ import { fmt, t } from "@/lib/copy";
 import type { Kind } from "@/lib/api/generated/Kind";
 import type { Title } from "@/lib/api/generated/Title";
 import type { TitleInput } from "@/lib/api/generated/TitleInput";
+import type { TmdbHit } from "@/lib/api/generated/TmdbHit";
 import type { WatchStatus } from "@/lib/api/generated/WatchStatus";
 import { ease, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
-import { adminApi, type Credential, errorKey, tier, today } from "@/lib/watched";
+import { adminApi, type Credential, errorKey, posterUrl, tier, today } from "@/lib/watched";
 
 const KINDS: Kind[] = ["movie", "series"];
 const STATUSES: WatchStatus[] = ["watched", "watching", "paused", "dropped", "want"];
@@ -53,6 +55,7 @@ export function TitleForm({ token, editing, onSaved, onCancel }: Props) {
           seasons: "",
           note: "",
           watched: today(),
+          poster: null,
         }
       : { ...editing, year: editing.year ? String(editing.year) : "" },
   );
@@ -60,6 +63,29 @@ export function TitleForm({ token, editing, onSaved, onCancel }: Props) {
   const [err, setErr] = useState("");
   const [dateOpen, setDateOpen] = useState(false);
   const ref = useRef<HTMLFormElement>(null);
+  // TMDB suggestions follow what the admin types, not what a pick fills in.
+  const [query, setQuery] = useState("");
+  const [hits, setHits] = useState<TmdbHit[]>([]);
+  const [suggest, setSuggest] = useState(false);
+
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length < 2) return;
+    const id = setTimeout(() => adminApi.tmdb(token, q).then(setHits, () => setHits([])), 350);
+    return () => clearTimeout(id);
+  }, [query, token]);
+
+  const choose = (h: TmdbHit) => {
+    setForm((s) => ({
+      ...s,
+      title: h.title,
+      kind: h.kind,
+      year: h.year ? String(h.year) : s.year,
+      poster: h.poster ?? null,
+    }));
+    setSuggest(false);
+  };
+  const showHits = suggest && query.trim().length >= 2 && hits.length > 0;
 
   useEffect(() => {
     ref.current?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -107,19 +133,79 @@ export function TitleForm({ token, editing, onSaved, onCancel }: Props) {
           {editing === "new" ? t.watched.add : t.watched.edit}
         </h3>
 
-        <div className={cn(field, "md:col-span-6")}>
+        <div className={cn(field, "relative md:col-span-6")}>
           <label htmlFor="f-title" className={label}>
             {f.title}
           </label>
-          <input
-            id="f-title"
-            className={input}
-            value={form.title}
-            maxLength={160}
-            autoComplete="off"
-            placeholder={f.titlePlaceholder}
-            onChange={(e) => set("title", e.target.value)}
-          />
+          <div className="flex items-center gap-3">
+            {form.poster && (
+              <button
+                type="button"
+                onClick={() => set("poster", null)}
+                title={f.noPoster}
+                aria-label={f.noPoster}
+                className="shrink-0 overflow-hidden rounded-md ring-1 ring-stage-frame transition-opacity hover:opacity-60"
+              >
+                <Image src={posterUrl(form.poster, "w92")} alt="" width={30} height={45} className="block" />
+              </button>
+            )}
+            <input
+              id="f-title"
+              className={input}
+              value={form.title}
+              maxLength={160}
+              autoComplete="off"
+              role="combobox"
+              aria-expanded={showHits}
+              aria-controls="f-title-hits"
+              placeholder={f.titlePlaceholder}
+              onChange={(e) => {
+                set("title", e.target.value);
+                setQuery(e.target.value);
+                setSuggest(true);
+              }}
+              onBlur={() => setSuggest(false)}
+              onKeyDown={(e) => e.key === "Escape" && setSuggest(false)}
+            />
+          </div>
+          <AnimatePresence>
+            {showHits && (
+              <motion.ul
+                id="f-title-hits"
+                role="listbox"
+                aria-label={f.tmdb}
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.18, ease: ease.out }}
+                data-lenis-prevent
+                className="absolute inset-x-0 top-full z-30 mt-2 max-h-80 overflow-y-auto rounded-2xl border border-stage-frame bg-stage-device p-1.5 shadow-2xl"
+              >
+                {hits.map((h, i) => (
+                  <li key={`${h.title}-${h.year}-${i}`} role="option" aria-selected={false}>
+                    <button
+                      type="button"
+                      // Before the input's blur closes the list.
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => choose(h)}
+                      className="flex w-full items-center gap-3 rounded-xl px-2 py-1.5 text-left hover:bg-white/8"
+                    >
+                      {h.poster ? (
+                        <Image src={posterUrl(h.poster, "w92")} alt="" width={30} height={45} className="rounded" />
+                      ) : (
+                        <span className="h-[45px] w-[30px] rounded bg-stage-frame" />
+                      )}
+                      <span className="min-w-0 flex-1 truncate text-[15px]">{h.title}</span>
+                      <span className="shrink-0 text-[13px] text-stage-dim tabular-nums">
+                        {t.watched.kind[h.kind]}
+                        {h.year ? ` · ${h.year}` : ""}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </motion.ul>
+            )}
+          </AnimatePresence>
         </div>
         <div className={cn(field, "md:col-span-3")}>
           <span className={label} id="f-kind">

@@ -72,6 +72,8 @@ services:
       # Форма «написать мне»: бот шлёт сообщения тому, чей /start пришёл от TELEGRAM_OWNER.
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       TELEGRAM_OWNER: ${TELEGRAM_OWNER:-kewldan}
+      # Постеры для Watched (Read Access Token с themoviedb.org).
+      TMDB_TOKEN: ${TMDB_TOKEN:-}
       LOG_FORMAT: json
       TZ: ${TZ:-Europe/Moscow}
     volumes:
