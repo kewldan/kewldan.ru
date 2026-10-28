@@ -1,0 +1,75 @@
+//! Runtime configuration from environment variables.
+
+use std::{net::SocketAddr, path::PathBuf};
+
+use axum::http::HeaderValue;
+
+#[derive(Debug, Clone)]
+pub struct Config {
+    /// `ADDR`, default `0.0.0.0:8080`.
+    pub addr: SocketAddr,
+    /// `VALKEY_URL`, e.g. `redis://valkey:6379`. Unset keeps the board in
+    /// memory.
+    pub valkey_url: Option<String>,
+    /// `VALKEY_NAMESPACE`, default `px`: prefix for the board key and channel.
+    pub valkey_namespace: String,
+    /// `CONTENT_PATH`. Unset serves the content compiled into the binary.
+    pub content_path: Option<PathBuf>,
+    /// `ADMIN_TOKEN`. Unset disables every `/api/admin` route.
+    pub admin_token: Option<String>,
+    /// `ALLOWED_ORIGINS`, comma separated. Empty allows any origin, which is
+    /// only meant for development.
+    pub allowed_origins: Vec<String>,
+    /// `TRUST_PROXY=1` reads the client IP from `X-Forwarded-For` (behind
+    /// Traefik).
+    pub trust_proxy: bool,
+    /// `LOG_FORMAT=json` for structured logs.
+    pub json_logs: bool,
+}
+
+impl Config {
+    pub fn from_env() -> anyhow::Result<Self> {
+        let var = |k: &str| std::env::var(k).ok().filter(|v| !v.trim().is_empty());
+        Ok(Self {
+            addr: var("ADDR")
+                .unwrap_or_else(|| "0.0.0.0:8080".into())
+                .parse()?,
+            valkey_url: var("VALKEY_URL"),
+            valkey_namespace: var("VALKEY_NAMESPACE").unwrap_or_else(|| "px".into()),
+            content_path: var("CONTENT_PATH").map(PathBuf::from),
+            admin_token: var("ADMIN_TOKEN"),
+            allowed_origins: var("ALLOWED_ORIGINS")
+                .map(|v| {
+                    v.split(',')
+                        .map(|s| s.trim().trim_end_matches('/').to_owned())
+                        .collect()
+                })
+                .unwrap_or_default(),
+            trust_proxy: var("TRUST_PROXY").is_some_and(|v| v == "1" || v == "true"),
+            json_logs: var("LOG_FORMAT").is_some_and(|v| v == "json"),
+        })
+    }
+
+    /// Settings for tests: in-memory board, embedded content, any origin.
+    pub fn for_tests() -> Self {
+        Self {
+            addr: "127.0.0.1:0".parse().unwrap(),
+            valkey_url: None,
+            valkey_namespace: "px".into(),
+            content_path: None,
+            admin_token: Some("test-token".into()),
+            allowed_origins: Vec::new(),
+            trust_proxy: false,
+            json_logs: false,
+        }
+    }
+
+    pub fn origin_allowed(&self, origin: Option<&HeaderValue>) -> bool {
+        if self.allowed_origins.is_empty() {
+            return true;
+        }
+        origin
+            .and_then(|o| o.to_str().ok())
+            .is_some_and(|o| self.allowed_origins.iter().any(|a| a == o))
+    }
+}

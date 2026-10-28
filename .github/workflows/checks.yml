@@ -1,0 +1,58 @@
+name: Проверки
+
+# Переиспользуемый набор проверок: дергается из ci.yml (ветки и PR)
+# и из deploy.yml перед сборкой образов.
+on:
+  workflow_call:
+
+jobs:
+  web:
+    name: Web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Prettier
+        run: pnpm --filter web format:check
+      - name: ESLint
+        run: pnpm --filter web lint
+      - name: Типы
+        run: pnpm --filter web typecheck
+      - name: Сборка (из контента в репозитории, без api)
+        run: pnpm --filter web build
+
+  api:
+    name: API
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    services:
+      valkey:
+        image: valkey/valkey:9-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "valkey-cli ping" --health-interval 5s --health-timeout 3s --health-retries 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/api
+      - name: rustfmt
+        run: cargo fmt --check
+      - name: clippy
+        run: cargo clippy --all-targets --locked -- -D warnings
+      - name: cargo test (сквозные тесты идут через Valkey)
+        run: cargo test --locked
+        env:
+          VALKEY_URL: redis://localhost:6379
+      - name: Типы TypeScript не разошлись с Rust
+        run: git diff --exit-code -- ../web/src/lib/api/generated

@@ -1,0 +1,7 @@
+**/node_modules
+**/.next
+apps/api/target
+.git
+.claude
+*.md
+!apps/**/*.md

@@ -1,0 +1,96 @@
+# Production stack. TLS is terminated by the server-wide Traefik that lives on
+# the external `virtual-hosts` network (cert resolver `myresolver`), the same
+# way edu3105 and ControlPanel are deployed. nginx splits /api/* (content and
+# the pixel-battle WebSocket) → Rust, the rest → Next.js.
+
+name: kewldan-ru
+
+services:
+  proxy:
+    image: nginx:alpine
+    restart: unless-stopped
+    expose:
+      - 80
+    networks:
+      - backends
+      - virtual-hosts
+    depends_on:
+      - web
+      - api
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=virtual-hosts
+      - traefik.http.routers.portfolio.rule=Host(`${DOMAIN:-kewldan.ru}`)
+      - traefik.http.routers.portfolio.tls=true
+      - traefik.http.routers.portfolio.tls.certresolver=myresolver
+      - traefik.http.services.portfolio.loadbalancer.server.port=80
+    volumes:
+      - ./deploy/nginx/conf.d:/etc/nginx/conf.d:ro
+
+  web:
+    # Образ собирается в GitHub Actions; build остаётся для локальной сборки (--build).
+    image: ghcr.io/kewldan/kewldan.ru/web:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    environment:
+      API_URL: http://api:8080
+      TZ: ${TZ:-Europe/Moscow}
+    expose:
+      - 3000
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - backends
+
+  api:
+    image: ghcr.io/kewldan/kewldan.ru/api:${IMAGE_TAG:-latest}
+    build:
+      context: ./apps/api
+    restart: unless-stopped
+    environment:
+      ADDR: 0.0.0.0:8080
+      VALKEY_URL: redis://valkey:6379
+      # nginx передаёт реальный IP клиента в X-Forwarded-For: по нему лимит чернил.
+      TRUST_PROXY: "1"
+      ALLOWED_ORIGINS: https://${DOMAIN:-kewldan.ru}
+      ADMIN_TOKEN: ${ADMIN_TOKEN:?set ADMIN_TOKEN in .env}
+      # Контент из репозитория: после правки en.json на сервере —
+      #   curl -XPOST -H "Authorization: Bearer $ADMIN_TOKEN" https://kewldan.ru/api/admin/content/reload
+      CONTENT_PATH: /content/en.json
+      LOG_FORMAT: json
+      TZ: ${TZ:-Europe/Moscow}
+    volumes:
+      - ./apps/api/content:/content:ro
+    expose:
+      - 8080
+    depends_on:
+      valkey:
+        condition: service_healthy
+    networks:
+      - backends
+
+  # Доска pixel battle: 2 КБ, но переживает рестарты (AOF).
+  valkey:
+    image: valkey/valkey:9-alpine
+    restart: unless-stopped
+    command: ["valkey-server", "--save", "60", "1", "--appendonly", "yes", "--maxmemory", "32mb"]
+    volumes:
+      - valkey-data:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      - backends
+
+networks:
+  backends:
+  virtual-hosts:
+    external: true
+
+volumes:
+  valkey-data:

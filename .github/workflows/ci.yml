@@ -1,0 +1,15 @@
+name: CI
+
+# Ветки и пулл-реквесты: те же проверки, что и перед деплоем, но без сборки.
+on:
+  pull_request:
+  push:
+    branches-ignore: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    uses: ./.github/workflows/checks.yml

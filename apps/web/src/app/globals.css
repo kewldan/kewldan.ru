@@ -1,0 +1,91 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "../styles/tokens.css";
+
+@utility wrap {
+  width: 100%;
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-left: var(--gutter);
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* Gradient fill for text; the gradient comes from --g on an ancestor. */
+@utility gradient-text {
+  background-image: var(--g);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility brutal {
+  border: var(--brutal-border) solid var(--ink);
+}
+
+@utility grid-index {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+@layer base {
+  * {
+    @apply border-rule;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-padding-top: calc(var(--header-h) + 16px);
+  }
+  body {
+    @apply bg-paper font-paper text-base text-ink antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  /* The notch area reads as part of the marquee. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0 0 auto;
+    height: env(safe-area-inset-top, 0px);
+    z-index: 60;
+    background: var(--ink);
+  }
+  :focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 3px;
+  }
+  /* Dark pages (Watched) also darken the overscroll area. */
+  body:has([data-surface="stage"]) {
+    background: var(--stage);
+  }
+  ::selection {
+    background: var(--accent-yellow);
+    color: var(--ink);
+  }
+  img {
+    max-width: 100%;
+  }
+}
+
+/* Lenis (smooth scroll) */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis:not(.lenis-autoToggle).lenis-stopped {
+  overflow: clip;
+}
+.lenis [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

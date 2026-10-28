@@ -1,0 +1,402 @@
+{
+  "profile": {
+    "name": "Daniil Tenishev",
+    "shortName": "Daniel",
+    "handle": "kewldan",
+    "description": "Daniel (kewldan), 18, ITMO Software Engineering. I build from the kernel up to the UI: XDP filters, Go backends, desktop apps and Telegram Mini Apps.",
+    "siteUrl": "https://kewldan.ru",
+    "email": null
+  },
+  "nav": [
+    { "label": "Pixels", "href": "#pixels" },
+    { "label": "About", "href": "#about" },
+    { "label": "Work", "href": "#work" },
+    { "label": "More", "href": "#more" },
+    { "label": "Stack", "href": "#stack" },
+    { "label": "Log", "href": "#log" },
+    { "label": "Contact", "href": "#contact" },
+    { "label": "Watched ↗", "href": "/watched" }
+  ],
+  "marquee": [
+    "OPEN TO INTERNSHIPS",
+    "C++",
+    "GO",
+    "TYPESCRIPT",
+    "XDP/eBPF",
+    "TELEGRAM MINI APPS",
+    "ITMO SE’30",
+    "PUSHKIN → ST PETERSBURG",
+    "HATES 3 A.M. BUGS"
+  ],
+  "hero": {
+    "meta": [
+      { "title": "Daniil Tenishev", "sub": "@kewldan" },
+      { "title": "Full-stack & systems", "sub": "developer, 18" },
+      { "title": "ITMO, Software Engineering", "sub": "group M3105, class of 2030" },
+      { "title": "Open to offers", "sub": "internships, freelance", "live": true }
+    ],
+    "headline": "I build from the ==kernel== up to the _UI._",
+    "photo": null,
+    "photoPlaceholder": "[your photo]",
+    "label": { "index": "01", "title": "Hi, I’m Daniel" },
+    "lead": "I build things from the kernel up to the UI: XDP filters, Go backends, desktop apps and Telegram Mini Apps. In production, used by real people.",
+    "stickers": [
+      { "label": "18 Y.O.", "accent": "pink", "tilt": 8 },
+      { "label": "ITMO SE'30", "accent": "blue", "tilt": -6 },
+      { "label": "100% HUMAN", "accent": "green", "tilt": 5 }
+    ],
+    "links": [
+      { "label": "GitHub", "href": "https://github.com/kewldan" },
+      { "label": "Telegram", "href": "https://t.me/kewldan" },
+      { "label": "CV (PDF)", "href": "#" }
+    ],
+    "ctas": [
+      { "label": "See the work ↓", "href": "#work", "accent": "yellow" },
+      { "label": "Contact", "href": "#contact", "accent": null }
+    ]
+  },
+  "pixels": {
+    "label": { "index": "02", "title": "Pixel battle" },
+    "title": "One board. _Everyone at once._"
+  },
+  "about": {
+    "label": { "index": "03", "title": "About" },
+    "pull": "I'm Daniel, Daniil Tenishev on paper. 18, first year of Software Engineering at ITMO, group M3105, class of 2030. I live in Pushkin and ride into Saint Petersburg every day.",
+    "now": [
+      "Studying at ITMO",
+      "Working as a developer alongside uni",
+      "Building Omniflow, my own VPN service",
+      "Open to internships and offers"
+    ],
+    "traits": ["hard-working", "easy-going", "open-minded", "self-confident"],
+    "traitsNote": "Friends say that about me. I always want to know how things work inside. That is how I end up writing engines, protocols and a passport-chip reader. My strongest skill is solving problems.",
+    "love": ["coding", "real guns at the range", "travelling"],
+    "hate": ["early alarms", "fixing bugs at 3 a.m."],
+    "hateNote": "(I still do it.)",
+    "hobbies": "Travelling and games: 90 on Steam, mostly the kind where you build factories. If I weren't a programmer, I'd be a pilot.",
+    "desk": "MacBook Pro M4 Pro. _best buy ever!_"
+  },
+  "work": {
+    "eyebrow": "Selected work",
+    "title": "Six projects.",
+    "titleDim": "Six launches.",
+    "lead": "Each one gets its own stage. Jump straight to one, or scroll through all six.",
+    "projects": [
+      {
+        "id": "larpguard",
+        "name": "LarpGuard",
+        "theme": "dark",
+        "gradient": "linear-gradient(100deg,#ffb36b 0%,#ff5f8f 34%,#8a6bff 68%,#3fb6ff 100%)",
+        "icon": null,
+        "title": "Cloudflare.",
+        "titleDim": "But self-hosted.",
+        "lead": "A bot filter in front of Traefik that reads **every layer** of a connection and asks one question: does this stack match the browser it claims to be?",
+        "showcase": {
+          "kind": "device",
+          "media": { "src": "/media/lg-live.webp", "alt": "LarpGuard console: live request stream", "width": 760, "height": 475 },
+          "label": "larpguard console · live",
+          "version": "v0.9"
+        },
+        "specs": [
+          { "value": "4", "label": "layers fingerprinted: TCP, TLS, HTTP/2, QUIC" },
+          { "value": "µs", "label": "gradient-boosting inference in C++" },
+          { "value": "XDP", "label": "prefilter with its own loader" },
+          { "value": "0", "label": "proxy lists. RTT does the work." }
+        ],
+        "points": [
+          "TCP SYN, JA4/JA4T/JA4H, HTTP/2 and QUIC fingerprints scored into human, suspicious, bot and verified_bot",
+          "Proxy detection from the RTT gap between TCP and the TLS 1.3 handshake, without proxy lists",
+          "XDP/eBPF prefilter with its own loader; gradient-boosting inference in C++ in microseconds"
+        ],
+        "chips": [],
+        "links": [{ "label": "View on GitHub ›", "href": "https://github.com/kewldan" }]
+      },
+      {
+        "id": "omniflow",
+        "name": "Omniflow",
+        "theme": "light",
+        "gradient": "linear-gradient(100deg,#7b5cff 0%,#b05cff 50%,#ff5fb8 100%)",
+        "icon": null,
+        "title": "A whole VPN business.",
+        "titleDim": "One open platform.",
+        "lead": "My own VPN business, turned into an open product: Telegram bot, subscriptions, payments, support, marketing and an admin panel on top of Remnawave, without owning Xray.",
+        "showcase": { "kind": "flow", "steps": ["Telegram bot", "Billing", "Outbox", "Remnawave"] },
+        "specs": [
+          { "value": "3", "label": "payment providers: Telegram Stars, CryptoBot, YooKassa" },
+          { "value": "6", "label": "admin roles with an audit log" },
+          { "value": "4", "label": "ways to sign in: Argon2id, passkeys, TOTP, OIDC" },
+          { "value": "Go", "label": "1.26 with chi, pgx, sqlc and River" }
+        ],
+        "points": [
+          "Plans, renewals and upgrades via Telegram Stars, CryptoBot or YooKassa; promo codes, wallet, referrals, tickets",
+          "RBAC admin: Argon2id, passkeys, TOTP, OIDC, 6 roles, audit log",
+          "Immutable plan versions, refunds, a wallet ledger, durable fulfilment through a transactional outbox"
+        ],
+        "chips": [],
+        "links": [
+          { "label": "Read the docs", "href": "https://omniflow-vpn.mintlify.site", "primary": true },
+          { "label": "GitHub ›", "href": "https://github.com/kewldan" }
+        ]
+      },
+      {
+        "id": "tether",
+        "name": "Tether",
+        "theme": "dark",
+        "gradient": "linear-gradient(90deg,#5ef0c2 0%,#3fb6ff 100%)",
+        "icon": { "src": "/media/te-icon.webp", "alt": "", "width": 128, "height": 128 },
+        "title": "adb.",
+        "titleDim": "Without the text file.",
+        "lead": "Every Android developer keeps a text file of adb commands. Tether puts all of it in one quiet, keyboard-first window.",
+        "showcase": {
+          "kind": "duo",
+          "back": { "src": "/media/te-overview.webp", "alt": "Tether: device overview with battery, storage, memory and CPU", "width": 1200, "height": 750 },
+          "front": { "src": "/media/te-palette.webp", "alt": "Tether: the ⌘K command palette", "width": 880, "height": 550 }
+        },
+        "specs": [
+          { "value": "⌘K", "label": "command palette for everything" },
+          { "value": "QR", "label": "Wi-Fi pairing" },
+          { "value": "OTA", "label": "signed updates" },
+          { "value": "Rust", "label": "core on Tauri, talks the adb protocol" }
+        ],
+        "points": [
+          "Screen mirroring with audio and recording, a file manager, APK installs to many devices at once",
+          "Logcat with crash detection, multi-tab shell, Wi-Fi pairing by QR, performance graphs",
+          "Talks to the adb server over its protocol instead of parsing the CLI; ⌘K palette, signed OTA updates"
+        ],
+        "chips": [],
+        "links": [{ "label": "Install with Homebrew ›", "href": "https://github.com/kewldan" }]
+      },
+      {
+        "id": "m3105",
+        "name": "m3105.ru",
+        "theme": "light",
+        "gradient": "linear-gradient(90deg,#ff9f1c 0%,#ff5f5f 100%)",
+        "icon": null,
+        "title": "My group's site.",
+        "titleDim": "The whole year opens it.",
+        "lead": "Deadlines, labs, lecture notes, quizzes and lab-defence sign-ups in one place. The whole year uses it.",
+        "showcase": {
+          "kind": "tiles",
+          "tiles": [
+            { "title": "Notes write themselves.", "body": "MDX notes with formulas, generated from voice recordings of lectures: transcript, diagrams and a quiz." },
+            { "title": "/cpp checks your code.", "body": "A Monaco editor where clang-tidy and clang-format check it against Google Style." },
+            { "title": "Works in the metro.", "body": "A PWA: notes open with no signal. Calendar with week parity and an ICS feed." }
+          ]
+        },
+        "specs": [],
+        "points": [],
+        "chips": ["«Шаверма» reviews", "«Анекдоты»", "⌘K full-text search", "Telegram or passkey login"],
+        "links": [{ "label": "Open m3105.ru", "href": "https://m3105.ru", "primary": true }]
+      },
+      {
+        "id": "logical",
+        "name": "Logical System",
+        "theme": "dark",
+        "gradient": "linear-gradient(90deg,#ffe14d 0%,#ffb36b 100%)",
+        "icon": null,
+        "title": "Logic gates.",
+        "titleDim": "All the way to a computer.",
+        "lead": "My oldest living project: released on itch.io in 2021 (rated 4.0/5), then remastered in C++20.",
+        "showcase": {
+          "kind": "logicDemo",
+          "hintOff": "Flip the switch.",
+          "hintOn": "Signal through. That is the whole idea, times 65,536 ticks a second."
+        },
+        "specs": [
+          { "value": "16", "label": "block types on an infinite grid" },
+          { "value": "65,536", "label": "ticks per second, max" },
+          { "value": "16-bit", "label": "SUBLEQ computer, built inside" },
+          { "value": "4.0/5", "label": "rating on itch.io" }
+        ],
+        "points": [],
+        "chips": [],
+        "links": [{ "label": "Play on itch.io ›", "href": "https://kewldan.itch.io" }]
+      },
+      {
+        "id": "goitmo",
+        "name": "go-itmo",
+        "theme": "dark",
+        "gradient": "linear-gradient(90deg,#3fd5ff 0%,#5a7bff 100%)",
+        "icon": null,
+        "title": "All of ITMO.",
+        "titleDim": "One Go import.",
+        "lead": "Plus the full ITMO.ID login: Keycloak, PKCE, OTP, SSO and refresh-token rotation. **Dependencies: just x/oauth2 and x/net.**",
+        "showcase": {
+          "kind": "bigNumbers",
+          "items": [
+            { "value": "452", "label": "routes of my.itmo.ru" },
+            { "value": "809", "label": "typed methods" },
+            { "value": "81", "label": "routes of the BARS REST API" }
+          ],
+          "command": "go get github.com/kewldan/go-itmo"
+        },
+        "specs": [],
+        "points": [],
+        "chips": [],
+        "links": [{ "label": "View on GitHub ›", "href": "https://github.com/kewldan" }]
+      }
+    ]
+  },
+  "numbers": {
+    "eyebrow": "The last twelve months",
+    "value": 2195,
+    "title": "contributions.",
+    "titleDim": "807 public. About 1,300 private.",
+    "trio": [
+      { "value": "8", "label": "years on GitHub" },
+      { "value": "65", "label": "pull requests" },
+      { "value": "42 + 16", "label": "public + private repos" }
+    ],
+    "note": "Peak year: **3,257 contributions in 2024.** Eight languages in production: C++, Go, TypeScript, Python, Rust, Kotlin, C and Lua.",
+    "packages": [
+      { "name": "tma-jwt", "registry": "npm", "href": "https://www.npmjs.com/package/tma-jwt" },
+      { "name": "aaio.js", "registry": "npm", "href": null },
+      { "name": "aiosmsactivate", "registry": "PyPI", "href": "https://pypi.org/project/aiosmsactivate/" },
+      { "name": "ITMO C++ Lab Kit", "registry": "VS Code Marketplace", "href": null },
+      { "name": "Tether", "registry": "Homebrew tap", "href": null },
+      { "name": "Logical System", "registry": "itch.io · 4.0/5", "href": "https://kewldan.itch.io" }
+    ]
+  },
+  "more": {
+    "label": { "index": "04", "title": "More work" },
+    "pull": "Twenty-eight smaller things, from a console Pong in 2022 to client work in 2026. _Client code is closed; descriptions only._",
+    "categories": [
+      { "id": "sys", "label": "Systems & Graphics" },
+      { "id": "web", "label": "Web & Backend" },
+      { "id": "tg", "label": "Telegram" },
+      { "id": "tools", "label": "Dev tools" },
+      { "id": "itmo", "label": "ITMO" },
+      { "id": "client", "label": "Client work" }
+    ],
+    "items": [
+      { "name": "ShooterGame", "categories": ["sys"], "year": "2022", "status": null, "what": "FPS prototype on a de_dust2 map.", "detail": "Deferred rendering, HDR + bloom, ACES, FXAA, god rays, SSAO, 4 shadow cascades, Bullet physics, UDP multiplayer.", "stack": "C++ · OpenGL · Bullet", "href": "https://github.com/kewldan", "media": null, "widget": null },
+      { "name": "VulkanEngine", "categories": ["sys"], "year": "2023", "status": "WIP", "what": "My own 3D engine on Vulkan.", "detail": "Separate render thread, VMA, an ImGui profiler, Bullet.", "stack": "C++ · Vulkan", "href": "https://github.com/kewldan", "media": null, "widget": null },
+      { "name": "Engine", "categories": ["sys"], "year": "2023", "status": null, "what": "A small C++20 OpenGL framework.", "detail": "The base my games are built on.", "stack": "C++20 · OpenGL", "href": "https://github.com/kewldan", "media": null, "widget": null },
+      { "name": "MinecraftServerCore", "categories": ["sys"], "year": "2023", "status": null, "what": "A Minecraft: Java Edition server core from scratch.", "detail": "Raw sockets: handshake, server list with MOTD and icon, the start of login. No reference code.", "stack": "C++", "href": "https://github.com/kewldan", "media": null, "widget": null },
+      { "name": "ConsolePong", "categories": ["sys"], "year": "2022", "status": null, "what": "Pong, a Tetris prototype and a ray-traced demo.", "detail": "All of it inside the Windows console.", "stack": "C++", "href": "https://github.com/kewldan", "media": null, "widget": null },
+      { "name": "ZagranRead", "categories": ["sys"], "year": null, "status": null, "what": "Reads the NFC chip of a biometric passport.", "detail": "ICAO 9303: PACE/BAC, Passive Authentication, fully offline.", "stack": "Kotlin · Compose · JMRTD", "href": "https://github.com/kewldan", "media": null, "widget": null },
+      { "name": "SteelSeriesDisplay", "categories": ["sys"], "year": null, "status": null, "what": "Now playing on a keyboard OLED.", "detail": "Title, artist, 40×40 1-bit cover art and a live progress bar on the 128×40 OLED of an Apex 7 / Apex Pro, through the GameSense API.", "stack": "Python · GameSense API", "href": "https://github.com/kewldan", "media": null, "widget": "oled" },
+      { "name": "tsar-trava", "categories": ["web"], "year": null, "status": "live", "what": "Landing page for a lawn-care studio in Pushkin.", "detail": "A live 3D field of 14–72k grass blades in WebGL: wind in the vertex shader, the cursor parts the grass, a map from OpenStreetMap data.", "stack": "React · Three.js · Vite", "href": "https://kewldan.github.io/tsar-trava", "media": { "src": "/media/tt-hero.webp", "alt": "tsar-trava: hero with a 3D field of grass", "width": 1200, "height": 750 }, "widget": null },
+      { "name": "selfsteal", "categories": ["web"], "year": null, "status": null, "what": "10 mask sites for VLESS Reality.", "detail": "One index.html each, zero external requests, all graphics inline SVG.", "stack": "HTML · SVG", "href": "https://github.com/kewldan", "media": null, "widget": null },
+      { "name": "itmo-bot", "categories": ["tg", "itmo"], "year": "2026", "status": null, "what": "Watches ITMO admission lists and estimates your odds.", "detail": "Forecast up to the enrolment date, multi-user. It was counting my own chances.", "stack": "Python · aiogram · PostgreSQL", "href": "https://github.com/kewldan", "media": null, "widget": null },
+      { "name": "egeResults", "categories": ["tg"], "year": "2026", "status": null, "what": "Pings followers when new EGE scores land.", "detail": "Plus a score card ready for stories.", "stack": "Telegram bot", "href": "https://github.com/kewldan", "media": null, "widget": null },
+      { "name": "OgeResultsBot · SolverBot", "categories": ["tg"], "year": "2023–24", "status": null, "what": "School bots for the OGE and EGE.", "detail": "Where my Telegram story started.", "stack": "Telegram bots", "href": "https://github.com/kewldan", "media": null, "widget": null },
+      { "name": "TelegramDnevnik", "categories": ["tg"], "year": "2024", "status": null, "what": "Mini App client for the St Petersburg e-diary.", "detail": "Grades, timetable, meal balance, turnstile passes.", "stack": "Next.js · FastAPI · MongoDB", "href": "https://github.com/kewldan", "media": null, "widget": null },
+      { "name": "GradesTracker", "categories": ["tg"], "year": "2025", "status": null, "what": "Mini App for grades and attendance.", "detail": "With an aurora background in WebGL.", "stack": "Telegram Mini App", "href": "https://github.com/kewldan", "media": null, "widget": null },
+      { "name": "Sudooky", "categories": ["tg"], "year": "2024", "status": "live", "what": "Sudoku inside Telegram.", "detail": "4 difficulty levels, confetti and haptics.", "stack": "Telegram Mini App", "href": "https://sudooky.vercel.app", "media": null, "widget": null },
+      { "name": "tma-jwt", "categories": ["tg", "tools"], "year": "2024", "status": "live", "what": "npm package: JWT auth for Telegram Mini Apps.", "detail": "The auth glue I kept rewriting, published once.", "stack": "TypeScript · npm", "href": "https://www.npmjs.com/package/tma-jwt", "media": null, "widget": null },
+      { "name": "ITMO C++ Lab Kit", "categories": ["tools", "itmo"], "year": "2026", "status": "live", "what": "VS Code extension: the course CI, locally.", "detail": "clang-tidy like the course CI, complexity over every function, GoogleTest in the test panel, git hooks, the lab brief as a checklist. macOS & WSL.", "stack": "VS Code extension", "href": "https://marketplace.visualstudio.com/search?term=ITMO%20C%2B%2B%20Lab%20Kit&target=VSCode", "media": null, "widget": null },
+      { "name": "C++ Example Checker", "categories": ["tools", "itmo"], "year": "2026", "status": null, "what": "One button checks your solution.", "detail": "Runs it against the example from the lab brief, right in VS Code.", "stack": "VS Code extension", "href": "https://github.com/kewldan", "media": null, "widget": null },
+      { "name": "claude-lobotomy", "categories": ["tools"], "year": null, "status": null, "what": "Edit Claude Code session history locally.", "detail": "“Change the memory, change the mind.” Zero dependencies.", "stack": "Local web app", "href": "https://github.com/kewldan", "media": null, "widget": null },
+      { "name": "claude-xray-test", "categories": ["tools"], "year": null, "status": null, "what": "Claude Code plugin for Xray configs.", "detail": "Runs one config on ~6 core versions in parallel and explains breakages with links to git history.", "stack": "Claude Code plugin", "href": "https://github.com/kewldan", "media": null, "widget": null },
+      { "name": "algs-lab1 · algs-lab2", "categories": ["itmo", "tools"], "year": "2026", "status": null, "what": "Starter kits for the algorithms labs.", "detail": "Made for the whole group.", "stack": "C++", "href": "https://github.com/kewldan", "media": null, "widget": null },
+      { "name": "ИСК «ВИТА»", "categories": ["client"], "year": "2026", "status": "client", "what": "A developer’s site moved from WordPress to Next.js.", "detail": "A catalogue of 4,220 units, picking a flat on the floor plan, a unit grid, facades, construction photo reports.", "stack": "Next.js", "href": null, "media": null, "widget": null },
+      { "name": "ЖК «Экспоград»", "categories": ["client"], "year": "2026", "status": "client", "what": "Resident portal for passes during SPIEF.", "detail": "Residents, cars, requests with statuses. Front end and back end.", "stack": "Full-stack", "href": null, "media": null, "widget": null },
+      { "name": "GeorgianCars", "categories": ["client"], "year": null, "status": "client", "what": "Car listings from Georgian Telegram channels.", "detail": "MTProto ingest, LLM parsing of free text into structure, filters and a “best deal” sort.", "stack": "MTProto · LLM", "href": null, "media": null, "widget": null },
+      { "name": "Open Balancer", "categories": ["client"], "year": null, "status": "client", "what": "A layer between VPN clients and Remnawave.", "detail": "Per-country balancing, cascading failover, sticky sessions, anti-sharing, Prometheus, an MCP server.", "stack": "Prometheus · MCP", "href": null, "media": null, "widget": null },
+      { "name": "SupportBot", "categories": ["client"], "year": null, "status": "client", "what": "LLM support userbot for a VPN.", "detail": "A self-learning knowledge base on multilingual-e5 embeddings.", "stack": "LLM · embeddings", "href": null, "media": null, "widget": null },
+      { "name": "ITMAX Leads", "categories": ["client", "tg"], "year": null, "status": "client", "what": "Mini App for tech-support requests.", "detail": "Requests come straight from Telegram.", "stack": "Telegram Mini App", "href": null, "media": null, "widget": null },
+      { "name": "YASC", "categories": ["client"], "year": null, "status": "WIP", "what": "Yes, Another SSH Client.", "detail": "Security-first: an encrypted vault, SFTP and tunnels.", "stack": "Rust · Tauri 2", "href": null, "media": null, "widget": null }
+    ]
+  },
+  "stack": {
+    "label": { "index": "05", "title": "Stack" },
+    "headline": ["C++", "Go", "TypeScript", "Python", "Next.js", "Docker"],
+    "note": "No skill bars. Grouped by where I've actually used it.",
+    "groups": [
+      { "id": "systems", "name": "Systems & graphics", "items": ["C++20", "C", "Rust", "CMake", "vcpkg", "OpenGL", "Vulkan", "GLSL/SPIR-V", "Bullet", "ImGui", "XDP/eBPF", "BoringSSL", "QUIC/HTTP3"], "usedIn": "LarpGuard, Logical System, ShooterGame" },
+      { "id": "backend", "name": "Backend", "items": ["Go (chi, pgx, sqlc, River)", "Python (FastAPI, aiogram, MTProto)", "Node / Bun"], "usedIn": "Omniflow, m3105.ru, go-itmo, itmo-bot" },
+      { "id": "frontend", "name": "Frontend", "items": ["TypeScript", "React 19", "Next.js 16", "Tailwind 4", "shadcn/ui", "Three.js", "MDX", "Framer Motion"], "usedIn": "m3105.ru, tsar-trava, Mini Apps" },
+      { "id": "desktop", "name": "Desktop & mobile", "items": ["Tauri 2", "Kotlin + Jetpack Compose", "VS Code extensions"], "usedIn": "Tether, YASC, ZagranRead, Lab Kit" },
+      { "id": "data", "name": "Data", "items": ["PostgreSQL", "ClickHouse", "MongoDB", "Valkey/Redis", "MinIO (S3)"], "usedIn": "LarpGuard, Omniflow, m3105.ru" },
+      { "id": "infra", "name": "Infra", "items": ["Docker", "Traefik", "nginx", "Linux", "GitHub Actions", "Prometheus", "OpenTelemetry", "Xray / VLESS Reality"], "usedIn": "self-hosted infra, Open Balancer, selfsteal" },
+      { "id": "ai", "name": "AI tooling", "items": ["LLM integrations (parsing, support, RAG)", "MCP servers", "Claude Code plugins"], "usedIn": "GeorgianCars, SupportBot, claude-xray-test" }
+    ]
+  },
+  "timeline": {
+    "label": { "index": "06", "title": "Timeline" },
+    "host": "kewldan@pushkin: ~",
+    "command": "git log --since=2018",
+    "commits": [
+      { "hash": "e7c1a09", "year": "2026", "message": "feat(life): enter ITMO", "body": "Passed the EGE (and wrote a bot for the results). Got into ITMO; itmo-bot was counting my own chances." },
+      { "hash": "d41f3b8", "year": "2026", "message": "feat: ship LarpGuard, Omniflow, Tether, m3105.ru", "body": "Plus the ITMO C++ Lab Kit, and client work for ИСК «ВИТА» and ЖК «Экспоград»." },
+      { "hash": "4b91d2e", "year": "2025", "message": "chore(school): 11th grade", "body": "GradesTracker and more Telegram projects, between exam prep." },
+      { "hash": "a3f9c21", "year": "2024", "message": "perf: 3,257 contributions", "body": "The peak year: the OGE and a bot for its results, Mini Apps (Dnevnik, Sudooky), the first npm and PyPI packages, the first paid orders." },
+      { "hash": "9d02b7f", "year": "2023", "message": "feat(engine): roll my own", "body": "An OpenGL framework, VulkanEngine, MinecraftServerCore, the Logical System remaster, Lua for CC: Tweaked, and the first Telegram bots." },
+      { "hash": "51ce8a3", "year": "2022", "message": "feat(gfx): hello, C++", "body": "ConsolePong, ShooterGame on OpenGL, utilities for Project Zomboid." },
+      { "hash": "c08e14d", "year": "2021", "message": "release: Logical System on itch.io", "body": "My profile said “Java programmer from Russia” back then." },
+      { "hash": "7a6b3f0", "year": "2020", "message": "feat: simulate life", "body": "First real projects: a life simulation in Python." },
+      { "hash": "0000001", "year": "2018", "message": "Initial commit", "body": "Joined GitHub in July 2018. I was about ten." }
+    ]
+  },
+  "offScreen": {
+    "label": { "index": "07", "title": "Off-screen" },
+    "car": {
+      "kicker": "Dream car · status: someday",
+      "name": "Porsche 911 GT3.",
+      "note": "huge wing!",
+      "image": { "src": "/media/gt3.webp", "alt": "Black Porsche 911 GT3 from the rear three-quarter, big swan-neck wing", "width": 1320, "height": 560 },
+      "imageLit": { "src": "/media/gt3-lit.webp", "alt": "", "width": 1320, "height": 560 }
+    },
+    "trip": {
+      "kicker": "Boarding pass",
+      "from": "LED",
+      "to": "HKT",
+      "fromCity": "Saint Petersburg",
+      "toCity": "Phuket",
+      "motto": "Next stop: everywhere",
+      "photo": null,
+      "photoPlaceholder": "[lion cub]"
+    },
+    "steam": {
+      "kicker": "My Steam · 90 games · level 12",
+      "games": [
+        { "name": "Counter-Strike 2", "hours": "288 h" },
+        { "name": "Factorio", "hours": null },
+        { "name": "Satisfactory", "hours": null },
+        { "name": "Deep Rock Galactic", "hours": null },
+        { "name": "Project Zomboid", "hours": null },
+        { "name": "City Car Driving", "hours": null }
+      ]
+    },
+    "cards": [
+      { "kicker": "Plan B", "title": "Pilot.", "body": "If I weren’t a programmer, I’d be a pilot.", "accent": "yellow" },
+      { "kicker": "Range day", "title": "Real range, real guns.", "body": "Shooting real guns at the range is one of my favourite ways to switch off.", "accent": "green" }
+    ]
+  },
+  "contact": {
+    "teaser": "One more thing.",
+    "title": "I'm open to offers.",
+    "body": "Internships in backend, systems or full-stack. Freelance: sites, Telegram bots and Mini Apps. Have a project, an internship or just a weird bug? Let’s talk.",
+    "links": [
+      { "label": "Message on Telegram", "href": "https://t.me/kewldan", "primary": true },
+      { "label": "GitHub ›", "href": "https://github.com/kewldan" }
+    ],
+    "socials": [
+      { "label": "GitHub", "href": "https://github.com/kewldan" },
+      { "label": "Telegram", "href": "https://t.me/kewldan" },
+      { "label": "LinkedIn", "href": "https://linkedin.com/in/kewldan" },
+      { "label": "X", "href": "https://x.com/kewldan" },
+      { "label": "itch.io", "href": "https://kewldan.itch.io" },
+      { "label": "npm", "href": "https://www.npmjs.com/~kewldan" }
+    ]
+  },
+  "dropout": {
+    "button": "— Отчислиться",
+    "note": "не нажимай",
+    "caller": "смерть в нищите",
+    "meme": { "src": "/media/call-meme.webp", "alt": "Входящий звонок. Звонит: смерть в нищите. На аватарке лев. Обе кнопки зелёные.", "width": 740, "height": 1140 }
+  },
+  "footer": {
+    "copyright": "© 2026 kewldan",
+    "thanks": "Thanks for reading!",
+    "source": { "label": "Source", "href": "https://github.com/kewldan/kewldan.ru" }
+  },
+  "watched": {
+    "eyebrow": "Films & series, rated by Daniel",
+    "title": "Watched.",
+    "description": "Every film and series I have watched lately, scored from 1 to 10 with one line on why.",
+    "emptyTitle": "Nothing rated yet.",
+    "emptyBody": "Daniel hasn’t rated anything yet. Check back soon."
+  }
+}
