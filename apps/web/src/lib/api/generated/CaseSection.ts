@@ -2,10 +2,11 @@
 
 export type CaseSection = { title: string, 
 /**
- * Rich paragraphs.
+ * Rich paragraphs. Required, even empty: the web app renders the raw
+ * JSON when the API is down, and it has no serde defaults.
  */
 body: Array<string>, 
 /**
- * Rich bullets.
+ * Rich bullets. Required, like `body`.
  */
 bullets: Array<string>, code?: string | null, };

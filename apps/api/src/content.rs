@@ -234,11 +234,10 @@ pub struct Case {
 #[ts(export)]
 pub struct CaseSection {
     pub title: String,
-    /// Rich paragraphs.
-    #[serde(default)]
+    /// Rich paragraphs. Required, even empty: the web app renders the raw
+    /// JSON when the API is down, and it has no serde defaults.
     pub body: Vec<String>,
-    /// Rich bullets.
-    #[serde(default)]
+    /// Rich bullets. Required, like `body`.
     pub bullets: Vec<String>,
     #[serde(default)]
     #[ts(optional = nullable)]
