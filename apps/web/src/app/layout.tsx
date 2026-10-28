@@ -3,6 +3,8 @@ import { Geist, Instrument_Sans, Instrument_Serif, JetBrains_Mono } from "next/f
 import Script from "next/script";
 
 import { Providers } from "@/components/providers";
+import { CommandPalette } from "@/components/site/command-palette";
+import { Konami } from "@/components/site/konami";
 import { getContent } from "@/lib/api/content";
 import { themeScript } from "@/lib/theme";
 import "./globals.css";
@@ -48,7 +50,8 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const { nav, work, contact } = await getContent();
   return (
     <html
       lang="en"
@@ -59,7 +62,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Script id="theme" strategy="beforeInteractive">
           {themeScript}
         </Script>
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <CommandPalette
+            sections={nav}
+            cases={work.projects.filter((p) => p.case).map((p) => ({ id: p.id, name: p.name, title: p.title }))}
+            socials={contact.socials}
+          />
+          <Konami />
+        </Providers>
       </body>
     </html>
   );
