@@ -12,21 +12,24 @@ import type { Title } from "@/lib/api/generated/Title";
 import type { WatchedPage } from "@/lib/api/generated/WatchedPage";
 import { ease, rise, spring, stagger, viewport } from "@/lib/motion";
 import { cn } from "@/lib/utils";
-import { adminApi, adminToken, type Credential, errorKey, fmtDate, tier } from "@/lib/watched";
+import { adminApi, adminToken, type Credential, errorKey, fmtScore, fmtWhen, tier, whenKey } from "@/lib/watched";
 
 import { AdminDialog } from "./admin-dialog";
 import { TitleForm } from "./title-form";
 
-const FILTERS = ["all", "movie", "series", "watching"] as const;
+const FILTERS = ["all", "movie", "series", "watching", "want"] as const;
 type Filter = (typeof FILTERS)[number];
 
 const SORTS = ["recent", "best", "worst", "title"] as const;
 type Sort = (typeof SORTS)[number];
 
+/** Unscored titles go last whichever way the scores are sorted. */
+const score = (x: Title, missing: number) => x.rating ?? missing;
+
 const sorters: Record<Sort, (a: Title, b: Title) => number> = {
-  recent: (a, b) => b.watched.localeCompare(a.watched) || b.createdAt - a.createdAt,
-  best: (a, b) => b.rating - a.rating || a.title.localeCompare(b.title),
-  worst: (a, b) => a.rating - b.rating || a.title.localeCompare(b.title),
+  recent: (a, b) => whenKey(b.watched) - whenKey(a.watched) || b.createdAt - a.createdAt,
+  best: (a, b) => score(b, -1) - score(a, -1) || a.title.localeCompare(b.title),
+  worst: (a, b) => score(a, 11) - score(b, 11) || a.title.localeCompare(b.title),
   title: (a, b) => a.title.localeCompare(b.title),
 };
 
@@ -73,23 +76,32 @@ export function WatchedView({ page, initial }: { page: WatchedPage; initial: Tit
   }, [armed]);
 
   const stats = useMemo(() => {
-    const hist = Array.from({ length: 10 }, (_, k) => items.filter((i) => i.rating === k + 1).length);
+    // "Want to watch" is a wish list: it counts in the filters, not the scores.
+    const seen = items.filter((i) => i.status !== "want");
+    const rated = seen.filter((i): i is Title & { rating: number } => i.rating !== null);
+    // 7.5 lands in the 7 bar.
+    const hist = Array.from({ length: 10 }, (_, k) => rated.filter((i) => Math.floor(i.rating) === k + 1).length);
     return {
-      movies: items.filter((i) => i.kind === "movie").length,
-      series: items.filter((i) => i.kind === "series").length,
+      seen: seen.length,
+      movies: seen.filter((i) => i.kind === "movie").length,
+      series: seen.filter((i) => i.kind === "series").length,
       watching: items.filter((i) => i.status === "watching").length,
-      tens: hist[9],
-      avg: items.length ? items.reduce((s, i) => s + i.rating, 0) / items.length : 0,
+      want: items.length - seen.length,
+      tens: rated.filter((i) => i.rating === 10).length,
+      avg: rated.length ? rated.reduce((s, i) => s + i.rating, 0) / rated.length : 0,
       hist,
       max: Math.max(1, ...hist),
-      best: items.toSorted((a, b) => b.rating - a.rating || b.watched.localeCompare(a.watched))[0],
+      best: rated.toSorted((a, b) => b.rating - a.rating || whenKey(b.watched) - whenKey(a.watched))[0],
     };
   }, [items]);
 
   const shown = useMemo(() => {
     const ql = q.trim().toLowerCase();
     return items
-      .filter((i) => filter === "all" || (filter === "watching" ? i.status === "watching" : i.kind === filter))
+      .filter(
+        (i) =>
+          filter === "all" || (filter === "watching" || filter === "want" ? i.status === filter : i.kind === filter),
+      )
       .filter((i) => !ql || i.title.toLowerCase().includes(ql) || i.note.toLowerCase().includes(ql))
       .toSorted(sorters[sort]);
   }, [items, filter, sort, q]);
@@ -99,6 +111,7 @@ export function WatchedView({ page, initial }: { page: WatchedPage; initial: Tit
     movie: stats.movies,
     series: stats.series,
     watching: stats.watching,
+    want: stats.want,
   };
 
   const saved = (x: Title) => {
@@ -145,7 +158,7 @@ export function WatchedView({ page, initial }: { page: WatchedPage; initial: Tit
           transition={{ delay: 0.4, duration: 0.6 }}
           className="text-[clamp(28px,4.4vw,58px)] leading-[1.06] font-semibold tracking-[-0.04em]"
         >
-          {plural(items.length, t.watched.titles)}
+          {plural(stats.seen, t.watched.titles)}
           <br />
           <span className="text-stage-dim">
             {stats.avg
@@ -371,7 +384,7 @@ function Spotlight({ best }: { best: Title }) {
       >
         <div style={{ ["--g" as string]: tier(best.rating).gradient }}>
           <CountUp
-            value={String(best.rating)}
+            value={fmtScore(best.rating)}
             className="gradient-text pb-[0.04em] text-[clamp(96px,16vw,200px)] leading-[0.85] font-bold tracking-[-0.07em]"
           />
         </div>
@@ -379,7 +392,7 @@ function Spotlight({ best }: { best: Title }) {
           {best.title}
         </h2>
         <p className="max-w-[46ch] text-[clamp(16px,1.7vw,20px)] leading-[1.45] text-stage-dim">
-          {meta(best)} · {fmt(t.watched.watchedOn, { date: fmtDate(best.watched) })}
+          {meta(best)} · {fmt(t.watched.watchedOn, { date: fmtWhen(best.watched) })}
         </p>
         {best.note && <p className="max-w-[46ch] text-[clamp(16px,1.7vw,20px)] text-stage-note">{best.note}</p>}
       </motion.div>
@@ -415,9 +428,9 @@ function Credit({
       <p
         className="gradient-text pb-[0.04em] text-right text-[52px] leading-[0.9] font-bold tracking-[-0.07em] tabular-nums md:text-[clamp(52px,6vw,80px)]"
         style={{ ["--g" as string]: tier(x.rating).gradient }}
-        aria-label={fmt(t.watched.scoreLabel, { n: x.rating })}
+        aria-label={x.rating === null ? t.watched.noScore : fmt(t.watched.scoreLabel, { n: x.rating })}
       >
-        {x.rating}
+        {fmtScore(x.rating)}
       </p>
       <div className="min-w-0">
         <h3 className="text-[clamp(22px,2.6vw,32px)] leading-[1.1] font-semibold tracking-[-0.035em] [overflow-wrap:anywhere]">
@@ -426,12 +439,14 @@ function Credit({
         <p className="mt-1.5 flex flex-wrap gap-x-2.5 gap-y-1 text-sm text-stage-dim">
           <span>{meta(x)}</span>
           {x.status === "watching" && <span className="text-[#e0a800]">{t.watched.watchingNow}</span>}
+          {x.status === "paused" && <span className="text-[#e0a800]">{t.watched.paused}</span>}
           {x.status === "dropped" && <span className="text-[#ff453a]">{t.watched.dropped}</span>}
+          {x.status === "want" && <span className="text-stage-link">{t.watched.wantTag}</span>}
         </p>
         {x.note && <p className="mt-2 max-w-[62ch] text-base leading-[1.45] text-stage-note">{x.note}</p>}
       </div>
       <p className="col-start-2 font-mono text-[12.5px] text-stage-dim tabular-nums md:col-start-auto md:text-right">
-        {fmtDate(x.watched)}
+        {fmtWhen(x.watched)}
       </p>
       <div className="col-start-2 flex gap-0.5 md:col-start-auto md:justify-end">
         {admin && (

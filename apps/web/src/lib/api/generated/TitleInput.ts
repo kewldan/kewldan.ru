@@ -7,14 +7,15 @@ import type { WatchStatus } from "./WatchStatus";
  */
 export type TitleInput = { title: string, kind: Kind, year: number | null, 
 /**
- * 1 to 10.
+ * 1 to 10 in half steps; none for titles not seen or not scored.
  */
-rating: number, status: WatchStatus, 
+rating: number | null, status: WatchStatus, 
 /**
  * Free text for series, e.g. "1–3".
  */
 seasons: string, note: string, 
 /**
- * `YYYY-MM-DD`.
+ * When, in words: "2024", "01.10.2026", "a few years ago",
+ * "winter 2023/24 – spring 2026". Empty for titles not seen yet.
  */
 watched: string, };

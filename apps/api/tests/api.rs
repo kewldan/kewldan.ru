@@ -186,7 +186,7 @@ async fn watched_list_is_public_and_edits_need_the_token() {
     let addr = spawn().await;
     let title = json!({
         "title": "Severance", "kind": "series", "year": 2022, "rating": 10,
-        "status": "watching", "seasons": "1–2", "note": "Music dance experience.", "watched": "2026-10-20"
+        "status": "watching", "seasons": "1–2", "note": "Music dance experience.", "watched": "autumn 2026"
     });
 
     assert_eq!(
@@ -248,7 +248,7 @@ async fn watched_list_is_public_and_edits_need_the_token() {
         .to_owned();
 
     let mut edited = title.clone();
-    edited["rating"] = json!(9);
+    edited["rating"] = json!(8.5);
     let path = format!("/api/admin/watched/{id}");
     assert_eq!(
         request(addr, "PUT", &path, Some("test-token"), Some(edited))
@@ -261,7 +261,7 @@ async fn watched_list_is_public_and_edits_need_the_token() {
     assert_eq!(status, 200);
     let items = serde_json::from_str::<Value>(&body).unwrap()["items"].clone();
     assert_eq!(items[0]["id"], json!(id));
-    assert_eq!(items[0]["rating"], json!(9));
+    assert_eq!(items[0]["rating"], json!(8.5));
     assert_eq!(items[0]["seasons"], json!("1–2"));
 
     assert_eq!(

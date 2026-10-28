@@ -41,7 +41,10 @@ pub enum Kind {
 pub enum Status {
     Watched,
     Watching,
+    Paused,
     Dropped,
+    /// On the list, not seen yet; left out of the scores.
+    Want,
 }
 
 /// What the admin form sends.
@@ -52,15 +55,17 @@ pub struct TitleInput {
     pub title: String,
     pub kind: Kind,
     pub year: Option<u16>,
-    /// 1 to 10.
-    pub rating: u8,
+    /// 1 to 10 in half steps; none for titles not seen or not scored.
+    pub rating: Option<f32>,
     pub status: Status,
     /// Free text for series, e.g. "1–3".
     #[serde(default)]
     pub seasons: String,
     #[serde(default)]
     pub note: String,
-    /// `YYYY-MM-DD`.
+    /// When, in words: "2024", "01.10.2026", "a few years ago",
+    /// "winter 2023/24 – spring 2026". Empty for titles not seen yet.
+    #[serde(default)]
     pub watched: String,
 }
 
@@ -83,32 +88,25 @@ impl TitleInput {
         self.title = self.title.trim().to_owned();
         self.seasons = self.seasons.trim().to_owned();
         self.note = self.note.trim().to_owned();
+        self.watched = self.watched.trim().to_owned();
         if self.title.is_empty() {
             return Err("title");
         }
         if self.title.chars().count() > 160
             || self.note.chars().count() > 400
             || self.seasons.chars().count() > 40
+            || self.watched.chars().count() > 60
         {
             return Err("too_long");
         }
-        if !(1..=10).contains(&self.rating) {
+        if self
+            .rating
+            .is_some_and(|r| !(1.0..=10.0).contains(&r) || (r * 2.0).fract() != 0.0)
+        {
             return Err("rating");
         }
         if self.year.is_some_and(|y| !(1880..2100).contains(&y)) {
             return Err("year");
-        }
-        let date = self.watched.as_bytes();
-        let ok_date = date.len() == 10
-            && date.iter().enumerate().all(|(i, b)| {
-                if i == 4 || i == 7 {
-                    *b == b'-'
-                } else {
-                    b.is_ascii_digit()
-                }
-            });
-        if !ok_date {
-            return Err("date");
         }
         if self.kind == Kind::Movie {
             self.seasons.clear();
@@ -156,12 +154,8 @@ impl Store {
                     .collect()
             }
         };
-        titles.sort_by(|a, b| {
-            b.input
-                .watched
-                .cmp(&a.input.watched)
-                .then(b.created_at.cmp(&a.created_at))
-        });
+        // Newest additions first; the page re-sorts by watch date, score or title.
+        titles.sort_by_key(|t| std::cmp::Reverse(t.created_at));
         Ok(titles)
     }
 
@@ -303,11 +297,11 @@ mod tests {
             title: "  Dune: Part Two ".into(),
             kind: Kind::Movie,
             year: Some(2024),
-            rating: 9,
+            rating: Some(9.0),
             status: Status::Watched,
             seasons: "1".into(),
             note: String::new(),
-            watched: "2026-10-28".into(),
+            watched: " 2024 ".into(),
         }
     }
 
@@ -315,27 +309,35 @@ mod tests {
     fn trims_and_drops_seasons_for_movies() {
         let v = input().validate().unwrap();
         assert_eq!(v.title, "Dune: Part Two");
+        assert_eq!(v.watched, "2024");
         assert!(v.seasons.is_empty());
     }
 
     #[test]
+    fn half_scores_and_no_score_are_fine() {
+        for rating in [Some(7.5), Some(1.0), Some(10.0), None] {
+            assert!(
+                TitleInput { rating, ..input() }.validate().is_ok(),
+                "{rating:?}"
+            );
+        }
+        let want = TitleInput {
+            status: Status::Want,
+            rating: None,
+            watched: String::new(),
+            ..input()
+        };
+        assert!(want.validate().is_ok());
+    }
+
+    #[test]
     fn rejects_bad_fields() {
-        assert!(
-            TitleInput {
-                rating: 0,
-                ..input()
-            }
-            .validate()
-            .is_err()
-        );
-        assert!(
-            TitleInput {
-                rating: 11,
-                ..input()
-            }
-            .validate()
-            .is_err()
-        );
+        for rating in [Some(0.0), Some(11.0), Some(7.3)] {
+            assert!(
+                TitleInput { rating, ..input() }.validate().is_err(),
+                "{rating:?}"
+            );
+        }
         assert!(
             TitleInput {
                 title: " ".into(),
@@ -354,7 +356,7 @@ mod tests {
         );
         assert!(
             TitleInput {
-                watched: "28.10.2026".into(),
+                watched: "x".repeat(61),
                 ..input()
             }
             .validate()
@@ -363,16 +365,12 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn store_lists_newest_first() {
+    async fn store_lists_newest_additions_first() {
         let store = Store::open(None, "t").await.unwrap();
-        for (i, day) in ["2026-01-01", "2026-03-01", "2026-02-01"]
-            .iter()
-            .enumerate()
-        {
+        for i in 0..3 {
             let (id, created_at) = store.new_id();
             let input = TitleInput {
                 title: format!("t{i}"),
-                watched: (*day).into(),
                 ..input()
             };
             store
@@ -383,14 +381,15 @@ mod tests {
                 })
                 .await
                 .unwrap();
+            tokio::time::sleep(std::time::Duration::from_millis(2)).await;
         }
-        let days: Vec<_> = store
+        let titles: Vec<_> = store
             .list()
             .await
             .unwrap()
             .into_iter()
-            .map(|t| t.input.watched)
+            .map(|t| t.input.title)
             .collect();
-        assert_eq!(days, ["2026-03-01", "2026-02-01", "2026-01-01"]);
+        assert_eq!(titles, ["t2", "t1", "t0"]);
     }
 }

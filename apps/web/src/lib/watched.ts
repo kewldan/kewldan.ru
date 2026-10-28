@@ -1,15 +1,41 @@
 import type { Title } from "@/lib/api/generated/Title";
 import type { TitleInput } from "@/lib/api/generated/TitleInput";
 
-/** Score tier → gradient and solid colour tokens. */
-export function tier(rating: number) {
+/** Score tier → gradient and solid colour tokens; no score is grey. */
+export function tier(rating: number | null) {
+  if (rating === null) return { gradient: "linear-gradient(#5a5a60,#5a5a60)", solid: "#5a5a60" };
   const t = rating >= 9 ? "top" : rating >= 7 ? "good" : rating >= 5 ? "mid" : "low";
   return { gradient: `var(--score-${t})`, solid: `var(--score-${t}-solid)` };
 }
 
-export const fmtDate = (s: string) => {
-  const [y, m, d] = s.split("-");
-  return y && m && d ? `${d}.${m}.${y}` : "—";
+/** 7.5 → "7.5", 9 → "9", none → "—". */
+export const fmtScore = (rating: number | null) => (rating === null ? "—" : String(rating));
+
+/** "When" as written; an ISO date from older entries reads as 28.10.2026. */
+export const fmtWhen = (s: string) => {
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return iso ? `${iso[3]}.${iso[2]}.${iso[1]}` : s || "—";
+};
+
+/**
+ * A sortable number from a free-form "when": "01.10.2026", "2024",
+ * "winter 2023/24 – spring 2026" (the latest year counts), "a few years ago"
+ * (unknown, sorts last).
+ */
+export function whenKey(s: string) {
+  const dmy = s.match(/(\d{2})\.(\d{2})\.(\d{4})/);
+  if (dmy) return Number(dmy[3]) * 10000 + Number(dmy[2]) * 100 + Number(dmy[1]);
+  const iso = s.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return Number(iso[1]) * 10000 + Number(iso[2]) * 100 + Number(iso[3]);
+  const years = [...s.matchAll(/(19|20)\d\d/g)].map((m) => Number(m[0]));
+  // A year alone counts as its start, so a known exact date in it ranks higher.
+  return years.length ? Math.max(...years) * 10000 : 0;
+}
+
+/** Today as 29.10.2026, the format new entries use. */
+export const today = () => {
+  const d = new Date();
+  return `${String(d.getDate()).padStart(2, "0")}.${String(d.getMonth() + 1).padStart(2, "0")}.${d.getFullYear()}`;
 };
 
 /** An error code from the API (or a network failure) → the key of a message. */

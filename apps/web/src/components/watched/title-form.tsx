@@ -15,17 +15,17 @@ import type { TitleInput } from "@/lib/api/generated/TitleInput";
 import type { WatchStatus } from "@/lib/api/generated/WatchStatus";
 import { ease, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
-import { adminApi, type Credential, errorKey, tier } from "@/lib/watched";
+import { adminApi, type Credential, errorKey, tier, today } from "@/lib/watched";
 
 const KINDS: Kind[] = ["movie", "series"];
-const STATUSES: WatchStatus[] = ["watched", "watching", "dropped"];
+const STATUSES: WatchStatus[] = ["watched", "watching", "paused", "dropped", "want"];
 
-/** `YYYY-MM-DD` in local time, the format the API stores. */
-const isoDay = (d: Date) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-const fromIsoDay = (s: string) => {
-  const [y, m, d] = s.split("-").map(Number);
-  return y && m && d ? new Date(y, m - 1, d) : undefined;
+/** 29.10.2026, the exact-date form of "when". */
+const dmy = (d: Date) =>
+  `${String(d.getDate()).padStart(2, "0")}.${String(d.getMonth() + 1).padStart(2, "0")}.${d.getFullYear()}`;
+const fromDmy = (s: string) => {
+  const m = s.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+  return m ? new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1])) : undefined;
 };
 
 const field = "flex min-w-0 flex-col gap-2";
@@ -48,11 +48,11 @@ export function TitleForm({ token, editing, onSaved, onCancel }: Props) {
           title: "",
           kind: "movie",
           year: "",
-          rating: 0,
+          rating: null,
           status: "watched",
           seasons: "",
           note: "",
-          watched: isoDay(new Date()),
+          watched: today(),
         }
       : { ...editing, year: editing.year ? String(editing.year) : "" },
   );
@@ -72,7 +72,6 @@ export function TitleForm({ token, editing, onSaved, onCancel }: Props) {
     e.preventDefault();
     if (busy) return;
     if (!form.title.trim()) return setErr(t.watched.errors.title);
-    if (!form.rating) return setErr(t.watched.errors.rating);
     const year = Number.parseInt(form.year, 10);
     const body: TitleInput = { ...form, year: Number.isFinite(year) ? year : null };
     setBusy(true);
@@ -86,7 +85,11 @@ export function TitleForm({ token, editing, onSaved, onCancel }: Props) {
     }
   };
 
-  const picked = fromIsoDay(form.watched);
+  const picked = fromDmy(form.watched);
+  const whole = form.rating === null ? 0 : Math.floor(form.rating);
+  const half = form.rating !== null && form.rating % 1 !== 0;
+  // Tapping the current score clears it: no score is allowed.
+  const pick = (n: number) => set("rating", whole === n ? null : n + (half && n < 10 ? 0.5 : 0));
 
   return (
     <motion.form
@@ -147,32 +150,48 @@ export function TitleForm({ token, editing, onSaved, onCancel }: Props) {
 
         <div className={cn(field, "md:col-span-6")}>
           <span className={label} id="f-rate">
-            {form.rating ? fmt(f.scoreValue, { n: form.rating }) : f.score}
+            {form.rating === null ? f.score : fmt(f.scoreValue, { n: form.rating })}
           </span>
-          <div role="radiogroup" aria-labelledby="f-rate" className="grid grid-cols-10 gap-1.5 md:gap-2">
-            {Array.from({ length: 10 }, (_, k) => k + 1).map((n) => {
-              const on = n <= form.rating;
-              return (
-                <motion.button
-                  key={n}
-                  type="button"
-                  role="radio"
-                  aria-checked={form.rating === n}
-                  aria-label={fmt(f.outOf, { n })}
-                  onClick={() => set("rating", n)}
-                  whileHover={{ scale: 1.08 }}
-                  whileTap={{ scale: 0.9 }}
-                  transition={spring.press}
-                  className={cn(
-                    "aspect-square min-h-8 rounded-full border text-[15px] font-semibold transition-colors",
-                    on ? "border-transparent text-black" : "border-stage-strong bg-stage-input text-stage-chip",
-                  )}
-                  style={on ? { background: tier(form.rating).solid } : undefined}
-                >
-                  {n}
-                </motion.button>
-              );
-            })}
+          <div className="flex items-center gap-2">
+            <div role="radiogroup" aria-labelledby="f-rate" className="grid flex-1 grid-cols-10 gap-1.5 md:gap-2">
+              {Array.from({ length: 10 }, (_, k) => k + 1).map((n) => {
+                const on = n <= whole;
+                return (
+                  <motion.button
+                    key={n}
+                    type="button"
+                    role="radio"
+                    aria-checked={whole === n}
+                    aria-label={fmt(f.outOf, { n })}
+                    onClick={() => pick(n)}
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.9 }}
+                    transition={spring.press}
+                    className={cn(
+                      "aspect-square min-h-8 rounded-full border text-[15px] font-semibold transition-colors",
+                      on ? "border-transparent text-black" : "border-stage-strong bg-stage-input text-stage-chip",
+                    )}
+                    style={on ? { background: tier(form.rating).solid } : undefined}
+                  >
+                    {n}
+                  </motion.button>
+                );
+              })}
+            </div>
+            <button
+              type="button"
+              aria-pressed={half}
+              aria-label={f.half}
+              disabled={whole === 0 || whole === 10}
+              onClick={() => set("rating", half ? whole : whole + 0.5)}
+              className={cn(
+                "min-h-8 shrink-0 rounded-full border px-2.5 text-[15px] font-semibold transition-colors disabled:opacity-40",
+                half ? "border-transparent text-black" : "border-stage-strong bg-stage-input text-stage-chip",
+              )}
+              style={half ? { background: tier(form.rating).solid } : undefined}
+            >
+              ½
+            </button>
           </div>
         </div>
         <div className={cn(field, "md:col-span-6")}>
@@ -189,39 +208,46 @@ export function TitleForm({ token, editing, onSaved, onCancel }: Props) {
         </div>
 
         <div className={cn(field, "md:col-span-3")}>
-          <span className={label} id="f-date">
+          <label className={label} htmlFor="f-date">
             {f.watchedOn}
-          </span>
-          <Popover open={dateOpen} onOpenChange={setDateOpen}>
-            <PopoverTrigger
-              aria-labelledby="f-date"
-              className={cn(input, "flex items-center justify-between gap-2 text-left")}
-            >
-              {picked
-                ? picked.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" })
-                : f.pickDate}
-              <CalendarIcon className="size-4 text-stage-dim" />
-            </PopoverTrigger>
-            <PopoverContent
-              align="start"
-              data-lenis-prevent
-              className="w-auto rounded-2xl border border-stage-frame bg-stage-tile p-2 text-stage-fg ring-0"
-            >
-              <Calendar
-                mode="single"
-                selected={picked}
-                defaultMonth={picked}
-                onSelect={(d) => {
-                  if (!d) return;
-                  set("watched", isoDay(d));
-                  setDateOpen(false);
-                }}
-                locale={enUS}
-                disabled={{ after: new Date() }}
-                className="bg-transparent font-stage"
-              />
-            </PopoverContent>
-          </Popover>
+          </label>
+          <div className="flex gap-1.5">
+            <input
+              id="f-date"
+              className={input}
+              maxLength={60}
+              placeholder={f.whenPlaceholder}
+              value={form.watched}
+              onChange={(e) => set("watched", e.target.value)}
+            />
+            <Popover open={dateOpen} onOpenChange={setDateOpen}>
+              <PopoverTrigger
+                aria-label={f.pickDate}
+                className="flex min-h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-stage-frame bg-stage-input text-stage-dim hover:text-stage-fg"
+              >
+                <CalendarIcon className="size-4" />
+              </PopoverTrigger>
+              <PopoverContent
+                align="end"
+                data-lenis-prevent
+                className="w-auto rounded-2xl border border-stage-frame bg-stage-tile p-2 text-stage-fg ring-0"
+              >
+                <Calendar
+                  mode="single"
+                  selected={picked}
+                  defaultMonth={picked}
+                  onSelect={(d) => {
+                    if (!d) return;
+                    set("watched", dmy(d));
+                    setDateOpen(false);
+                  }}
+                  locale={enUS}
+                  disabled={{ after: new Date() }}
+                  className="bg-transparent font-stage"
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
         {form.kind === "series" && (
           <div className={cn(field, "md:col-span-3")}>
