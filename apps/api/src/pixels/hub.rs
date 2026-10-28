@@ -134,11 +134,21 @@ impl Hub {
             ink: Mutex::new(HashMap::new()),
         });
         if let Backend::Valkey { client, keys, .. } = &hub.backend {
+            let (ready, subscribed) = tokio::sync::oneshot::channel();
             tokio::spawn(subscribe_loop(
                 Arc::clone(&hub),
                 client.clone(),
                 keys.clone(),
+                ready,
             ));
+            // Events published before the subscription exists would be lost:
+            // serve nobody until it is up.
+            if tokio::time::timeout(Duration::from_secs(10), subscribed)
+                .await
+                .is_err()
+            {
+                tracing::warn!("valkey subscription is slow to start; continuing");
+            }
         }
         tokio::spawn(heartbeat_loop(Arc::clone(&hub)));
         Ok(hub)
@@ -385,10 +395,17 @@ async fn load_or_seed(conn: &mut ConnectionManager, key: &str) -> anyhow::Result
     Ok(seed)
 }
 
-async fn subscribe_loop(hub: Arc<Hub>, client: redis::Client, keys: Keys) {
+/// Keeps a subscription alive; `ready` fires once the first one is live.
+async fn subscribe_loop(
+    hub: Arc<Hub>,
+    client: redis::Client,
+    keys: Keys,
+    ready: tokio::sync::oneshot::Sender<()>,
+) {
     let mut backoff = Duration::from_millis(250);
+    let mut ready = Some(ready);
     loop {
-        match subscribe_once(&hub, &client, &keys).await {
+        match subscribe_once(&hub, &client, &keys, &mut ready).await {
             Ok(()) => tracing::warn!("valkey subscription ended, reconnecting"),
             Err(err) => tracing::warn!(%err, "valkey subscription failed, reconnecting"),
         }
@@ -397,7 +414,12 @@ async fn subscribe_loop(hub: Arc<Hub>, client: redis::Client, keys: Keys) {
     }
 }
 
-async fn subscribe_once(hub: &Hub, client: &redis::Client, keys: &Keys) -> anyhow::Result<()> {
+async fn subscribe_once(
+    hub: &Hub,
+    client: &redis::Client,
+    keys: &Keys,
+    ready: &mut Option<tokio::sync::oneshot::Sender<()>>,
+) -> anyhow::Result<()> {
     let mut pubsub = client.get_async_pubsub().await?;
     pubsub.subscribe(&keys.events).await?;
     // Subscribed first, then resync, so no event falls in the gap.
@@ -408,6 +430,9 @@ async fn subscribe_once(hub: &Hub, client: &redis::Client, keys: &Keys) -> anyho
         });
     }
     tracing::info!(channel = %keys.events, "subscribed");
+    if let Some(ready) = ready.take() {
+        let _ = ready.send(());
+    }
     let mut messages = pubsub.on_message();
     while let Some(msg) = messages.next().await {
         let payload: String = msg.get_payload()?;
