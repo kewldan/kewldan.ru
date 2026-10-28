@@ -1,5 +1,6 @@
 //! Portfolio API: site content, the live pixel board and the Watched list.
 
+pub mod auth;
 pub mod config;
 pub mod content;
 pub mod pixels;
@@ -33,6 +34,7 @@ pub struct AppState {
     pub stats: Arc<stats::Stats>,
     pub hub: Arc<Hub>,
     pub watched: Arc<watched::Store>,
+    pub auth: Arc<auth::Auth>,
 }
 
 impl AppState {
@@ -45,12 +47,19 @@ impl AppState {
         let hub = Hub::start(config.valkey_url.as_deref(), &config.valkey_namespace).await?;
         let watched =
             watched::Store::open(config.valkey_url.as_deref(), &config.valkey_namespace).await?;
+        let auth = auth::Auth::open(
+            &config.webauthn_origin,
+            config.valkey_url.as_deref(),
+            &config.valkey_namespace,
+        )
+        .await?;
         Ok(Self {
             config: Arc::new(config),
             content: Arc::new(RwLock::new(Arc::new(content))),
             stats,
             hub,
             watched: Arc::new(watched),
+            auth: Arc::new(auth),
         })
     }
 }
@@ -59,6 +68,10 @@ pub fn router(state: AppState) -> Router {
     let admin = Router::new()
         // Lets the site check a pasted token before showing the editor.
         .route("/check", get(|| async { StatusCode::NO_CONTENT }))
+        .route("/passkeys", get(auth::list))
+        .route("/passkeys/register/start", post(auth::register_start))
+        .route("/passkeys/register/finish", post(auth::register_finish))
+        .route("/passkeys/{id}", axum::routing::delete(auth::delete))
         .route("/content/reload", post(reload_content))
         .route("/watched", post(watched::create))
         .route(
@@ -71,6 +84,10 @@ pub fn router(state: AppState) -> Router {
 
     let api = Router::new()
         .route("/health", get(health))
+        .route("/auth/passkey", get(auth::available))
+        .route("/auth/passkey/login/start", post(auth::login_start))
+        .route("/auth/passkey/login/finish", post(auth::login_finish))
+        .route("/auth/logout", post(auth::logout))
         .route("/content", get(get_content))
         .route("/stats", get(get_stats))
         .route("/pixels", get(pixels::board))
@@ -141,19 +158,26 @@ async fn get_stats(State(app): State<AppState>) -> Json<std::collections::BTreeM
     Json(app.stats.snapshot())
 }
 
+/// Admin routes take either `Authorization: Bearer $ADMIN_TOKEN` or the
+/// session cookie a passkey sign-in sets.
 async fn require_admin(State(app): State<AppState>, req: Request, next: Next) -> Response {
     let Some(token) = app.config.admin_token.as_deref() else {
         return StatusCode::NOT_FOUND.into_response();
     };
-    let given = req
+    let bearer = req
         .headers()
         .get(header::AUTHORIZATION)
         .and_then(|v| v.to_str().ok())
         .and_then(|v| v.strip_prefix("Bearer "));
-    match given {
-        Some(given) if constant_time_eq(given.as_bytes(), token.as_bytes()) => next.run(req).await,
-        _ => StatusCode::UNAUTHORIZED.into_response(),
+    if bearer.is_some_and(|given| constant_time_eq(given.as_bytes(), token.as_bytes())) {
+        return next.run(req).await;
     }
+    if let Some(session) = auth::session_cookie(req.headers())
+        && app.auth.session_valid(session).await
+    {
+        return next.run(req).await;
+    }
+    StatusCode::UNAUTHORIZED.into_response()
 }
 
 fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {

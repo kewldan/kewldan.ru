@@ -24,6 +24,9 @@ pub struct Config {
     pub stats_refresh: bool,
     /// `ADMIN_TOKEN`. Unset disables every `/api/admin` route.
     pub admin_token: Option<String>,
+    /// `WEBAUTHN_ORIGIN`, where the site is served; passkeys are bound to its
+    /// host. Default `http://localhost:3000` for development.
+    pub webauthn_origin: String,
     /// `ALLOWED_ORIGINS`, comma separated. Empty allows any origin, which is
     /// only meant for development.
     pub allowed_origins: Vec<String>,
@@ -72,6 +75,8 @@ impl Config {
             },
             stats_refresh: var("STATS_REFRESH").is_none_or(|v| v != "0"),
             admin_token: var("ADMIN_TOKEN"),
+            webauthn_origin: var("WEBAUTHN_ORIGIN")
+                .unwrap_or_else(|| "http://localhost:3000".into()),
             allowed_origins: var("ALLOWED_ORIGINS")
                 .map(|v| {
                     v.split(',')
@@ -100,6 +105,7 @@ impl Config {
             },
             stats_refresh: false,
             admin_token: Some("test-token".into()),
+            webauthn_origin: "http://localhost:3000".into(),
             allowed_origins: Vec::new(),
             trust_proxy: false,
             json_logs: false,

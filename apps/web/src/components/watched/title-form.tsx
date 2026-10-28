@@ -15,7 +15,7 @@ import type { TitleInput } from "@/lib/api/generated/TitleInput";
 import type { WatchStatus } from "@/lib/api/generated/WatchStatus";
 import { ease, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
-import { adminApi, errorKey, tier } from "@/lib/watched";
+import { adminApi, type Credential, errorKey, tier } from "@/lib/watched";
 
 const KINDS: Kind[] = ["movie", "series"];
 const STATUSES: WatchStatus[] = ["watched", "watching", "dropped"];
@@ -34,7 +34,7 @@ const input =
   "min-h-11 w-full rounded-xl border border-stage-frame bg-stage-input px-3.5 text-[15px] text-stage-fg placeholder:text-stage-dim";
 
 type Props = {
-  token: string;
+  token: Credential;
   editing: Title | "new";
   onSaved: (t: Title) => void;
   onCancel: () => void;

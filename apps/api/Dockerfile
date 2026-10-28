@@ -2,6 +2,9 @@
 # Build context: apps/api
 
 FROM rust:1-slim-bookworm AS build
+# webauthn-rs verifies passkeys with OpenSSL.
+RUN apt-get update && apt-get install -y --no-install-recommends pkg-config libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 COPY . .
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
@@ -9,7 +12,8 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
     cargo build --release --locked \
     && cp target/release/portfolio-api /portfolio-api
 
-FROM gcr.io/distroless/cc-debian12:nonroot
+# "base" rather than "cc": it carries libssl for webauthn-rs.
+FROM gcr.io/distroless/base-debian12:nonroot
 COPY --from=build /portfolio-api /portfolio-api
 # A copy of the content for CONTENT_PATH; the binary also embeds it.
 COPY content /content

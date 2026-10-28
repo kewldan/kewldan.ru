@@ -57,6 +57,8 @@ services:
       TRUST_PROXY: "1"
       ALLOWED_ORIGINS: https://${DOMAIN:-kewldan.ru}
       ADMIN_TOKEN: ${ADMIN_TOKEN:?set ADMIN_TOKEN in .env}
+      # Passkeys привязаны к этому адресу; сменишь домен — придётся добавить их заново.
+      WEBAUTHN_ORIGIN: https://${DOMAIN:-kewldan.ru}
       # Контент из репозитория (en.json, stats.json): после правки —
       #   curl -XPOST -H "Authorization: Bearer $ADMIN_TOKEN" https://kewldan.ru/api/admin/content/reload
       CONTENT_DIR: /content

@@ -12,7 +12,7 @@ import type { Title } from "@/lib/api/generated/Title";
 import type { WatchedPage } from "@/lib/api/generated/WatchedPage";
 import { ease, rise, spring, stagger, viewport } from "@/lib/motion";
 import { cn } from "@/lib/utils";
-import { adminApi, adminToken, errorKey, fmtDate, tier } from "@/lib/watched";
+import { adminApi, adminToken, type Credential, errorKey, fmtDate, tier } from "@/lib/watched";
 
 import { AdminDialog } from "./admin-dialog";
 import { TitleForm } from "./title-form";
@@ -47,16 +47,21 @@ export function WatchedView({ page, initial }: { page: WatchedPage; initial: Tit
   const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = useState<Sort>("recent");
   const [q, setQ] = useState("");
-  const [token, setToken] = useState<string | null>(null);
+  // Signed in either with the admin token (kept here) or a passkey session
+  // (an HttpOnly cookie the browser sends itself, so `token` stays null).
+  const [admin, setAdmin] = useState(false);
+  const [token, setToken] = useState<Credential>(null);
   const [editing, setEditing] = useState<Title | "new" | null>(null);
   const [armed, setArmed] = useState<string | null>(null);
 
-  // A token saved on this device unlocks editing; re-check it quietly.
+  // Already signed in on this device? Re-check quietly.
   useEffect(() => {
     const saved = adminToken.get();
-    if (!saved) return;
     adminApi.check(saved).then(
-      () => setToken(saved),
+      () => {
+        setToken(saved);
+        setAdmin(true);
+      },
       () => adminToken.set(null),
     );
   }, []);
@@ -103,7 +108,7 @@ export function WatchedView({ page, initial }: { page: WatchedPage; initial: Tit
   };
 
   const remove = async (x: Title) => {
-    if (!token) return;
+    if (!admin) return;
     if (armed !== x.id) return setArmed(x.id);
     setArmed(null);
     try {
@@ -245,7 +250,7 @@ export function WatchedView({ page, initial }: { page: WatchedPage; initial: Tit
                 ))}
               </SelectContent>
             </Select>
-            {token && !editing && (
+            {admin && !editing && (
               <Button variant="pill" size="pill" onClick={() => setEditing("new")}>
                 {t.watched.add}
               </Button>
@@ -254,7 +259,7 @@ export function WatchedView({ page, initial }: { page: WatchedPage; initial: Tit
         </div>
 
         <AnimatePresence initial={false}>
-          {token && editing && (
+          {admin && editing && (
             <TitleForm
               key={editing === "new" ? "new" : editing.id}
               token={token}
@@ -267,7 +272,7 @@ export function WatchedView({ page, initial }: { page: WatchedPage; initial: Tit
 
         {initial === null && <Blank title={t.watched.unavailable} body={t.watched.tryLater} />}
         {initial !== null && items.length === 0 && (
-          <Blank title={page.emptyTitle} body={token ? t.watched.addFirst : page.emptyBody} />
+          <Blank title={page.emptyTitle} body={admin ? t.watched.addFirst : page.emptyBody} />
         )}
         {items.length > 0 && shown.length === 0 && <Blank title={t.watched.noMatches} body={t.watched.noMatchesBody} />}
 
@@ -280,7 +285,7 @@ export function WatchedView({ page, initial }: { page: WatchedPage; initial: Tit
                     key={x.id}
                     x={x}
                     index={i}
-                    admin={!!token}
+                    admin={admin}
                     armed={armed === x.id}
                     onEdit={() => setEditing(x)}
                     onRemove={() => remove(x)}
@@ -296,11 +301,18 @@ export function WatchedView({ page, initial }: { page: WatchedPage; initial: Tit
         <div className="wrap flex flex-wrap justify-between gap-3 py-5 text-[12.5px] text-stage-dim">
           <span>© 2026 kewldan</span>
           <AdminDialog
+            admin={admin}
             token={token}
-            onToken={(next) => {
+            onSignIn={(next) => {
               setToken(next);
               adminToken.set(next);
-              if (!next) setEditing(null);
+              setAdmin(true);
+            }}
+            onSignOut={() => {
+              setToken(null);
+              adminToken.set(null);
+              setAdmin(false);
+              setEditing(null);
             }}
           />
         </div>

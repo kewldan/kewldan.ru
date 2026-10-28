@@ -287,3 +287,67 @@ async fn content_has_stats_filled_in() {
     assert_eq!(content["numbers"]["value"], json!("2,195"));
     assert!(!body.contains("{gh."), "every placeholder is filled");
 }
+
+#[tokio::test]
+async fn passkey_endpoints_guard_the_admin() {
+    let addr = spawn().await;
+    let (status, body) = request(addr, "GET", "/api/auth/passkey", None, None).await;
+    assert_eq!(status, 200);
+    assert_eq!(
+        serde_json::from_str::<Value>(&body).unwrap()["available"],
+        json!(false)
+    );
+
+    // Nothing to sign in with yet.
+    let (status, body) = request(addr, "POST", "/api/auth/passkey/login/start", None, None).await;
+    assert_eq!(status, 404);
+    assert!(body.contains("no_passkeys"));
+
+    // Adding a passkey needs the admin.
+    assert_eq!(
+        request(
+            addr,
+            "POST",
+            "/api/admin/passkeys/register/start",
+            None,
+            None
+        )
+        .await
+        .0,
+        401
+    );
+    let (status, body) = request(
+        addr,
+        "POST",
+        "/api/admin/passkeys/register/start",
+        Some("test-token"),
+        None,
+    )
+    .await;
+    assert_eq!(status, 200);
+    let start: Value = serde_json::from_str(&body).unwrap();
+    assert_eq!(
+        start["options"]["publicKey"]["rp"]["id"],
+        json!("localhost")
+    );
+    assert!(start["id"].as_str().is_some_and(|s| !s.is_empty()));
+
+    // A finish without the ceremony behind it is refused.
+    let bogus = json!({ "id": "nope", "credential": {
+        "id": "x", "rawId": "eA", "type": "public-key",
+        "response": { "attestationObject": "eA", "clientDataJSON": "eA" } } });
+    let (status, body) = request(
+        addr,
+        "POST",
+        "/api/admin/passkeys/register/finish",
+        Some("test-token"),
+        Some(bogus),
+    )
+    .await;
+    assert_eq!(status, 400);
+    assert!(body.contains("expired"));
+
+    // Logging out always clears the cookie.
+    let (status, _) = request(addr, "POST", "/api/auth/logout", None, None).await;
+    assert_eq!(status, 204);
+}
