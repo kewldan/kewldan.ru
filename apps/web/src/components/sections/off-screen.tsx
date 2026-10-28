@@ -13,6 +13,8 @@ import { t } from "@/lib/copy";
 import { ease, spring, viewport } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
+import { Casings } from "./casings";
+
 const box =
   "brutal flex min-w-0 flex-col gap-3 bg-surface p-5.5 shadow-[7px_7px_0_var(--ink)] transition-[translate,box-shadow] duration-(--dur-fast) hover:-translate-y-1 hover:shadow-[7px_11px_0_var(--ink)]";
 const kicker = "font-mono text-xs tracking-[0.06em] uppercase";
@@ -102,13 +104,20 @@ export function OffScreen({ off }: { off: OffScreenContent }) {
           </div>
         </RevealItem>
 
-        {off.cards.map((c) => (
-          <RevealItem key={c.title} className={cn(box, accentBg[c.accent])}>
-            <span className={kicker}>{c.kicker}</span>
-            <h3 className="text-box leading-[0.95] font-bold tracking-[-0.045em]">{c.title}</h3>
-            <p className="text-[16.5px] leading-[1.45] font-medium">{c.body}</p>
-          </RevealItem>
-        ))}
+        {off.cards.map((c) => {
+          const casings = c.widget === "casings";
+          return (
+            <RevealItem
+              key={c.title}
+              className={cn(box, accentBg[c.accent], casings && "relative isolate min-h-72 overflow-hidden")}
+            >
+              {casings && <Casings />}
+              <span className={cn(kicker, "relative")}>{c.kicker}</span>
+              <h3 className="relative text-box leading-[0.95] font-bold tracking-[-0.045em]">{c.title}</h3>
+              <p className="relative text-[16.5px] leading-[1.45] font-medium">{c.body}</p>
+            </RevealItem>
+          );
+        })}
       </RevealGroup>
     </section>
   );

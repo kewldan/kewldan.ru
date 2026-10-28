@@ -786,7 +786,7 @@
     },
     "cards": [
       { "kicker": "Plan B", "title": "Pilot.", "body": "If I weren’t a programmer, I’d be a pilot.", "accent": "yellow" },
-      { "kicker": "Range day", "title": "Real range, real guns.", "body": "Shooting real guns at the range is one of my favourite ways to switch off.", "accent": "green" }
+      { "kicker": "Range day", "title": "Real range, real guns.", "body": "Shooting real guns at the range is one of my favourite ways to switch off.", "accent": "green", "widget": "casings" }
     ]
   },
   "contact": {

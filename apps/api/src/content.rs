@@ -458,6 +458,10 @@ pub struct Card {
     pub title: String,
     pub body: String,
     pub accent: Accent,
+    /// A live background behind the text (`"casings"`).
+    #[serde(default)]
+    #[ts(optional = nullable)]
+    pub widget: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
