@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/opengraph-image": ["./src/og/fonts/**"],
     "/watched/opengraph-image": ["./src/og/fonts/**"],
+    "/work/*/opengraph-image": ["./src/og/fonts/**"],
   },
   cacheComponents: true,
   partialPrefetching: true,

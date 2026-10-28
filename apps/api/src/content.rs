@@ -212,6 +212,37 @@ pub struct Project {
     pub points: Vec<String>,
     pub chips: Vec<String>,
     pub links: Vec<Link>,
+    /// The long read at `/work/{id}`.
+    pub case: Option<Case>,
+}
+
+/// A case study: the story behind a project.
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[ts(export)]
+pub struct Case {
+    /// Rich. One or two sentences under the title.
+    pub summary: String,
+    pub facts: Vec<Spec>,
+    /// The architecture as a left-to-right chain of steps.
+    pub pipeline: Vec<String>,
+    pub sections: Vec<CaseSection>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[ts(export)]
+pub struct CaseSection {
+    pub title: String,
+    /// Rich paragraphs.
+    #[serde(default)]
+    pub body: Vec<String>,
+    /// Rich bullets.
+    #[serde(default)]
+    pub bullets: Vec<String>,
+    #[serde(default)]
+    #[ts(optional = nullable)]
+    pub code: Option<String>,
 }
 
 /// The bespoke centrepiece of a project slide.

@@ -4,6 +4,7 @@ import { Reveal, RevealGroup, RevealItem } from "@/components/motion/reveal";
 import { Rich } from "@/components/rich";
 import type { Project } from "@/lib/api/generated/Project";
 import type { Work as WorkContent } from "@/lib/api/generated/Work";
+import { t as copy } from "@/lib/copy";
 import { cn } from "@/lib/utils";
 
 import { KeynoteTitle, Points, Specs } from "./keynote";
@@ -104,7 +105,10 @@ function Slide({ project: p }: { project: Project }) {
             ))}
           </RevealGroup>
         )}
-        <SlideLinks links={p.links} linkClass={t.link} />
+        <SlideLinks
+          links={p.case ? [...p.links, { label: copy.work.readCase, href: `/work/${p.id}` }] : p.links}
+          linkClass={t.link}
+        />
       </div>
     </div>
   );

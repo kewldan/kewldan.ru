@@ -110,7 +110,87 @@
           "XDP/eBPF prefilter with its own loader; gradient-boosting inference in C++ in microseconds"
         ],
         "chips": [],
-        "links": [{ "label": "View on GitHub ›", "href": "https://github.com/kewldan/LarpGuard" }]
+        "links": [{ "label": "View on GitHub ›", "href": "https://github.com/kewldan/LarpGuard" }],
+        "case": {
+          "summary": "A bot filter I run in front of my own servers. Faking a User-Agent takes one line; faking a browser's TCP handshake, TLS hello, HTTP/2 settings and header order all at once is another story. LarpGuard checks that **the whole stack agrees**.",
+          "facts": [
+            {
+              "value": "2026",
+              "label": "started"
+            },
+            {
+              "value": "Solo",
+              "label": "from the kernel to the dashboard"
+            },
+            {
+              "value": "C++20",
+              "label": "BoringSSL, ngtcp2, eBPF"
+            },
+            {
+              "value": "µs",
+              "label": "per verdict, ML included"
+            }
+          ],
+          "pipeline": [
+            "XDP prefilter",
+            "TCP SYN",
+            "TLS · JA4",
+            "HTTP/2 · QUIC",
+            "Score",
+            "Verdict"
+          ],
+          "sections": [
+            {
+              "title": "Why build it",
+              "body": [
+                "Bots lie about who they are, and the commercial answer is a black box sitting in front of all your traffic. I wanted the same depth of inspection on my own servers, with rules I can read and data that stays with me."
+              ]
+            },
+            {
+              "title": "Every layer, one question",
+              "body": [
+                "Each connection is fingerprinted on every layer it passes through, and the fingerprints are checked against each other: does this stack match the browser the client claims to be?"
+              ],
+              "bullets": [
+                "**TCP SYN**: window size, option order and TTL, before a single byte of TLS.",
+                "**TLS**: JA4, JA4T and JA4H, read straight from the ClientHello.",
+                "**HTTP/2 and QUIC**: SETTINGS frames, pseudo-header order, transport parameters.",
+                "A consistency score sorts every client into `human`, `suspicious`, `bot` or `verified_bot`."
+              ]
+            },
+            {
+              "title": "Proxies without proxy lists",
+              "body": [
+                "A proxy adds a hop, and a hop shows up as time. LarpGuard compares the round trip of the TCP handshake with the round trip of the TLS 1.3 handshake; when they disagree, someone is in the middle. No IP lists to buy or keep fresh."
+              ]
+            },
+            {
+              "title": "The fast path lives in the kernel",
+              "body": [
+                "Known-bad traffic never reaches userspace: an XDP/eBPF prefilter with its own loader (no libbpf) drops it at the network card. Honeypot paths, a tarpit and decoy responses waste the time of whoever is left."
+              ]
+            },
+            {
+              "title": "It learns from its own traffic",
+              "body": [
+                "Every decision is an event in ClickHouse. A gradient-boosting model is trained on those events and runs inside the C++ gateway in microseconds. The grey zone gets a JS challenge with proof of work and my own CAPTCHA; real crawlers are verified by DNS and IP ranges, and Web Bot Auth signatures (Ed25519)."
+              ]
+            },
+            {
+              "title": "Rules people can read",
+              "body": [
+                "Policies are written in a small rule language, and rate limits use GCRA kept in sync across instances through Valkey."
+              ],
+              "code": "path ~ \"/admin*\" and class != \"human\" => challenge\nja4 in known_bad => drop\nrate(ip, 100/min) => tarpit"
+            },
+            {
+              "title": "Stack",
+              "body": [
+                "C++20, BoringSSL, HTTP/3 on ngtcp2 and nghttp3, XDP/BPF, ClickHouse, Valkey, behind Traefik."
+              ]
+            }
+          ]
+        }
       },
       {
         "id": "omniflow",
@@ -137,7 +217,68 @@
         "links": [
           { "label": "Read the docs", "href": "https://omniflow-vpn.mintlify.site", "primary": true },
           { "label": "GitHub ›", "href": "https://github.com/kewldan/omniflow" }
-        ]
+        ],
+        "case": {
+          "summary": "My own VPN business, turned into an open platform: the Telegram bot customers buy from, the billing behind it, support, marketing and an admin panel, all on top of Remnawave, **without owning Xray**.",
+          "facts": [
+            {
+              "value": "2026",
+              "label": "open-sourced"
+            },
+            {
+              "value": "Live",
+              "label": "runs a real VPN service"
+            },
+            {
+              "value": "Go 1.26",
+              "label": "chi, pgx, sqlc, River"
+            },
+            {
+              "value": "3",
+              "label": "payment providers"
+            }
+          ],
+          "pipeline": [
+            "Telegram bot",
+            "Billing",
+            "Outbox",
+            "Remnawave"
+          ],
+          "sections": [
+            {
+              "title": "Why open it up",
+              "body": [
+                "Running a VPN service is mostly not about VPN: it is plans, payments, refunds, support and a bot people actually enjoy using. Every Remnawave operator rebuilds that glue. Omniflow is the glue, done once and properly."
+              ]
+            },
+            {
+              "title": "A whole shop inside Telegram",
+              "bullets": [
+                "A plan catalogue with purchase, renewal and upgrade.",
+                "Payments through **Telegram Stars**, **CryptoBot** and **YooKassa**.",
+                "Promo codes, a wallet, referrals and support tickets, in Russian and English."
+              ]
+            },
+            {
+              "title": "Money done carefully",
+              "body": [
+                "Plans are immutable versions, so changing a price never rewrites what someone already paid for. Refunds and top-ups go through a wallet ledger, and access is granted through a **transactional outbox**: the payment and the job that provisions the subscription commit together, and River retries the job until Remnawave confirms it."
+              ]
+            },
+            {
+              "title": "An admin panel with real access control",
+              "body": [
+                "Staff sign in with Argon2id passwords, passkeys, TOTP or OIDC. Six roles decide who sees what, and every action lands in an audit log."
+              ]
+            },
+            {
+              "title": "Stack",
+              "body": [
+                "Go 1.26 with chi, pgx, sqlc and River; PostgreSQL 18, Valkey 9, OpenTelemetry; Next.js and shadcn/ui for the admin; documentation on Mintlify."
+              ]
+            }
+          ]
+        }
       },
       {
         "id": "tether",
@@ -165,7 +306,70 @@
           "Talks to the adb server over its protocol instead of parsing the CLI; ⌘K palette, signed OTA updates"
         ],
         "chips": [],
-        "links": [{ "label": "Install with Homebrew ›", "href": "https://github.com/kewldan/homebrew-tap" }]
+        "links": [{ "label": "Install with Homebrew ›", "href": "https://github.com/kewldan/homebrew-tap" }],
+        "case": {
+          "summary": "Every Android developer keeps a text file of adb commands. Tether replaces it with **one quiet, keyboard-first window** that talks to the adb server directly.",
+          "facts": [
+            {
+              "value": "2026",
+              "label": "released"
+            },
+            {
+              "value": "macOS",
+              "label": "via a Homebrew tap"
+            },
+            {
+              "value": "Rust",
+              "label": "core on Tauri"
+            },
+            {
+              "value": "⌘K",
+              "label": "everything one shortcut away"
+            }
+          ],
+          "pipeline": [
+            "React UI",
+            "Tauri IPC",
+            "Rust core",
+            "adb protocol",
+            "Device"
+          ],
+          "sections": [
+            {
+              "title": "Talking to adb, not around it",
+              "body": [
+                "Most adb GUIs shell out to the CLI and parse its text. Tether speaks the adb server's own protocol from Rust, so it gets structured answers, streams and many devices at once without guessing at output formats."
+              ]
+            },
+            {
+              "title": "Everything in one window",
+              "bullets": [
+                "Screen mirroring through scrcpy-server, with audio and recording.",
+                "A file manager, and APK installs to several devices in one go.",
+                "Logcat that spots crashes, and a shell with tabs.",
+                "Wi-Fi pairing by QR code, performance graphs, developer toggles, OTA sideload."
+              ]
+            },
+            {
+              "title": "Keyboard first",
+              "body": [
+                "A ⌘K palette reaches every action. Spring animations, light and dark themes, Russian and English."
+              ]
+            },
+            {
+              "title": "Shipping it",
+              "body": [
+                "Signed over-the-air updates, distributed through my own Homebrew tap."
+              ]
+            },
+            {
+              "title": "Stack",
+              "body": [
+                "Tauri and Rust underneath; React, TypeScript, Tailwind and shadcn/ui on top."
+              ]
+            }
+          ]
+        }
       },
       {
         "id": "m3105",
@@ -187,7 +391,76 @@
         "specs": [],
         "points": [],
         "chips": ["«Шаверма» reviews", "«Анекдоты»", "⌘K full-text search", "Telegram or passkey login"],
-        "links": [{ "label": "Open m3105.ru", "href": "https://m3105.ru", "primary": true }]
+        "links": [{ "label": "Open m3105.ru", "href": "https://m3105.ru", "primary": true }],
+        "case": {
+          "summary": "My ITMO group's site: deadlines, labs, lecture notes, quizzes and sign-ups for lab defences in one place. **The whole year uses it**, every day.",
+          "facts": [
+            {
+              "value": "2026",
+              "label": "launched"
+            },
+            {
+              "value": "Live",
+              "label": "m3105.ru"
+            },
+            {
+              "value": "PWA",
+              "label": "works with no signal"
+            },
+            {
+              "value": "Go + Next.js",
+              "label": "Postgres, MinIO"
+            }
+          ],
+          "pipeline": [
+            "Lecture recording",
+            "Transcript",
+            "MDX notes",
+            "Diagrams",
+            "Quiz"
+          ],
+          "sections": [
+            {
+              "title": "Why",
+              "body": [
+                "Deadlines lived in five chats, the lab rules in PDFs and the notes in someone's photos. I put all of it into one site the group actually opens."
+              ]
+            },
+            {
+              "title": "What it does",
+              "bullets": [
+                "A calendar that knows odd and even weeks, with an ICS feed for any calendar app.",
+                "Labs with scores, sign-ups for defences and personal \"done\" marks.",
+                "Sign-in with Telegram or a passkey; comments under everything.",
+                "⌘K full-text search on Postgres."
+              ]
+            },
+            {
+              "title": "Notes that write themselves",
+              "body": [
+                "I record lectures on my phone. A pipeline transcribes them, writes MDX notes with formulas, draws the diagrams and builds a quiz, so the notes are on the site the same evening."
+              ]
+            },
+            {
+              "title": "/cpp checks your code",
+              "body": [
+                "A Monaco editor where clang-tidy and clang-format check code against Google Style, exactly like the course CI. The checker runs in an empty, read-only container with no network, because it reads strangers' code."
+              ]
+            },
+            {
+              "title": "The human bits",
+              "body": [
+                "Reviews of «Шаверма» spots near the campus and a feed of «Анекдоты». Nobody asked for them; everybody reads them."
+              ]
+            },
+            {
+              "title": "Stack",
+              "body": [
+                "Next.js 16, React 19, Tailwind 4 and MDX; Go (chi), PostgreSQL, Valkey, MinIO, imgproxy and nginx."
+              ]
+            }
+          ]
+        }
       },
       {
         "id": "logical",
@@ -211,7 +484,69 @@
         ],
         "points": [],
         "chips": [],
-        "links": [{ "label": "Play on itch.io ›", "href": "https://kewldan.itch.io" }]
+        "links": [{ "label": "Play on itch.io ›", "href": "https://kewldan.itch.io" }],
+        "case": {
+          "summary": "A Turing-complete sandbox of logic gates. My oldest living project: released on itch.io in 2021 (**rated 4.0/5**), then rebuilt from scratch in C++20.",
+          "facts": [
+            {
+              "value": "2021",
+              "label": "first release"
+            },
+            {
+              "value": "4.0/5",
+              "label": "on itch.io"
+            },
+            {
+              "value": "65,536",
+              "label": "ticks per second, max"
+            },
+            {
+              "value": "C++20",
+              "label": "OpenGL, ImGui"
+            }
+          ],
+          "pipeline": [
+            "Switch",
+            "Wire",
+            "OR",
+            "Wire",
+            "Lamp"
+          ],
+          "sections": [
+            {
+              "title": "From a school project to a remaster",
+              "body": [
+                "The first version shipped when my profile still said \"Java programmer from Russia\". The remaster keeps the idea and rewrites everything else in modern C++."
+              ]
+            },
+            {
+              "title": "The simulation",
+              "bullets": [
+                "16 block types on an infinite 2D grid.",
+                "Event-driven: only what changed is recomputed, from 2 up to 65,536 ticks a second."
+              ]
+            },
+            {
+              "title": "What people build in it",
+              "body": [
+                "The examples go from an RS latch and adders to an 8-bit adder with seven-segment displays, and finally an **autonomous 16-bit SUBLEQ computer** running inside the sandbox."
+              ]
+            },
+            {
+              "title": "Under the hood",
+              "bullets": [
+                "Instanced rendering and HDR bloom, so thousands of glowing wires stay smooth.",
+                "Undo and redo, and an autosave that survives a crash."
+              ]
+            },
+            {
+              "title": "Stack",
+              "body": [
+                "C++20, OpenGL, ImGui and CMake."
+              ]
+            }
+          ]
+        }
       },
       {
         "id": "goitmo",
@@ -234,7 +569,61 @@
         "specs": [],
         "points": [],
         "chips": [],
-        "links": [{ "label": "View on GitHub ›", "href": "https://github.com/kewldan/go-itmo" }]
+        "links": [{ "label": "View on GitHub ›", "href": "https://github.com/kewldan/go-itmo" }],
+        "case": {
+          "summary": "An unofficial Go library for the whole ITMO ecosystem: every route of my.itmo.ru and the BARS gradebook, plus the full ITMO.ID login. **Two dependencies.**",
+          "facts": [
+            {
+              "value": "452",
+              "label": "my.itmo.ru routes"
+            },
+            {
+              "value": "809",
+              "label": "typed methods"
+            },
+            {
+              "value": "81",
+              "label": "BARS REST routes"
+            },
+            {
+              "value": "2",
+              "label": "dependencies"
+            }
+          ],
+          "pipeline": [
+            "ITMO.ID",
+            "my.itmo.ru",
+            "BARS"
+          ],
+          "sections": [
+            {
+              "title": "Why",
+              "body": [
+                "Every student tool around ITMO re-implements the same login and scrapes the same pages. I wanted one typed client that does it right, so my own bots and sites could stop doing it badly."
+              ]
+            },
+            {
+              "title": "Coverage",
+              "bullets": [
+                "All **452** routes of my.itmo.ru as **809** typed methods.",
+                "All **81** routes of the BARS REST API."
+              ]
+            },
+            {
+              "title": "The login, all of it",
+              "body": [
+                "ITMO.ID is Keycloak. The library handles PKCE, one-time codes, single sign-on across ITMO services and refresh-token rotation, so a session just keeps working."
+              ]
+            },
+            {
+              "title": "Small on purpose",
+              "body": [
+                "The only dependencies are `golang.org/x/oauth2` and `golang.org/x/net`."
+              ],
+              "code": "go get github.com/kewldan/go-itmo"
+            }
+          ]
+        }
       }
     ]
   },

@@ -1,5 +1,6 @@
 import { parseRich } from "@/components/rich";
 import type { Content } from "@/lib/api/generated/Content";
+import type { Project } from "@/lib/api/generated/Project";
 
 import { ogFamily as f } from "./fonts";
 
@@ -249,6 +250,82 @@ export function WatchedCard({ content, domain }: { content: Content; domain: str
             }}
           >
             {n}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** A case study's share card: the project's gradient name, its headline and pipeline. */
+export function CaseCard({ project: p, handle, domain }: { project: Project; handle: string; domain: string }) {
+  const nameSize = Math.min(200, Math.floor(1088 / (p.name.length * 0.56)));
+  const steps = p.case?.pipeline ?? [];
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        padding: "40px 56px",
+        background: "radial-gradient(circle at 50% 30%, #1c1a33 0%, #0b0b0e 55%, #000 100%)",
+        color: "#f5f5f7",
+        fontFamily: f.stage,
+      }}
+    >
+      <div style={{ display: "flex", width: "100%", justifyContent: "space-between", fontSize: 22 }}>
+        <span style={{ fontWeight: 700 }}>{handle}</span>
+        <span style={{ fontWeight: 500, color: "#d2d2d7" }}>
+          {domain}/work/{p.id}
+        </span>
+      </div>
+      <div style={{ display: "flex", marginTop: 60, fontSize: 28, fontWeight: 500, color: "#8a8a90" }}>Case study</div>
+      <div
+        style={{
+          display: "flex",
+          fontSize: nameSize,
+          fontWeight: 700,
+          letterSpacing: -nameSize * 0.055,
+          lineHeight: 1,
+          backgroundImage: p.gradient,
+          backgroundClip: "text",
+          color: "transparent",
+          paddingBottom: 10,
+        }}
+      >
+        {p.name}
+      </div>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          fontSize: 44,
+          fontWeight: 700,
+          letterSpacing: -2,
+          lineHeight: 1.1,
+        }}
+      >
+        <span>{p.title}</span>
+        <span style={{ color: "#8a8a90" }}>{p.titleDim}</span>
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10, marginTop: "auto" }}>
+        {steps.map((s, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {i > 0 && <div style={{ width: 22, height: 2, backgroundImage: p.gradient }} />}
+            <div
+              style={{
+                display: "flex",
+                padding: "10px 16px",
+                borderRadius: 16,
+                border: "1px solid #2c2c2e",
+                background: "#1c1c1e",
+                fontSize: 20,
+                fontWeight: 500,
+              }}
+            >
+              {s}
+            </div>
           </div>
         ))}
       </div>

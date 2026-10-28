@@ -23,7 +23,7 @@ export function KeynoteTitle({
   title: string;
   dim: string;
   dimClass: string;
-  as?: "h2" | "p";
+  as?: "h1" | "h2" | "p";
   className?: string;
 }) {
   const M = motion[Tag];
@@ -53,8 +53,13 @@ export function CountUp({ value, className }: { value: string; className?: strin
   // "2,195" (the API formats it) plus an optional suffix.
   const match = value.match(/^(\d{1,3}(?:,\d{3})+|\d+)(.*)$/);
   const target = match ? Number(match[1].replace(/\D/g, "")) : NaN;
+  // "2026" is a year, not "2,026": group digits only when the source does.
+  const grouped = match?.[1].includes(",") ?? false;
   const mv = useMotionValue(0);
-  const text = useTransform(mv, (v) => Math.round(v).toLocaleString("en-US") + (match?.[2] ?? ""));
+  const text = useTransform(
+    mv,
+    (v) => (grouped ? Math.round(v).toLocaleString("en-US") : String(Math.round(v))) + (match?.[2] ?? ""),
+  );
 
   useEffect(() => {
     if (!inView || Number.isNaN(target)) return;
