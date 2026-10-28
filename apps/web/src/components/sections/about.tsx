@@ -1,10 +1,16 @@
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/reveal";
 import { Rich } from "@/components/rich";
 import { SectionLabel } from "@/components/section-label";
+import type { Dictionary } from "@/i18n/dictionaries/en";
 import type { About as AboutContent } from "@/lib/api/generated/About";
 import { cn } from "@/lib/utils";
 
-const STAMPS = ["-rotate-3 bg-yellow", "rotate-2 bg-white", "-rotate-1 bg-pink", "rotate-3 bg-white"];
+const STAMPS = [
+  "-rotate-3 bg-yellow text-on-accent",
+  "rotate-2 bg-surface",
+  "-rotate-1 bg-pink text-on-accent",
+  "rotate-3 bg-surface",
+];
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -15,7 +21,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
-export function About({ about }: { about: AboutContent }) {
+export function About({ about, t }: { about: AboutContent; t: Dictionary["about"] }) {
   return (
     <section id="about" className="wrap grid-index border-t-[1.5px] border-ink py-section">
       <SectionLabel label={about.label} />
@@ -24,14 +30,14 @@ export function About({ about }: { about: AboutContent }) {
           <p className="max-w-[24ch] text-pull font-medium text-pretty">{about.pull}</p>
         </Reveal>
         <RevealGroup className="flex flex-col border-t-[1.5px] border-ink">
-          <Row label="Right now">
+          <Row label={t.now}>
             <ul className="flex flex-col gap-0.5">
               {about.now.map((x) => (
                 <li key={x}>{x}</li>
               ))}
             </ul>
           </Row>
-          <Row label="Character">
+          <Row label={t.character}>
             <ul className="mb-2.5 flex flex-wrap gap-2.5">
               {about.traits.map((t, i) => (
                 <li
@@ -47,16 +53,16 @@ export function About({ about }: { about: AboutContent }) {
             </ul>
             <p className="text-ink-muted">{about.traitsNote}</p>
           </Row>
-          <Row label="Love & hate">
+          <Row label={t.loveHate}>
             <div className="grid grid-cols-1 gap-4.5 md:grid-cols-2">
-              <LoveHate title="love +" items={about.love} className="bg-green" />
-              <LoveHate title="hate −" items={about.hate} note={about.hateNote} className="bg-pink" />
+              <LoveHate title={t.love} items={about.love} className="bg-green text-on-accent" />
+              <LoveHate title={t.hate} items={about.hate} note={about.hateNote} className="bg-pink text-on-accent" />
             </div>
           </Row>
-          <Row label="Hobbies">
+          <Row label={t.hobbies}>
             <p>{about.hobbies}</p>
           </Row>
-          <Row label="Desk">
+          <Row label={t.desk}>
             <p>
               <Rich text={about.desk} />
             </p>

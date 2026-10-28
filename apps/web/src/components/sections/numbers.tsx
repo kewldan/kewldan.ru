@@ -18,7 +18,7 @@ export function Numbers({ numbers }: { numbers: NumbersContent }) {
           <p className="text-eyebrow font-semibold text-stage-dim">{numbers.eyebrow}</p>
         </Reveal>
         <CountUp
-          value={numbers.value.toLocaleString("en-US")}
+          value={numbers.value}
           className="block gradient-text pb-[0.05em] text-mega font-bold tracking-[-0.065em]"
         />
         <KeynoteTitle

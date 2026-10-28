@@ -78,25 +78,25 @@ pub struct Title {
 }
 
 impl TitleInput {
-    /// Trims and checks every field; the error is shown to the admin as is.
-    fn validate(mut self) -> Result<Self, String> {
+    /// Trims and checks every field. Errors are codes the site translates.
+    fn validate(mut self) -> Result<Self, &'static str> {
         self.title = self.title.trim().to_owned();
         self.seasons = self.seasons.trim().to_owned();
         self.note = self.note.trim().to_owned();
         if self.title.is_empty() {
-            return Err("Add a title first.".into());
+            return Err("title");
         }
         if self.title.chars().count() > 160
             || self.note.chars().count() > 400
             || self.seasons.chars().count() > 40
         {
-            return Err("Too long: title up to 160 characters, note up to 400.".into());
+            return Err("too_long");
         }
         if !(1..=10).contains(&self.rating) {
-            return Err("Pick a score from 1 to 10.".into());
+            return Err("rating");
         }
         if self.year.is_some_and(|y| !(1880..2100).contains(&y)) {
-            return Err("The year looks wrong.".into());
+            return Err("year");
         }
         let date = self.watched.as_bytes();
         let ok_date = date.len() == 10
@@ -108,7 +108,7 @@ impl TitleInput {
                 }
             });
         if !ok_date {
-            return Err("The date must look like 2026-10-28.".into());
+            return Err("date");
         }
         if self.kind == Kind::Movie {
             self.seasons.clear();
@@ -207,10 +207,10 @@ fn now_ms() -> u64 {
         .map_or(0, |d| d.as_millis() as u64)
 }
 
-fn bad_request(message: String) -> Response {
+fn bad_request(code: &str) -> Response {
     (
         StatusCode::UNPROCESSABLE_ENTITY,
-        Json(json!({ "error": message })),
+        Json(json!({ "error": code })),
     )
         .into_response()
 }
@@ -219,7 +219,7 @@ fn internal(err: anyhow::Error) -> Response {
     tracing::error!(error = %format!("{err:#}"), "watched store failed");
     (
         StatusCode::INTERNAL_SERVER_ERROR,
-        Json(json!({ "error": "Could not save. Try again in a moment." })),
+        Json(json!({ "error": "save" })),
     )
         .into_response()
 }
@@ -240,7 +240,7 @@ pub async fn create(State(app): State<AppState>, Json(input): Json<TitleInput>) 
     };
     match app.watched.len().await {
         Ok(n) if n >= MAX_TITLES => {
-            return bad_request("The list is full. Delete a few titles first.".into());
+            return bad_request("full");
         }
         Err(err) => return internal(err),
         Ok(_) => {}

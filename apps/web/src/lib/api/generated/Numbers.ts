@@ -4,9 +4,10 @@ import type { Spec } from "./Spec";
 
 export type Numbers = { eyebrow: string, 
 /**
- * Counted up from zero when the slide scrolls into view.
+ * Counted up from zero when the slide scrolls into view. Usually a
+ * stats placeholder such as `{gh.contributions}`.
  */
-value: number, title: string, titleDim: string, trio: Array<Spec>, 
+value: string, title: string, titleDim: string, trio: Array<Spec>, 
 /**
  * Rich.
  */

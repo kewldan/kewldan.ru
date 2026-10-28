@@ -13,8 +13,14 @@ pub struct Config {
     pub valkey_url: Option<String>,
     /// `VALKEY_NAMESPACE`, default `px`: prefix for the board key and channel.
     pub valkey_namespace: String,
-    /// `CONTENT_PATH`. Unset serves the content compiled into the binary.
-    pub content_path: Option<PathBuf>,
+    /// `CONTENT_DIR` with `en.json`, `ru.json` and `stats.json`. Unset
+    /// serves the copies compiled into the binary.
+    pub content_dir: Option<PathBuf>,
+    /// `GITHUB_LOGIN` (default `kewldan`), `GITHUB_TOKEN`, `STEAM_API_KEY`,
+    /// `STEAM_ID`, `STATS_REFRESH_SECS` (default 6 hours).
+    pub stats: crate::stats::Sources,
+    /// `STATS_REFRESH=0` turns the background refresh off (tests, offline).
+    pub stats_refresh: bool,
     /// `ADMIN_TOKEN`. Unset disables every `/api/admin` route.
     pub admin_token: Option<String>,
     /// `ALLOWED_ORIGINS`, comma separated. Empty allows any origin, which is
@@ -36,7 +42,19 @@ impl Config {
                 .parse()?,
             valkey_url: var("VALKEY_URL"),
             valkey_namespace: var("VALKEY_NAMESPACE").unwrap_or_else(|| "px".into()),
-            content_path: var("CONTENT_PATH").map(PathBuf::from),
+            content_dir: var("CONTENT_DIR").map(PathBuf::from),
+            stats: crate::stats::Sources {
+                github_login: var("GITHUB_LOGIN").unwrap_or_else(|| "kewldan".into()),
+                github_token: var("GITHUB_TOKEN"),
+                steam_key: var("STEAM_API_KEY"),
+                steam_id: var("STEAM_ID"),
+                every: std::time::Duration::from_secs(
+                    var("STATS_REFRESH_SECS")
+                        .and_then(|v| v.parse().ok())
+                        .unwrap_or(6 * 3600),
+                ),
+            },
+            stats_refresh: var("STATS_REFRESH").is_none_or(|v| v != "0"),
             admin_token: var("ADMIN_TOKEN"),
             allowed_origins: var("ALLOWED_ORIGINS")
                 .map(|v| {
@@ -56,7 +74,15 @@ impl Config {
             addr: "127.0.0.1:0".parse().unwrap(),
             valkey_url: None,
             valkey_namespace: "px".into(),
-            content_path: None,
+            content_dir: None,
+            stats: crate::stats::Sources {
+                github_login: "kewldan".into(),
+                github_token: None,
+                steam_key: None,
+                steam_id: None,
+                every: std::time::Duration::from_secs(3600),
+            },
+            stats_refresh: false,
             admin_token: Some("test-token".into()),
             allowed_origins: Vec::new(),
             trust_proxy: false,

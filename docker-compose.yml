@@ -57,9 +57,13 @@ services:
       TRUST_PROXY: "1"
       ALLOWED_ORIGINS: https://${DOMAIN:-kewldan.ru}
       ADMIN_TOKEN: ${ADMIN_TOKEN:?set ADMIN_TOKEN in .env}
-      # Контент из репозитория: после правки en.json на сервере —
+      # Контент из репозитория (en.json, ru.json, stats.json): после правки —
       #   curl -XPOST -H "Authorization: Bearer $ADMIN_TOKEN" https://kewldan.ru/api/admin/content/reload
-      CONTENT_PATH: /content/en.json
+      CONTENT_DIR: /content
+      # Живые цифры: без токенов берётся то, что GitHub отдаёт публично.
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      STEAM_API_KEY: ${STEAM_API_KEY:-}
+      STEAM_ID: ${STEAM_ID:-}
       LOG_FORMAT: json
       TZ: ${TZ:-Europe/Moscow}
     volumes:

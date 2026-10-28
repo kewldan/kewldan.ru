@@ -3,6 +3,7 @@
 pub mod config;
 pub mod content;
 pub mod pixels;
+pub mod stats;
 pub mod watched;
 
 use std::{
@@ -12,7 +13,7 @@ use std::{
 
 use axum::{
     Json, Router,
-    extract::{ConnectInfo, FromRequestParts, Request, State},
+    extract::{ConnectInfo, FromRequestParts, Query, Request, State},
     http::{HeaderMap, HeaderValue, StatusCode, header, request::Parts},
     middleware::{self, Next},
     response::{IntoResponse, Response},
@@ -22,26 +23,32 @@ use serde_json::json;
 use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 
 pub use config::Config;
-use content::Snapshot;
+use content::{Library, Locale};
 use pixels::Hub;
 
 #[derive(Clone)]
 pub struct AppState {
     pub config: Arc<Config>,
-    pub content: Arc<RwLock<Arc<Snapshot>>>,
+    pub content: Arc<RwLock<Arc<Library>>>,
+    pub stats: Arc<stats::Stats>,
     pub hub: Arc<Hub>,
     pub watched: Arc<watched::Store>,
 }
 
 impl AppState {
     pub async fn new(config: Config) -> anyhow::Result<Self> {
-        let content = Snapshot::load(config.content_path.as_deref()).await?;
+        let content = Library::load(config.content_dir.as_deref()).await?;
+        let stats = Arc::new(stats::Stats::new(content.stats.clone()));
+        if config.stats_refresh {
+            stats::spawn_refresh(Arc::clone(&stats), config.stats.clone());
+        }
         let hub = Hub::start(config.valkey_url.as_deref(), &config.valkey_namespace).await?;
         let watched =
             watched::Store::open(config.valkey_url.as_deref(), &config.valkey_namespace).await?;
         Ok(Self {
             config: Arc::new(config),
             content: Arc::new(RwLock::new(Arc::new(content))),
+            stats,
             hub,
             watched: Arc::new(watched),
         })
@@ -65,6 +72,7 @@ pub fn router(state: AppState) -> Router {
     let api = Router::new()
         .route("/health", get(health))
         .route("/content", get(get_content))
+        .route("/stats", get(get_stats))
         .route("/pixels", get(pixels::board))
         .route("/pixels/ws", get(pixels::ws))
         .route("/watched", get(watched::list))
@@ -81,10 +89,29 @@ async fn health(State(app): State<AppState>) -> Json<serde_json::Value> {
     Json(json!({ "status": "ok", "board": app.hub.backend_name() }))
 }
 
-/// `GET /api/content`, with ETag revalidation.
-async fn get_content(State(app): State<AppState>, headers: HeaderMap) -> Response {
-    let snapshot = Arc::clone(&app.content.read().unwrap());
-    let etag = HeaderValue::from_str(&snapshot.etag).expect("etag is ascii");
+#[derive(serde::Deserialize)]
+struct ContentQuery {
+    locale: Option<String>,
+}
+
+/// `GET /api/content?locale=ru`, with ETag revalidation. Stats placeholders
+/// are filled in here, so the ETag changes when the numbers do.
+async fn get_content(
+    State(app): State<AppState>,
+    Query(q): Query<ContentQuery>,
+    headers: HeaderMap,
+) -> Response {
+    let locale = match q.locale.as_deref() {
+        None => Locale::En,
+        Some(code) => match Locale::parse(code) {
+            Some(l) => l,
+            None => return (StatusCode::NOT_FOUND, "unknown locale").into_response(),
+        },
+    };
+    let library = Arc::clone(&app.content.read().unwrap());
+    let body = app.stats.render(&library.locales[&locale].json, locale);
+    let etag = HeaderValue::from_str(&format!("\"{:016x}\"", content::fnv1a(body.as_bytes())))
+        .expect("etag is ascii");
     let cache = HeaderValue::from_static("public, max-age=60, stale-while-revalidate=600");
     if headers.get(header::IF_NONE_MATCH) == Some(&etag) {
         return (
@@ -102,20 +129,20 @@ async fn get_content(State(app): State<AppState>, headers: HeaderMap) -> Respons
             (header::ETAG, etag),
             (header::CACHE_CONTROL, cache),
         ],
-        snapshot.json.to_string(),
+        body,
     )
         .into_response()
 }
 
-/// `POST /api/admin/content/reload`: re-reads `CONTENT_PATH`; a broken file
+/// `POST /api/admin/content/reload`: re-reads `CONTENT_DIR`; a broken file
 /// is rejected and the current content stays live.
 async fn reload_content(State(app): State<AppState>) -> Response {
-    match Snapshot::load(app.config.content_path.as_deref()).await {
+    match Library::load(app.config.content_dir.as_deref()).await {
         Ok(next) => {
-            let etag = next.etag.clone();
+            app.stats.merge_defaults(&next.stats);
             *app.content.write().unwrap() = Arc::new(next);
-            tracing::info!(%etag, "content reloaded");
-            Json(json!({ "etag": etag })).into_response()
+            tracing::info!("content reloaded");
+            StatusCode::NO_CONTENT.into_response()
         }
         Err(err) => (
             StatusCode::UNPROCESSABLE_ENTITY,
@@ -123,6 +150,11 @@ async fn reload_content(State(app): State<AppState>) -> Response {
         )
             .into_response(),
     }
+}
+
+/// `GET /api/stats`: the numbers behind the placeholders, live or fallback.
+async fn get_stats(State(app): State<AppState>) -> Json<std::collections::BTreeMap<String, u64>> {
+    Json(app.stats.snapshot())
 }
 
 async fn require_admin(State(app): State<AppState>, req: Request, next: Next) -> Response {

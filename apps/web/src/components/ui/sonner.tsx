@@ -12,7 +12,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
         unstyled: true,
         classNames: {
           toast:
-            "brutal flex w-full items-center gap-3 bg-white px-4.5 py-3 font-paper text-md font-bold text-ink shadow-brutal-sm",
+            "brutal flex w-full items-center gap-3 bg-surface px-4.5 py-3 font-paper text-md font-bold text-ink shadow-brutal-sm",
         },
       }}
       {...props}

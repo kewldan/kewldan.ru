@@ -8,13 +8,44 @@
 //! Text fields marked "rich" accept a tiny inline markup that the web app
 //! renders: `**bold**`, `_serif italic accent_` and `==highlighter box==`.
 
-use std::{path::Path, sync::Arc};
+use std::{
+    collections::{BTreeMap, HashMap, HashSet},
+    path::Path,
+    sync::Arc,
+};
 
 use anyhow::{Context, bail};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
-const EMBEDDED: &str = include_str!("../content/en.json");
+const EMBEDDED: [(Locale, &str); 2] = [
+    (Locale::En, include_str!("../content/en.json")),
+    (Locale::Ru, include_str!("../content/ru.json")),
+];
+const EMBEDDED_STATS: &str = include_str!("../content/stats.json");
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, TS)]
+#[serde(rename_all = "lowercase")]
+#[ts(export)]
+pub enum Locale {
+    En,
+    Ru,
+}
+
+impl Locale {
+    pub const ALL: [Locale; 2] = [Locale::En, Locale::Ru];
+
+    pub fn code(self) -> &'static str {
+        match self {
+            Locale::En => "en",
+            Locale::Ru => "ru",
+        }
+    }
+
+    pub fn parse(code: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|l| l.code() == code)
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -45,6 +76,8 @@ pub struct Profile {
     pub name: String,
     pub short_name: String,
     pub handle: String,
+    /// "full-stack & systems developer", for titles and the share card.
+    pub role: String,
     pub description: String,
     pub site_url: String,
     pub email: Option<String>,
@@ -255,8 +288,9 @@ pub struct Spec {
 #[ts(export)]
 pub struct Numbers {
     pub eyebrow: String,
-    /// Counted up from zero when the slide scrolls into view.
-    pub value: u32,
+    /// Counted up from zero when the slide scrolls into view. Usually a
+    /// stats placeholder such as `{gh.contributions}`.
+    pub value: String,
     pub title: String,
     pub title_dim: String,
     pub trio: Vec<Spec>,
@@ -457,13 +491,13 @@ pub struct Footer {
     pub source: Link,
 }
 
-/// Parsed content plus its serialized form and ETag, swapped atomically on
-/// reload.
+/// One locale's content, serialized once. The JSON still holds stats
+/// placeholders like `{gh.contributions}`; `crate::stats` fills them per
+/// request.
 #[derive(Debug)]
 pub struct Snapshot {
     pub content: Content,
     pub json: Arc<str>,
-    pub etag: String,
 }
 
 impl Snapshot {
@@ -472,29 +506,95 @@ impl Snapshot {
             serde_json::from_str(raw).context("content does not match the schema")?;
         content.validate()?;
         let json: Arc<str> = serde_json::to_string(&content)?.into();
-        let etag = format!("\"{:016x}\"", fnv1a(json.as_bytes()));
-        Ok(Self {
-            content,
-            json,
-            etag,
-        })
+        Ok(Self { content, json })
+    }
+}
+
+/// Every locale plus the fallback numbers for the placeholders; swapped
+/// atomically on reload.
+#[derive(Debug)]
+pub struct Library {
+    pub locales: HashMap<Locale, Snapshot>,
+    pub stats: BTreeMap<String, u64>,
+}
+
+impl Library {
+    pub fn parse(sources: &[(Locale, String)], stats: &str) -> anyhow::Result<Self> {
+        let stats: BTreeMap<String, u64> =
+            serde_json::from_str(stats).context("stats.json must map keys to numbers")?;
+        let mut locales = HashMap::new();
+        for (locale, raw) in sources {
+            let snap =
+                Snapshot::parse(raw).with_context(|| format!("in {}.json", locale.code()))?;
+            for key in placeholders(&snap.json) {
+                if !stats.contains_key(key) {
+                    bail!(
+                        "{}.json uses {{{key}}}, which stats.json does not define",
+                        locale.code()
+                    );
+                }
+            }
+            locales.insert(*locale, snap);
+        }
+        let ids = |l: Locale| -> Vec<&str> {
+            locales[&l]
+                .content
+                .work
+                .projects
+                .iter()
+                .map(|p| p.id.as_str())
+                .collect()
+        };
+        if ids(Locale::En) != ids(Locale::Ru) {
+            bail!("en.json and ru.json must list the same projects in the same order");
+        }
+        Ok(Self { locales, stats })
     }
 
     pub fn embedded() -> anyhow::Result<Self> {
-        Self::parse(EMBEDDED)
+        let sources: Vec<_> = EMBEDDED
+            .iter()
+            .map(|(l, s)| (*l, (*s).to_owned()))
+            .collect();
+        Self::parse(&sources, EMBEDDED_STATS)
     }
 
-    pub async fn load(path: Option<&Path>) -> anyhow::Result<Self> {
-        match path {
-            Some(path) => {
-                let raw = tokio::fs::read_to_string(path)
-                    .await
-                    .with_context(|| format!("reading {}", path.display()))?;
-                Self::parse(&raw).with_context(|| format!("in {}", path.display()))
-            }
-            None => Self::embedded(),
+    /// Reads `{en,ru,stats}.json` from `dir`, or uses the embedded copies.
+    pub async fn load(dir: Option<&Path>) -> anyhow::Result<Self> {
+        let Some(dir) = dir else {
+            return Self::embedded();
+        };
+        let read = |name: String| async move {
+            let path = dir.join(&name);
+            tokio::fs::read_to_string(&path)
+                .await
+                .with_context(|| format!("reading {}", path.display()))
+        };
+        let mut sources = Vec::new();
+        for locale in Locale::ALL {
+            sources.push((locale, read(format!("{}.json", locale.code())).await?));
+        }
+        Self::parse(&sources, &read("stats.json".into()).await?)
+    }
+}
+
+/// Every `{gh.*}` / `{steam.*}` key mentioned in `json`.
+pub fn placeholders(json: &str) -> HashSet<&str> {
+    let mut out = HashSet::new();
+    let mut rest = json;
+    while let Some(start) = rest.find('{') {
+        rest = &rest[start + 1..];
+        let Some(end) = rest.find('}') else { break };
+        let key = &rest[..end];
+        if (key.starts_with("gh.") || key.starts_with("steam."))
+            && key
+                .bytes()
+                .all(|b| b.is_ascii_lowercase() || b == b'.' || b == b'_' || b.is_ascii_digit())
+        {
+            out.insert(key);
         }
     }
+    out
 }
 
 impl Content {
@@ -519,7 +619,7 @@ impl Content {
     }
 }
 
-fn fnv1a(bytes: &[u8]) -> u64 {
+pub fn fnv1a(bytes: &[u8]) -> u64 {
     bytes.iter().fold(0xcbf2_9ce4_8422_2325, |h, b| {
         (h ^ u64::from(*b)).wrapping_mul(0x0100_0000_01b3)
     })
@@ -531,22 +631,35 @@ mod tests {
 
     #[test]
     fn embedded_content_is_valid() {
-        let s = Snapshot::embedded().expect("content/en.json must parse");
-        assert!(!s.content.work.projects.is_empty());
+        let lib = Library::embedded().expect("content must parse");
+        for locale in Locale::ALL {
+            assert!(!lib.locales[&locale].content.work.projects.is_empty());
+        }
     }
 
     #[test]
     fn rejects_unknown_category() {
-        let mut v: serde_json::Value = serde_json::from_str(EMBEDDED).unwrap();
+        let mut v: serde_json::Value = serde_json::from_str(EMBEDDED[0].1).unwrap();
         v["more"]["items"][0]["categories"] = serde_json::json!(["nope"]);
         let err = Snapshot::parse(&v.to_string()).unwrap_err();
         assert!(format!("{err:#}").contains("unknown category"));
     }
 
     #[test]
-    fn etag_is_stable() {
-        let a = Snapshot::embedded().unwrap();
-        let b = Snapshot::embedded().unwrap();
-        assert_eq!(a.etag, b.etag);
+    fn rejects_undefined_placeholders() {
+        let mut v: serde_json::Value = serde_json::from_str(EMBEDDED[0].1).unwrap();
+        v["numbers"]["value"] = serde_json::json!("{gh.nope}");
+        let sources = [
+            (Locale::En, v.to_string()),
+            (Locale::Ru, EMBEDDED[1].1.to_owned()),
+        ];
+        let err = Library::parse(&sources, EMBEDDED_STATS).unwrap_err();
+        assert!(format!("{err:#}").contains("gh.nope"));
+    }
+
+    #[test]
+    fn finds_placeholders() {
+        let keys = placeholders(r#"{"a":"{gh.prs} and {steam.cs2}","b":"{not a key}"}"#);
+        assert_eq!(keys, HashSet::from(["gh.prs", "steam.cs2"]));
     }
 }

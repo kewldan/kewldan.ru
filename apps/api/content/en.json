@@ -3,6 +3,7 @@
     "name": "Daniil Tenishev",
     "shortName": "Daniel",
     "handle": "kewldan",
+    "role": "full-stack & systems developer",
     "description": "Daniel (kewldan), 18, ITMO Software Engineering. I build from the kernel up to the UI: XDP filters, Go backends, desktop apps and Telegram Mini Apps.",
     "siteUrl": "https://kewldan.ru",
     "email": null
@@ -36,7 +37,7 @@
       { "title": "Open to offers", "sub": "internships, freelance", "live": true }
     ],
     "headline": "I build from the ==kernel== up to the _UI._",
-    "photo": null,
+    "photo": { "src": "/media/daniel.webp", "alt": "Daniel on the embankment, Moscow City towers behind", "width": 460, "height": 460 },
     "photoPlaceholder": "[your photo]",
     "label": { "index": "01", "title": "Hi, I’m Daniel" },
     "lead": "I build things from the kernel up to the UI: XDP filters, Go backends, desktop apps and Telegram Mini Apps. In production, used by real people.",
@@ -73,7 +74,7 @@
     "love": ["coding", "real guns at the range", "travelling"],
     "hate": ["early alarms", "fixing bugs at 3 a.m."],
     "hateNote": "(I still do it.)",
-    "hobbies": "Travelling and games: 90 on Steam, mostly the kind where you build factories. If I weren't a programmer, I'd be a pilot.",
+    "hobbies": "Travelling and games: {steam.games} on Steam, mostly the kind where you build factories. If I weren't a programmer, I'd be a pilot.",
     "desk": "MacBook Pro M4 Pro. _best buy ever!_"
   },
   "work": {
@@ -239,13 +240,13 @@
   },
   "numbers": {
     "eyebrow": "The last twelve months",
-    "value": 2195,
+    "value": "{gh.contributions}",
     "title": "contributions.",
-    "titleDim": "807 public. About 1,300 private.",
+    "titleDim": "{gh.public} public. About {gh.private} private.",
     "trio": [
-      { "value": "8", "label": "years on GitHub" },
-      { "value": "65", "label": "pull requests" },
-      { "value": "42 + 16", "label": "public + private repos" }
+      { "value": "{gh.years}", "label": "years on GitHub" },
+      { "value": "{gh.prs}", "label": "pull requests" },
+      { "value": "{gh.repos_public} + {gh.repos_private}", "label": "public + private repos" }
     ],
     "note": "Peak year: **3,257 contributions in 2024.** Eight languages in production: C++, Go, TypeScript, Python, Rust, Kotlin, C and Lua.",
     "packages": [
@@ -345,13 +346,13 @@
       "fromCity": "Saint Petersburg",
       "toCity": "Phuket",
       "motto": "Next stop: everywhere",
-      "photo": null,
+      "photo": { "src": "/media/lion-cub.webp", "alt": "Daniel with a lion cub at Phuket Lion Zoo", "width": 480, "height": 480 },
       "photoPlaceholder": "[lion cub]"
     },
     "steam": {
-      "kicker": "My Steam · 90 games · level 12",
+      "kicker": "My Steam · {steam.games} games · level {steam.level}",
       "games": [
-        { "name": "Counter-Strike 2", "hours": "288 h" },
+        { "name": "Counter-Strike 2", "hours": "{steam.cs2} h" },
         { "name": "Factorio", "hours": null },
         { "name": "Satisfactory", "hours": null },
         { "name": "Deep Rock Galactic", "hours": null },

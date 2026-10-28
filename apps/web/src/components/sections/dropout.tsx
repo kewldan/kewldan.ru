@@ -76,7 +76,7 @@ export function Dropout({ dropout }: { dropout: DropoutContent }) {
           whileHover={{ x: -2, y: -2, boxShadow: "8px 8px 0 #fff" }}
           whileTap={{ x: 6, y: 6, boxShadow: "0px 0px 0 #fff" }}
           transition={{ duration: 0.08 }}
-          className="inline-flex min-h-15 items-center gap-3 bg-pink px-6.5 font-paper text-[clamp(20px,2.4vw,28px)] font-bold text-ink shadow-brutal-white brutal"
+          className="inline-flex min-h-15 items-center gap-3 bg-pink px-6.5 font-paper text-[clamp(20px,2.4vw,28px)] font-bold text-on-accent shadow-brutal-white brutal"
         >
           <span aria-hidden className="inline-block animate-beat">
             ❤️

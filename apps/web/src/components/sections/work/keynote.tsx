@@ -4,6 +4,7 @@ import { animate, motion, useInView, useMotionValue, useTransform, type Variants
 import { useEffect, useRef } from "react";
 
 import type { Spec } from "@/lib/api/generated/Spec";
+import { useI18n } from "@/i18n/provider";
 import { duration, ease, rise, stagger, viewport } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
@@ -50,10 +51,12 @@ export function KeynoteTitle({
 export function CountUp({ value, className }: { value: string; className?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, viewport);
-  const match = value.match(/^([\d,]+)(.*)$/);
-  const target = match ? Number(match[1].replaceAll(",", "")) : NaN;
+  const { intl } = useI18n();
+  // "2,195" / "2 195" (the API formats per locale) plus an optional suffix.
+  const match = value.match(/^(\d{1,3}(?:[,\u00a0\u202f]\d{3})+|\d+)(.*)$/);
+  const target = match ? Number(match[1].replace(/\D/g, "")) : NaN;
   const mv = useMotionValue(0);
-  const text = useTransform(mv, (v) => Math.round(v).toLocaleString("en-US") + (match?.[2] ?? ""));
+  const text = useTransform(mv, (v) => Math.round(v).toLocaleString(intl) + (match?.[2] ?? ""));
 
   useEffect(() => {
     if (!inView || Number.isNaN(target)) return;

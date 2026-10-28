@@ -1,11 +1,13 @@
 "use client";
 
 import { motion, useScroll, useTransform } from "motion/react";
+import Image from "next/image";
 import { useRef } from "react";
 
 import { RichReveal } from "@/components/motion/rich-reveal";
 import { SectionLabel } from "@/components/section-label";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/i18n/provider";
 import { accentBg } from "@/lib/accent";
 import type { Hero as HeroContent } from "@/lib/api/generated/Hero";
 import { ease, spring } from "@/lib/motion";
@@ -88,6 +90,7 @@ export function Hero({ hero }: { hero: HeroContent }) {
 }
 
 function Photo({ hero }: { hero: HeroContent }) {
+  const { t } = useI18n();
   return (
     <motion.div
       initial={{ opacity: 0, rotate: 12, scale: 0.8, y: 30 }}
@@ -96,14 +99,23 @@ function Photo({ hero }: { hero: HeroContent }) {
       whileHover={{ rotate: -1, scale: 1.03 }}
       className="mt-6 w-47.5 md:absolute md:top-[2%] md:right-[1%] md:mt-0 md:w-[min(24%,290px)]"
     >
-      <div
-        role="img"
-        aria-label={hero.photo?.alt ?? "Photo placeholder"}
-        className="flex aspect-square items-end bg-blue bg-[repeating-linear-gradient(135deg,rgb(0_0_0/0.06)_0_10px,rgb(0_0_0/0.13)_10px_20px)] bg-cover p-2 shadow-brutal brutal"
-        style={hero.photo ? { backgroundImage: `url(${hero.photo.src})` } : undefined}
-      >
-        {!hero.photo && (
-          <span className="border-2 border-ink bg-white px-1.5 py-0.5 font-mono text-[11px]">
+      <div className="relative flex aspect-square items-end overflow-hidden bg-blue bg-[repeating-linear-gradient(135deg,rgb(0_0_0/0.06)_0_10px,rgb(0_0_0/0.13)_10px_20px)] p-2 shadow-brutal brutal">
+        {hero.photo ? (
+          <Image
+            src={hero.photo.src}
+            alt={hero.photo.alt}
+            fill
+            priority
+            unoptimized
+            sizes="(min-width: 768px) 290px, 190px"
+            className="object-cover"
+          />
+        ) : (
+          <span
+            role="img"
+            aria-label={t.photoPlaceholder}
+            className="border-2 border-ink bg-surface px-1.5 py-0.5 font-mono text-[11px]"
+          >
             {hero.photoPlaceholder}
           </span>
         )}

@@ -5,26 +5,41 @@ import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useI18n } from "@/i18n/provider";
 import type { Link } from "@/lib/api/generated/Link";
 import { ease, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
+import { LocaleSwitch, ThemeSwitch } from "./switches";
+
 type Props = { handle: string; nav: Link[]; marquee: string[] };
 
+/** Content links like "/watched" get the current locale in front. */
+function useHref() {
+  const { locale } = useI18n();
+  return (href: string) => (href.startsWith("/") ? `/${locale}${href}` : href);
+}
+
 export function SiteHeader({ handle, nav, marquee }: Props) {
+  const { t } = useI18n();
+  const href = useHref();
   return (
     <>
       <Marquee words={marquee} />
       <header className="wrap flex items-center justify-between gap-3 py-4.5">
         <Logo handle={handle} />
-        <nav aria-label="Sections" className="hidden gap-x-5.5 text-[15px] md:flex">
+        <nav aria-label={t.nav.sections} className="hidden gap-x-5.5 text-[15px] lg:flex">
           {nav.map((l) => (
-            <a key={l.href} href={l.href} className="py-2.5 transition-colors hover:text-cobalt">
+            <a key={l.href} href={href(l.href)} className="py-2.5 transition-colors hover:text-cobalt">
               {l.label}
             </a>
           ))}
         </nav>
-        <MobileNav nav={nav} />
+        <div className="flex items-center gap-2.5">
+          <LocaleSwitch />
+          <ThemeSwitch />
+          <MobileNav nav={nav} />
+        </div>
       </header>
       <FloatingNav handle={handle} nav={nav} />
     </>
@@ -36,7 +51,7 @@ function Logo({ handle, small }: { handle: string; small?: boolean }) {
     <a
       href="#top"
       className={cn(
-        "bg-yellow font-mono font-bold shadow-brutal-sm transition-[translate,box-shadow] duration-(--dur-fast) brutal hover:-translate-y-0.5 hover:shadow-[5px_6px_0_var(--ink)]",
+        "bg-yellow font-mono font-bold text-on-accent shadow-brutal-sm transition-[translate,box-shadow] duration-(--dur-fast) brutal hover:-translate-y-0.5 hover:shadow-[5px_6px_0_var(--ink)]",
         small ? "px-2 py-0.5 text-sm" : "px-2.75 py-1.25 text-md",
       )}
     >
@@ -51,7 +66,7 @@ function Marquee({ words }: { words: string[] }) {
   return (
     <div
       aria-hidden
-      className="group overflow-hidden border-b-3 border-ink bg-ink font-mono text-[12.5px] tracking-[0.06em] whitespace-nowrap text-yellow"
+      className="group overflow-hidden border-b-3 border-ink bg-night font-mono text-[12.5px] tracking-[0.06em] whitespace-nowrap text-yellow"
     >
       <div className="inline-flex animate-marquee gap-7 py-2.25 group-hover:[animation-play-state:paused]">
         {row.map((w, i) => (
@@ -84,6 +99,8 @@ function useActiveSection(ids: string[]) {
  * reading down and returns on the slightest scroll up.
  */
 function FloatingNav({ handle, nav }: { handle: string; nav: Link[] }) {
+  const { t } = useI18n();
+  const href = useHref();
   const { scrollY, scrollYProgress } = useScroll();
   const progress = useSpring(scrollYProgress, { stiffness: 260, damping: 40, restDelta: 0.001 });
   const [shown, setShown] = useState(false);
@@ -109,11 +126,11 @@ function FloatingNav({ handle, nav }: { handle: string; nav: Link[] }) {
         >
           <div className="wrap flex h-14 items-center justify-between gap-3">
             <Logo handle={handle} small />
-            <nav aria-label="Sections" className="hidden items-center md:flex">
+            <nav aria-label={t.nav.sections} className="hidden items-center lg:flex">
               {nav.map((l) => {
                 const on = l.href === `#${active}`;
                 return (
-                  <a key={l.href} href={l.href} className="relative px-3 py-2 text-sm">
+                  <a key={l.href} href={href(l.href)} className="relative px-3 py-2 text-sm">
                     {on && (
                       <motion.span
                         layoutId="nav-active"
@@ -121,12 +138,18 @@ function FloatingNav({ handle, nav }: { handle: string; nav: Link[] }) {
                         className="absolute inset-0 -z-10 border-2 border-ink bg-yellow"
                       />
                     )}
-                    <span className={cn("transition-colors", !on && "hover:text-cobalt")}>{l.label}</span>
+                    <span className={cn("transition-colors", on ? "text-on-accent" : "hover:text-cobalt")}>
+                      {l.label}
+                    </span>
                   </a>
                 );
               })}
             </nav>
-            <MobileNav nav={nav} />
+            <div className="flex items-center gap-2">
+              <LocaleSwitch />
+              <ThemeSwitch />
+              <MobileNav nav={nav} />
+            </div>
           </div>
           <motion.div aria-hidden style={{ scaleX: progress }} className="h-0.75 origin-left bg-cobalt" />
         </motion.div>
@@ -136,20 +159,22 @@ function FloatingNav({ handle, nav }: { handle: string; nav: Link[] }) {
 }
 
 function MobileNav({ nav }: { nav: Link[] }) {
+  const { t } = useI18n();
+  const href = useHref();
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="brutal" size="brutal-sm" className="md:hidden">
-          Menu
+        <Button variant="brutal" size="brutal-sm" className="lg:hidden">
+          {t.nav.menu}
         </Button>
       </SheetTrigger>
       <SheetContent side="top" className="rounded-none border-b-3 border-ink bg-paper p-0" data-lenis-prevent>
-        <SheetTitle className="sr-only">Sections</SheetTitle>
-        <nav aria-label="Sections" className="flex flex-col px-4 pt-[calc(env(safe-area-inset-top)+56px)] pb-6">
+        <SheetTitle className="sr-only">{t.nav.sections}</SheetTitle>
+        <nav aria-label={t.nav.sections} className="flex flex-col px-4 pt-[calc(env(safe-area-inset-top)+56px)] pb-6">
           {nav.map((l, i) => (
             <SheetClose asChild key={l.href}>
               <motion.a
-                href={l.href}
+                href={href(l.href)}
                 initial={{ opacity: 0, x: -16 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.04 * i + 0.1, duration: 0.4, ease: ease.out }}

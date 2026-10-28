@@ -4,12 +4,11 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/i18n/provider";
 import { spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 import { CELLS, EMPTY, HEIGHT, usePixelBoard, WIDTH } from "./use-pixel-board";
-
-const COLOR_NAMES = ["Ink", "Yellow", "Blue", "Green", "Orange", "Cobalt", "Pink"];
 
 /** Every cell on the straight line between two cells, so fast drags leave no gaps. */
 function line(x0: number, y0: number, x1: number, y1: number) {
@@ -35,6 +34,7 @@ function line(x0: number, y0: number, x1: number, y1: number) {
 }
 
 export function PixelBattle() {
+  const { t, fmt, plural } = useI18n();
   const px = usePixelBoard();
   const canvas = useRef<HTMLCanvasElement>(null);
   const [color, setColor] = useState(0);
@@ -108,13 +108,13 @@ export function PixelBattle() {
   };
 
   const status = {
-    connecting: "Connecting to the board…",
-    live: `Live · ${px.peers} ${px.peers === 1 ? "person" : "people"} here now · everyone sees every pixel`,
-    offline: "Offline here · your pixels stay in this browser",
+    connecting: t.pixels.connecting,
+    live: fmt(t.pixels.live, { people: plural(px.peers, t.pixels.people) }),
+    offline: t.pixels.offline,
   }[px.mode];
 
   return (
-    <div className="flex flex-col bg-white shadow-brutal-lg brutal">
+    <div className="flex flex-col bg-surface shadow-brutal-lg brutal">
       <div className="relative touch-none border-b-3 border-ink">
         <canvas
           ref={canvas}
@@ -126,7 +126,7 @@ export function PixelBattle() {
           onPointerCancel={onUp}
           onPointerLeave={onLeave}
           role="img"
-          aria-label="Shared pixel board, 64 by 32. Click or drag to paint."
+          aria-label={t.pixels.board}
           className={cn(
             "block aspect-[2/1] h-auto w-full touch-none [image-rendering:pixelated]",
             canDraw ? "cursor-crosshair" : "cursor-wait",
@@ -183,13 +183,13 @@ export function PixelBattle() {
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3.5 border-b-3 border-ink p-3 md:px-4 md:py-3.5">
-        <div role="group" aria-label="Colour" className="flex flex-wrap items-center gap-2.5">
+        <div role="group" aria-label={t.pixels.colours} className="flex flex-wrap items-center gap-2.5">
           {px.palette.map((c, i) => {
             const on = !erase && color === i;
             return (
               <motion.button
                 key={c}
-                aria-label={COLOR_NAMES[i] ?? c}
+                aria-label={t.pixels.colourNames[i] ?? c}
                 aria-pressed={on}
                 disabled={!canDraw}
                 onClick={() => {
@@ -218,22 +218,22 @@ export function PixelBattle() {
             onClick={() => setErase((v) => !v)}
             className="shadow-none aria-pressed:bg-ink aria-pressed:text-white"
           >
-            Eraser
+            {t.pixels.eraser}
           </Button>
         </div>
         {px.mode === "offline" && (
           <Button variant="brutal" size="brutal-sm" className="shadow-none" onClick={px.clearLocal}>
-            Clear
+            {t.pixels.clear}
           </Button>
         )}
       </div>
 
       <div
         className="flex items-center gap-3 border-b-3 border-ink px-4 py-2.5 font-mono text-[12.5px]"
-        aria-label={`Ink: ${px.ink} of ${px.inkMax} pixels`}
+        aria-label={fmt(t.pixels.inkLabel, { n: px.ink, max: px.inkMax })}
       >
-        <span>Ink</span>
-        <div className="h-3 flex-1 border-2 border-ink bg-white">
+        <span>{t.pixels.ink}</span>
+        <div className="h-3 flex-1 border-2 border-ink bg-surface">
           <motion.div
             className="h-full origin-left bg-yellow"
             animate={{ scaleX: px.ink / px.inkMax }}

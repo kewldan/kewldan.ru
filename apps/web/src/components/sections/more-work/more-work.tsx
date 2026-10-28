@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { RichReveal } from "@/components/motion/rich-reveal";
 import { SectionLabel } from "@/components/section-label";
+import { useI18n } from "@/i18n/provider";
 import type { More } from "@/lib/api/generated/More";
 import type { WorkItem } from "@/lib/api/generated/WorkItem";
 import { ease, spring } from "@/lib/motion";
@@ -16,8 +17,9 @@ import { Oled } from "./oled";
 const ALL = "all";
 
 export function MoreWork({ more }: { more: More }) {
+  const { t } = useI18n();
   const [filter, setFilter] = useState(ALL);
-  const chips = [{ id: ALL, label: "All" }, ...more.categories].map((c) => ({
+  const chips = [{ id: ALL, label: t.more.all }, ...more.categories].map((c) => ({
     ...c,
     count: c.id === ALL ? more.items.length : more.items.filter((w) => w.categories.includes(c.id)).length,
   }));
@@ -33,7 +35,7 @@ export function MoreWork({ more }: { more: More }) {
             each={0.03}
             className="text-pull-sm font-medium tracking-[-0.03em] text-pretty"
           />
-          <div role="group" aria-label="Filter projects" className="flex flex-wrap gap-x-5.5 gap-y-0.5">
+          <div role="group" aria-label={t.more.filter} className="flex flex-wrap gap-x-5.5 gap-y-0.5">
             {chips.map((c) => {
               const on = filter === c.id;
               return (
@@ -76,6 +78,7 @@ export function MoreWork({ more }: { more: More }) {
 }
 
 function Row({ item: x, index }: { item: WorkItem; index: number }) {
+  const { t } = useI18n();
   return (
     <motion.li
       layout="position"
@@ -117,7 +120,7 @@ function Row({ item: x, index }: { item: WorkItem; index: number }) {
       <span className="font-mono text-[13px] tabular-nums md:text-right">
         {x.href ? (
           <a href={x.href} className="after:absolute after:inset-0">
-            {x.year ?? "open"} ↗
+            {x.year ?? t.more.open} ↗
           </a>
         ) : (
           (x.year ?? "—")

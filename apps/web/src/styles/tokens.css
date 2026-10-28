@@ -59,6 +59,12 @@
   /* ---------- 2. semantics ---------- */
   /* paper world */
   --paper: var(--p-paper-50);
+  /* Cards, buttons, inputs: white on paper, raised grey in the dark. */
+  --surface: var(--p-white);
+  /* Text on yellow/pink/green/blue fills: always dark, in both themes. */
+  --on-accent: var(--p-ink-950);
+  /* Things that stay black in both themes: the marquee, the Steam card. */
+  --night: var(--p-ink-950);
   --ink: var(--p-ink-950);
   --ink-muted: var(--p-ink-600);
   --rule: var(--p-ink-200);
@@ -90,6 +96,12 @@
   --stage-light-dim: var(--p-gray-600);
   --stage-light-tile: var(--p-gray-100);
   --stage-light-link: var(--p-sky-700);
+  --stage-chip: var(--p-gray-300);
+  /* Text on a stage-fg fill (the active segment of a switch). */
+  --stage-on-fg: var(--p-gray-990);
+  --stage-input: #1c1c1f;
+  --stage-strong: #3a3a3c;
+  --stage-note: #c7c7cc;
 
   /* terminal */
   --term-bg: var(--p-term-bg);
@@ -127,6 +139,9 @@
   --color-black: var(--p-black);
 
   --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-on-accent: var(--on-accent);
+  --color-night: var(--night);
   --color-ink: var(--ink);
   --color-ink-muted: var(--ink-muted);
   --color-rule: var(--rule);
@@ -152,7 +167,11 @@
   --color-stage-device: var(--stage-device);
   --color-stage-link: var(--stage-link);
   --color-stage-cta: var(--stage-cta);
-  --color-stage-chip: var(--p-gray-300);
+  --color-stage-chip: var(--stage-chip);
+  --color-stage-on-fg: var(--stage-on-fg);
+  --color-stage-input: var(--stage-input);
+  --color-stage-strong: var(--stage-strong);
+  --color-stage-note: var(--stage-note);
   --color-stage-light: var(--stage-light);
   --color-stage-light-fg: var(--stage-light-fg);
   --color-stage-light-dim: var(--stage-light-dim);
@@ -187,8 +206,9 @@
   --color-input: var(--ink);
   --color-ring: var(--focus);
 
-  --font-paper: var(--font-instrument-sans), "Helvetica Neue", Arial, sans-serif;
-  --font-serif: var(--font-instrument-serif), Georgia, serif;
+  /* Instrument has no Cyrillic; Onest and Cormorant fill in glyph by glyph. */
+  --font-paper: var(--font-instrument-sans), var(--font-onest), "Helvetica Neue", Arial, sans-serif;
+  --font-serif: var(--font-instrument-serif), var(--font-cormorant), Georgia, serif;
   --font-stage: var(--font-geist), "Helvetica Neue", Arial, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
   --font-sans: var(--font-paper);
@@ -308,4 +328,38 @@
   --score-mid-solid: #ffb36b;
   --score-low-solid: #ff5f8f;
   --title-gradient: linear-gradient(100deg, #ffb36b 0%, #ff5f8f 38%, #8a6bff 72%, #3fb6ff 100%);
+}
+
+/*
+ * Dark theme (src/lib/theme.ts sets data-theme on <html>). Only semantic tokens
+ * move: ink turns light, so borders and the hard shadows glow on the dark
+ * paper; accent fills keep their dark text through --on-accent.
+ */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #111113;
+  --surface: #1b1b1f;
+  --ink: #f2f2ee;
+  --ink-muted: #a1a1a8;
+  --rule: #2a2a2f;
+  --accent-cobalt: #6b76ff;
+  --focus: #8c95ff;
+  --link-hover: #8c95ff;
+}
+
+/* Watched is a keynote page: in the light theme it becomes a light keynote. */
+:root[data-theme="light"]:has([data-surface="stage"]) {
+  --stage: var(--p-gray-50);
+  --stage-fg: var(--p-gray-990);
+  --stage-dim: var(--p-gray-600);
+  --stage-tile: var(--p-gray-100);
+  --stage-rule: #e3e3e8;
+  --stage-frame: #d2d2d7;
+  --stage-device: var(--p-white);
+  --stage-link: var(--p-sky-700);
+  --stage-chip: #3a3a3c;
+  --stage-on-fg: var(--p-gray-50);
+  --stage-input: var(--p-white);
+  --stage-strong: #c7c7cc;
+  --stage-note: var(--p-gray-700);
 }

@@ -12,6 +12,12 @@ export const fmtDate = (s: string) => {
   return y && m && d ? `${d}.${m}.${y}` : "—";
 };
 
+/** An error code from the API (or a network failure) → the key of a message. */
+export function errorKey<T extends Record<string, string>>(err: unknown, messages: T): keyof T {
+  const code = (err as Error)?.message;
+  return code in messages ? code : "save";
+}
+
 const TOKEN_KEY = "kd-admin-token";
 
 export const adminToken = {
@@ -38,10 +44,11 @@ async function call<T>(token: string, method: string, path: string, body?: Title
     headers: { Authorization: `Bearer ${token}`, ...(body && { "Content-Type": "application/json" }) },
     body: body && JSON.stringify(body),
   });
-  if (res.status === 401) throw new Error("The admin token is no longer valid.");
+  // Errors carry a code (`rating`, `full`, ...) that the page translates.
+  if (res.status === 401) throw new Error("token");
   if (!res.ok) {
     const err = (await res.json().catch(() => null)) as { error?: string } | null;
-    throw new Error(err?.error ?? "Could not save. Try again in a moment.");
+    throw new Error(err?.error ?? "save");
   }
   return (res.status === 204 ? undefined : await res.json()) as T;
 }

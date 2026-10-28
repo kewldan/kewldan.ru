@@ -231,7 +231,7 @@ async fn watched_list_is_public_and_edits_need_the_token() {
     )
     .await;
     assert_eq!(status, 422);
-    assert!(body.contains("score"));
+    assert!(body.contains("\"rating\""));
 
     let (status, body) = request(
         addr,
@@ -272,6 +272,31 @@ async fn watched_list_is_public_and_edits_need_the_token() {
     );
     assert_eq!(
         request(addr, "DELETE", &path, Some("test-token"), None)
+            .await
+            .0,
+        404
+    );
+}
+
+#[tokio::test]
+async fn content_is_served_per_locale_with_stats_filled_in() {
+    let addr = spawn().await;
+    let (status, en) = request(addr, "GET", "/api/content?locale=en", None, None).await;
+    assert_eq!(status, 200);
+    let en: Value = serde_json::from_str(&en).unwrap();
+    assert_eq!(en["numbers"]["value"], json!("2,195"));
+
+    let (_, ru) = request(addr, "GET", "/api/content?locale=ru", None, None).await;
+    let ru: Value = serde_json::from_str(&ru).unwrap();
+    assert_eq!(ru["numbers"]["value"], json!("2\u{a0}195"));
+    assert_eq!(ru["contact"]["teaser"], json!("И ещё кое-что."));
+    assert!(
+        !ru.to_string().contains("{gh."),
+        "every placeholder is filled"
+    );
+
+    assert_eq!(
+        request(addr, "GET", "/api/content?locale=de", None, None)
             .await
             .0,
         404

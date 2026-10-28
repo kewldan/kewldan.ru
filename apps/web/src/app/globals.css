@@ -3,6 +3,9 @@
 @import "shadcn/tailwind.css";
 @import "../styles/tokens.css";
 
+/* `dark:` follows the site's theme switch, not the OS setting. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 @utility wrap {
   width: 100%;
   max-width: var(--container);

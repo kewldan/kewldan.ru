@@ -3,9 +3,9 @@ import { SectionLabel } from "@/components/section-label";
 import type { Stack as StackContent } from "@/lib/api/generated/Stack";
 import { cn } from "@/lib/utils";
 
-const FILLS = ["bg-yellow", "bg-blue", "bg-pink"];
+const FILLS = ["bg-yellow text-on-accent", "bg-blue text-on-accent", "bg-pink text-on-accent"];
 
-export function Stack({ stack }: { stack: StackContent }) {
+export function Stack({ stack, usedIn }: { stack: StackContent; usedIn: string }) {
   return (
     <section id="stack" className="wrap grid-index border-t-[1.5px] border-ink py-section">
       <SectionLabel label={stack.label} />
@@ -30,7 +30,9 @@ export function Stack({ stack }: { stack: StackContent }) {
             <RevealItem key={g.id}>
               <h3 className="mb-2 border-t-[1.5px] border-ink pt-2.5 text-sm font-medium text-ink-muted">{g.name}</h3>
               <p className="text-[16.5px] leading-normal">{g.items.join(", ")}</p>
-              <small className="mt-2 block text-[13px] text-ink-muted">Used in {g.usedIn}</small>
+              <small className="mt-2 block text-[13px] text-ink-muted">
+                {usedIn} {g.usedIn}
+              </small>
             </RevealItem>
           ))}
         </RevealGroup>

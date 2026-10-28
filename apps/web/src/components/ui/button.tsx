@@ -20,7 +20,7 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         /** Paper world: ink slab with a hard shadow that you press flat. */
         brutal:
-          "rounded-none bg-white font-paper font-bold text-ink shadow-brutal transition-[translate,box-shadow] duration-(--dur-press) brutal hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-brutal-lg active:shadow-none active:not-aria-[haspopup]:translate-x-1.5 active:not-aria-[haspopup]:translate-y-1.5",
+          "rounded-none bg-surface font-paper font-bold text-ink shadow-brutal transition-[translate,box-shadow] duration-(--dur-press) brutal hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-brutal-lg active:shadow-none active:not-aria-[haspopup]:translate-x-1.5 active:not-aria-[haspopup]:translate-y-1.5",
         /** Stage world: the keynote pill. */
         pill: "rounded-pill bg-stage-cta font-stage font-medium text-white hover:bg-[#0077ed]",
       },

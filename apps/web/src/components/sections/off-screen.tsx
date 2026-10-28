@@ -13,7 +13,7 @@ import { ease, spring, viewport } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 const box =
-  "brutal flex min-w-0 flex-col gap-3 bg-white p-5.5 shadow-[7px_7px_0_var(--ink)] transition-[translate,box-shadow] duration-(--dur-fast) hover:-translate-y-1 hover:shadow-[7px_11px_0_var(--ink)]";
+  "brutal flex min-w-0 flex-col gap-3 bg-surface p-5.5 shadow-[7px_7px_0_var(--ink)] transition-[translate,box-shadow] duration-(--dur-fast) hover:-translate-y-1 hover:shadow-[7px_11px_0_var(--ink)]";
 const kicker = "font-mono text-xs tracking-[0.06em] uppercase";
 
 export function OffScreen({ off }: { off: OffScreenContent }) {
@@ -24,7 +24,7 @@ export function OffScreen({ off }: { off: OffScreenContent }) {
         each={0.08}
         className="col-span-12 grid min-w-0 grid-cols-1 gap-5.5 md:col-span-9 md:col-start-4 md:grid-cols-2 lg:grid-flow-dense lg:grid-cols-3"
       >
-        <RevealItem className={cn(box, "md:col-span-2")}>
+        <RevealItem className={cn(box, "bg-white text-on-accent md:col-span-2")}>
           <span className={kicker}>{off.car.kicker}</span>
           <Car car={off.car} />
           <p className="font-bold">
@@ -33,7 +33,10 @@ export function OffScreen({ off }: { off: OffScreenContent }) {
         </RevealItem>
 
         <RevealItem
-          className={cn(box, "@container grid grid-cols-[minmax(0,1fr)_116px] gap-0 bg-pink p-0 md:col-span-2")}
+          className={cn(
+            box,
+            "@container grid grid-cols-[minmax(0,1fr)_116px] gap-0 bg-pink p-0 text-on-accent md:col-span-2",
+          )}
         >
           <div className="flex flex-col gap-2 border-r-3 border-dashed border-ink p-5.5">
             <span className={kicker}>{off.trip.kicker}</span>
@@ -57,13 +60,19 @@ export function OffScreen({ off }: { off: OffScreenContent }) {
             <p className="mt-auto font-bold">{off.trip.motto}</p>
           </div>
           <div className="flex flex-col justify-between gap-2.5 px-3 py-4">
-            <div
-              role="img"
-              aria-label={off.trip.photo?.alt ?? `Photo placeholder: ${off.trip.photoPlaceholder}`}
-              className="flex aspect-square items-end border-3 border-ink bg-yellow bg-[repeating-linear-gradient(135deg,rgb(0_0_0/0.06)_0_8px,rgb(0_0_0/0.14)_8px_16px)] bg-cover p-1 font-mono text-[10px]"
-              style={off.trip.photo ? { backgroundImage: `url(${off.trip.photo.src})` } : undefined}
-            >
-              {!off.trip.photo && off.trip.photoPlaceholder}
+            <div className="relative flex aspect-square items-end overflow-hidden border-3 border-ink bg-yellow bg-[repeating-linear-gradient(135deg,rgb(0_0_0/0.06)_0_8px,rgb(0_0_0/0.14)_8px_16px)] p-1 font-mono text-[10px]">
+              {off.trip.photo ? (
+                <Image
+                  src={off.trip.photo.src}
+                  alt={off.trip.photo.alt}
+                  fill
+                  unoptimized
+                  sizes="120px"
+                  className="object-cover transition-transform duration-(--dur-base) hover:scale-110"
+                />
+              ) : (
+                off.trip.photoPlaceholder
+              )}
             </div>
             <div
               aria-hidden
@@ -72,7 +81,7 @@ export function OffScreen({ off }: { off: OffScreenContent }) {
           </div>
         </RevealItem>
 
-        <RevealItem className={cn(box, "bg-ink text-white md:col-span-2 lg:col-span-3")}>
+        <RevealItem className={cn(box, "bg-night text-white md:col-span-2 lg:col-span-3")}>
           <span className={kicker}>{off.steam.kicker}</span>
           <div className="flex flex-wrap gap-2">
             {off.steam.games.map((g) => (
@@ -82,7 +91,7 @@ export function OffScreen({ off }: { off: OffScreenContent }) {
                 transition={spring.press}
                 className={cn(
                   "border-[2.5px] px-3 py-1.5 text-[15px] font-semibold",
-                  g.hours ? "border-yellow bg-yellow text-ink" : "border-white",
+                  g.hours ? "border-yellow bg-yellow text-on-accent" : "border-white",
                 )}
               >
                 {g.name}

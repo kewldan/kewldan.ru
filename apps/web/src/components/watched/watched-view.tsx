@@ -6,30 +6,22 @@ import { toast } from "sonner";
 
 import { CountUp } from "@/components/sections/work/keynote";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useI18n } from "@/i18n/provider";
 import type { Title } from "@/lib/api/generated/Title";
 import type { WatchedPage } from "@/lib/api/generated/WatchedPage";
 import { ease, rise, spring, stagger, viewport } from "@/lib/motion";
 import { cn } from "@/lib/utils";
-import { adminApi, adminToken, fmtDate, tier } from "@/lib/watched";
+import { adminApi, adminToken, errorKey, fmtDate, tier } from "@/lib/watched";
 
 import { AdminDialog } from "./admin-dialog";
 import { TitleForm } from "./title-form";
 
-const FILTERS = [
-  ["all", "All"],
-  ["movie", "Movies"],
-  ["series", "Series"],
-  ["watching", "Watching now"],
-] as const;
-type Filter = (typeof FILTERS)[number][0];
+const FILTERS = ["all", "movie", "series", "watching"] as const;
+type Filter = (typeof FILTERS)[number];
 
-const SORTS = {
-  recent: "Recently watched",
-  best: "Best first",
-  worst: "Worst first",
-  title: "A to Z",
-} as const;
-type Sort = keyof typeof SORTS;
+const SORTS = ["recent", "best", "worst", "title"] as const;
+type Sort = (typeof SORTS)[number];
 
 const sorters: Record<Sort, (a: Title, b: Title) => number> = {
   recent: (a, b) => b.watched.localeCompare(a.watched) || b.createdAt - a.createdAt,
@@ -38,10 +30,21 @@ const sorters: Record<Sort, (a: Title, b: Title) => number> = {
   title: (a, b) => a.title.localeCompare(b.title),
 };
 
-const meta = (t: Title) =>
-  [t.kind === "series" ? `Series${t.seasons ? ` · S${t.seasons}` : ""}` : "Movie", t.year].filter(Boolean).join(" · ");
+function useMeta() {
+  const { t, fmt } = useI18n();
+  return (x: Title) =>
+    [
+      x.kind === "series"
+        ? `${t.watched.kind.series}${x.seasons ? ` · ${fmt(t.watched.seasonsShort, { s: x.seasons })}` : ""}`
+        : t.watched.kind.movie,
+      x.year,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+}
 
 export function WatchedView({ page, initial }: { page: WatchedPage; initial: Title[] | null }) {
+  const { t, fmt, plural, intl } = useI18n();
   const [items, setItems] = useState<Title[]>(initial ?? []);
   const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = useState<Sort>("recent");
@@ -95,22 +98,22 @@ export function WatchedView({ page, initial }: { page: WatchedPage; initial: Tit
     watching: stats.watching,
   };
 
-  const saved = (t: Title) => {
-    setItems((list) => [t, ...list.filter((i) => i.id !== t.id)]);
-    toast(editing === "new" ? `Added “${t.title}”.` : "Saved.");
+  const saved = (x: Title) => {
+    setItems((list) => [x, ...list.filter((i) => i.id !== x.id)]);
+    toast(editing === "new" ? fmt(t.watched.added, { title: x.title }) : t.watched.saved);
     setEditing(null);
   };
 
-  const remove = async (t: Title) => {
+  const remove = async (x: Title) => {
     if (!token) return;
-    if (armed !== t.id) return setArmed(t.id);
+    if (armed !== x.id) return setArmed(x.id);
     setArmed(null);
     try {
-      await adminApi.remove(token, t.id);
-      setItems((list) => list.filter((i) => i.id !== t.id));
-      toast(`Deleted “${t.title}”.`);
+      await adminApi.remove(token, x.id);
+      setItems((list) => list.filter((i) => i.id !== x.id));
+      toast(fmt(t.watched.deleted, { title: x.title }));
     } catch (err) {
-      toast((err as Error).message);
+      toast(t.watched.errors[errorKey(err, t.watched.errors)]);
     }
   };
 
@@ -129,7 +132,7 @@ export function WatchedView({ page, initial }: { page: WatchedPage; initial: Tit
           initial={{ opacity: 0, y: 24, scale: 0.97, filter: "blur(8px)" }}
           animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
           transition={{ duration: 1.2, ease: ease.out }}
-          className="gradient-text pb-[0.06em] text-[clamp(72px,15vw,200px)] leading-[0.92] font-bold tracking-[-0.065em] [--g:var(--title-gradient)]"
+          className="gradient-text pb-[0.06em] text-[clamp(64px,14vw,200px)] leading-[0.92] font-bold tracking-[-0.065em] [--g:var(--title-gradient)]"
         >
           {page.title}
         </motion.h1>
@@ -139,10 +142,14 @@ export function WatchedView({ page, initial }: { page: WatchedPage; initial: Tit
           transition={{ delay: 0.4, duration: 0.6 }}
           className="text-[clamp(28px,4.4vw,58px)] leading-[1.06] font-semibold tracking-[-0.04em]"
         >
-          {items.length} {items.length === 1 ? "title" : "titles"}.
+          {plural(items.length, t.watched.titles)}
           <br />
           <span className="text-stage-dim">
-            {stats.avg ? `Average ${stats.avg.toFixed(1)} out of 10.` : "Scored from 1 to 10."}
+            {stats.avg
+              ? fmt(t.watched.average, {
+                  avg: stats.avg.toLocaleString(intl, { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
+                })
+              : t.watched.scored}
           </span>
         </motion.p>
 
@@ -154,9 +161,9 @@ export function WatchedView({ page, initial }: { page: WatchedPage; initial: Tit
         >
           {(
             [
-              [stats.movies, "movies"],
-              [stats.series, "series"],
-              [stats.tens, "perfect tens"],
+              [stats.movies, t.watched.movies],
+              [stats.series, t.watched.series],
+              [stats.tens, t.watched.tens],
             ] as const
           ).map(([n, label]) => (
             <motion.div key={label} variants={rise}>
@@ -173,8 +180,12 @@ export function WatchedView({ page, initial }: { page: WatchedPage; initial: Tit
 
       <section className="wrap pb-[clamp(64px,9vw,120px)]">
         <div className="flex flex-wrap items-center justify-between gap-3.5 pt-2">
-          <div role="group" aria-label="Show" className="flex flex-wrap gap-1 rounded-pill bg-stage-tile p-1.25">
-            {FILTERS.map(([id, label]) => {
+          <div
+            role="group"
+            aria-label={t.watched.show}
+            className="flex flex-wrap gap-1 rounded-pill bg-stage-tile p-1.25"
+          >
+            {FILTERS.map((id) => {
               const on = filter === id;
               return (
                 <button
@@ -183,21 +194,19 @@ export function WatchedView({ page, initial }: { page: WatchedPage; initial: Tit
                   onClick={() => setFilter(id)}
                   className={cn(
                     "relative min-h-9.5 rounded-pill px-3.75 text-sm font-medium transition-colors",
-                    on ? "text-stage-light-fg" : "text-stage-chip hover:text-white",
+                    on ? "text-stage-on-fg" : "text-stage-chip hover:text-stage-fg",
                   )}
                 >
                   {on && (
                     <motion.span
                       layoutId="watched-filter"
                       transition={spring.layout}
-                      className="absolute inset-0 -z-0 rounded-pill bg-stage-fg"
+                      className="absolute inset-0 rounded-pill bg-stage-fg"
                     />
                   )}
                   <span className="relative">
-                    {label}
-                    <span className={cn("ml-1.25 tabular-nums", on ? "text-stage-light-dim" : "text-stage-dim")}>
-                      {counts[id]}
-                    </span>
+                    {t.watched.filters[id]}
+                    <span className="ml-1.25 tabular-nums opacity-60">{counts[id]}</span>
                   </span>
                 </button>
               );
@@ -205,34 +214,42 @@ export function WatchedView({ page, initial }: { page: WatchedPage; initial: Tit
           </div>
           <div className="flex w-full flex-wrap items-center gap-2.5 md:w-auto">
             <label className="sr-only" htmlFor="watched-q">
-              Search
+              {t.watched.search}
             </label>
             <input
               id="watched-q"
               type="search"
-              placeholder="Search titles and notes"
+              placeholder={t.watched.search}
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              className="min-h-11 w-full rounded-xl border border-stage-frame bg-stage-tile px-3.5 text-[15px] text-stage-fg placeholder:text-stage-light-dim md:w-57.5"
+              className="min-h-11 w-full rounded-xl border border-stage-frame bg-stage-tile px-3.5 text-[15px] text-stage-fg placeholder:text-stage-dim md:w-57.5"
             />
-            <label className="sr-only" htmlFor="watched-sort">
-              Sort
-            </label>
-            <select
-              id="watched-sort"
-              value={sort}
-              onChange={(e) => setSort(e.target.value as Sort)}
-              className="min-h-11 rounded-xl border border-stage-frame bg-stage-tile pr-2.5 pl-3.5 text-[15px] text-stage-fg"
-            >
-              {Object.entries(SORTS).map(([k, v]) => (
-                <option key={k} value={k}>
-                  {v}
-                </option>
-              ))}
-            </select>
+            <Select value={sort} onValueChange={(v) => setSort(v as Sort)}>
+              <SelectTrigger
+                aria-label={t.watched.sortLabel}
+                className="min-h-11 rounded-xl border-stage-frame bg-stage-tile px-3.5 text-[15px] text-stage-fg data-[size=default]:h-11 [&_svg]:text-stage-dim"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent
+                position="popper"
+                align="end"
+                className="rounded-2xl border border-stage-frame bg-stage-tile p-1 font-stage text-stage-fg ring-0"
+              >
+                {SORTS.map((k) => (
+                  <SelectItem
+                    key={k}
+                    value={k}
+                    className="rounded-xl py-2.5 pr-8 pl-3 text-[15px] focus:bg-stage-frame focus:text-stage-fg"
+                  >
+                    {t.watched.sort[k]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {token && !editing && (
               <Button variant="pill" size="pill" onClick={() => setEditing("new")}>
-                Add a title
+                {t.watched.add}
               </Button>
             )}
           </div>
@@ -250,27 +267,25 @@ export function WatchedView({ page, initial }: { page: WatchedPage; initial: Tit
           )}
         </AnimatePresence>
 
-        {initial === null && <Blank title="The list isn’t available right now." body="Try again in a minute." />}
+        {initial === null && <Blank title={t.watched.unavailable} body={t.watched.tryLater} />}
         {initial !== null && items.length === 0 && (
-          <Blank title={page.emptyTitle} body={token ? "Add the last thing you watched." : page.emptyBody} />
+          <Blank title={page.emptyTitle} body={token ? t.watched.addFirst : page.emptyBody} />
         )}
-        {items.length > 0 && shown.length === 0 && (
-          <Blank title="No matches." body="Nothing fits this filter or search. Try another one." />
-        )}
+        {items.length > 0 && shown.length === 0 && <Blank title={t.watched.noMatches} body={t.watched.noMatchesBody} />}
 
         {shown.length > 0 && (
           <LayoutGroup>
             <motion.ol layout className="mt-7 border-t border-stage-frame">
               <AnimatePresence initial={false} mode="popLayout">
-                {shown.map((t, i) => (
+                {shown.map((x, i) => (
                   <Credit
-                    key={t.id}
-                    t={t}
+                    key={x.id}
+                    x={x}
                     index={i}
                     admin={!!token}
-                    armed={armed === t.id}
-                    onEdit={() => setEditing(t)}
-                    onRemove={() => remove(t)}
+                    armed={armed === x.id}
+                    onEdit={() => setEditing(x)}
+                    onRemove={() => remove(x)}
                   />
                 ))}
               </AnimatePresence>
@@ -284,10 +299,10 @@ export function WatchedView({ page, initial }: { page: WatchedPage; initial: Tit
           <span>© 2026 kewldan</span>
           <AdminDialog
             token={token}
-            onToken={(t) => {
-              setToken(t);
-              adminToken.set(t);
-              if (!t) setEditing(null);
+            onToken={(next) => {
+              setToken(next);
+              adminToken.set(next);
+              if (!next) setEditing(null);
             }}
           />
         </div>
@@ -298,10 +313,11 @@ export function WatchedView({ page, initial }: { page: WatchedPage; initial: Tit
 
 /** Scores 1–10 as bars that grow in once, coloured by tier. */
 function Histogram({ hist, max }: { hist: number[]; max: number }) {
+  const { t } = useI18n();
   return (
     <div
       className="mt-7 flex w-full max-w-190 flex-col gap-2.5"
-      aria-label={`How the scores spread: ${hist.map((n, k) => `${k + 1}: ${n}`).join(", ")}`}
+      aria-label={`${t.watched.spread}: ${hist.map((n, k) => `${k + 1}: ${n}`).join(", ")}`}
     >
       <div aria-hidden className="grid h-22.5 grid-cols-10 items-end gap-1.25 md:h-30 md:gap-2">
         {hist.map((n, k) => (
@@ -311,7 +327,7 @@ function Histogram({ hist, max }: { hist: number[]; max: number }) {
             animate={{ scaleY: 1 }}
             transition={{ duration: 0.8, ease: ease.out, delay: 0.6 + k * 0.04 }}
             className="block min-h-0.75 origin-bottom rounded-t-lg rounded-b-[3px]"
-            style={{ height: `${(n / max) * 100}%`, background: n ? tier(k + 1).gradient : "#2a2a2d" }}
+            style={{ height: `${(n / max) * 100}%`, background: n ? tier(k + 1).gradient : "var(--stage-frame)" }}
           />
         ))}
       </div>
@@ -320,12 +336,14 @@ function Histogram({ hist, max }: { hist: number[]; max: number }) {
           <span key={k}>{k + 1}</span>
         ))}
       </div>
-      <small className="text-[13px] text-stage-dim">How I score</small>
+      <small className="text-[13px] text-stage-dim">{t.watched.howIScore}</small>
     </div>
   );
 }
 
 function Spotlight({ best }: { best: Title }) {
+  const { t, fmt } = useI18n();
+  const meta = useMeta();
   const glow = (e: React.PointerEvent<HTMLDivElement>) => {
     const el = e.currentTarget;
     const r = el.getBoundingClientRect();
@@ -334,7 +352,7 @@ function Spotlight({ best }: { best: Title }) {
   };
   return (
     <section className="wrap flex flex-col items-center gap-4.5 pb-[clamp(72px,10vw,140px)] text-center">
-      <p className="text-eyebrow font-semibold text-stage-dim">Top of the list</p>
+      <p className="text-eyebrow font-semibold text-stage-dim">{t.watched.top}</p>
       <motion.div
         initial={{ opacity: 0, y: 40, scale: 0.96 }}
         whileInView={{ opacity: 1, y: 0, scale: 1 }}
@@ -353,29 +371,31 @@ function Spotlight({ best }: { best: Title }) {
           {best.title}
         </h2>
         <p className="max-w-[46ch] text-[clamp(16px,1.7vw,20px)] leading-[1.45] text-stage-dim">
-          {meta(best)} · watched {fmtDate(best.watched)}
+          {meta(best)} · {fmt(t.watched.watchedOn, { date: fmtDate(best.watched) })}
         </p>
-        {best.note && <p className="max-w-[46ch] text-[clamp(16px,1.7vw,20px)] text-[#c7c7cc]">{best.note}</p>}
+        {best.note && <p className="max-w-[46ch] text-[clamp(16px,1.7vw,20px)] text-stage-note">{best.note}</p>}
       </motion.div>
     </section>
   );
 }
 
 function Credit({
-  t,
+  x,
   index,
   admin,
   armed,
   onEdit,
   onRemove,
 }: {
-  t: Title;
+  x: Title;
   index: number;
   admin: boolean;
   armed: boolean;
   onEdit: () => void;
   onRemove: () => void;
 }) {
+  const { t, fmt } = useI18n();
+  const meta = useMeta();
   return (
     <motion.li
       layout="position"
@@ -387,39 +407,39 @@ function Credit({
     >
       <p
         className="gradient-text pb-[0.04em] text-right text-[52px] leading-[0.9] font-bold tracking-[-0.07em] tabular-nums md:text-[clamp(52px,6vw,80px)]"
-        style={{ ["--g" as string]: tier(t.rating).gradient }}
-        aria-label={`Score ${t.rating} out of 10`}
+        style={{ ["--g" as string]: tier(x.rating).gradient }}
+        aria-label={fmt(t.watched.scoreLabel, { n: x.rating })}
       >
-        {t.rating}
+        {x.rating}
       </p>
       <div className="min-w-0">
         <h3 className="text-[clamp(22px,2.6vw,32px)] leading-[1.1] font-semibold tracking-[-0.035em] [overflow-wrap:anywhere]">
-          {t.title}
+          {x.title}
         </h3>
         <p className="mt-1.5 flex flex-wrap gap-x-2.5 gap-y-1 text-sm text-stage-dim">
-          <span>{meta(t)}</span>
-          {t.status === "watching" && <span className="text-[#ffd36b]">Watching now</span>}
-          {t.status === "dropped" && <span className="text-[#ff6961]">Dropped</span>}
+          <span>{meta(x)}</span>
+          {x.status === "watching" && <span className="text-[#e0a800]">{t.watched.watchingNow}</span>}
+          {x.status === "dropped" && <span className="text-[#ff453a]">{t.watched.dropped}</span>}
         </p>
-        {t.note && <p className="mt-2 max-w-[62ch] text-base leading-[1.45] text-[#c7c7cc]">{t.note}</p>}
+        {x.note && <p className="mt-2 max-w-[62ch] text-base leading-[1.45] text-stage-note">{x.note}</p>}
       </div>
       <p className="col-start-2 font-mono text-[12.5px] text-stage-dim tabular-nums md:col-start-auto md:text-right">
-        {fmtDate(t.watched)}
+        {fmtDate(x.watched)}
       </p>
       <div className="col-start-2 flex gap-0.5 md:col-start-auto md:justify-end">
         {admin && (
           <>
             <button onClick={onEdit} className="min-h-10 px-2 text-sm text-stage-link hover:underline">
-              Edit
+              {t.watched.editAction}
             </button>
             <button
               onClick={onRemove}
               className={cn(
                 "min-h-10 px-2 text-sm hover:underline",
-                armed ? "font-semibold text-[#ff6961]" : "text-stage-link",
+                armed ? "font-semibold text-[#ff453a]" : "text-stage-link",
               )}
             >
-              {armed ? "Sure?" : "Delete"}
+              {armed ? t.watched.sure : t.watched.deleteAction}
             </button>
           </>
         )}
