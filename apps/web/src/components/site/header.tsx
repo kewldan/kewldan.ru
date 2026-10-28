@@ -18,7 +18,8 @@ export function SiteHeader({ handle, nav, marquee }: Props) {
   return (
     <>
       <Marquee words={marquee} />
-      <header className="wrap flex items-center justify-between gap-3 py-4.5">
+      {/* Three columns, so the nav sits in the true centre whatever the sides hold. */}
+      <header className="wrap grid grid-cols-[1fr_auto_1fr] items-center gap-3 py-4.5">
         <Logo handle={handle} />
         <nav aria-label={t.nav.sections} className="hidden gap-x-5.5 text-[15px] lg:flex">
           {nav.map((l) => (
@@ -27,7 +28,7 @@ export function SiteHeader({ handle, nav, marquee }: Props) {
             </a>
           ))}
         </nav>
-        <div className="flex items-center gap-2.5">
+        <div className="col-start-3 flex items-center justify-end gap-2.5">
           <Switches />
           <MobileNav nav={nav} />
         </div>
@@ -42,7 +43,7 @@ function Logo({ handle, small }: { handle: string; small?: boolean }) {
     <a
       href="#top"
       className={cn(
-        "bg-yellow font-mono font-bold text-on-accent shadow-brutal-sm transition-[translate,box-shadow] duration-(--dur-fast) brutal hover:-translate-y-0.5 hover:shadow-[5px_6px_0_var(--ink)]",
+        "justify-self-start bg-yellow font-mono font-bold text-on-accent shadow-brutal-sm transition-[translate,box-shadow] duration-(--dur-fast) brutal hover:-translate-y-0.5 hover:shadow-[5px_6px_0_var(--ink)]",
         small ? "px-2 py-0.5 text-sm" : "px-2.75 py-1.25 text-md",
       )}
     >
@@ -113,7 +114,7 @@ function FloatingNav({ handle, nav }: { handle: string; nav: Link[] }) {
           transition={{ duration: 0.35, ease: ease.out }}
           className="fixed inset-x-0 top-0 z-50 border-b-3 border-ink bg-paper/90 pt-[env(safe-area-inset-top)] backdrop-blur-md"
         >
-          <div className="wrap flex h-14 items-center justify-between gap-3">
+          <div className="wrap grid h-14 grid-cols-[1fr_auto_1fr] items-center gap-3">
             <Logo handle={handle} small />
             <nav aria-label={t.nav.sections} className="hidden items-center lg:flex">
               {nav.map((l) => {
@@ -134,7 +135,7 @@ function FloatingNav({ handle, nav }: { handle: string; nav: Link[] }) {
                 );
               })}
             </nav>
-            <div className="flex items-center gap-2">
+            <div className="col-start-3 flex items-center justify-end gap-2">
               <Switches />
               <MobileNav nav={nav} />
             </div>
