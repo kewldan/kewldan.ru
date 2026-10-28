@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Contact as ContactContent } from "@/lib/api/generated/Contact";
 import { ease, rise, stagger } from "@/lib/motion";
 
+import { ContactForm } from "./contact-form";
 import { SlideLinks } from "./work/slide-links";
 import { Stage } from "./work/stage";
 
@@ -76,6 +77,9 @@ export function Contact({ contact, email }: { contact: ContactContent; email: st
               </motion.p>
               <motion.div variants={rise}>
                 <SlideLinks links={contact.links} linkClass="text-stage-link" />
+              </motion.div>
+              <motion.div variants={rise} className="w-full">
+                <ContactForm />
               </motion.div>
               <motion.div variants={rise} className="flex flex-wrap items-center justify-center gap-x-7.5 text-[15px]">
                 {contact.socials.map((s) => (

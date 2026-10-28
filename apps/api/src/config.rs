@@ -35,6 +35,9 @@ pub struct Config {
     pub trust_proxy: bool,
     /// `LOG_FORMAT=json` for structured logs.
     pub json_logs: bool,
+    /// `TELEGRAM_BOT_TOKEN` for the contact form, and `TELEGRAM_OWNER` (default
+    /// `kewldan`): the username whose `/start` makes the bot deliver to them.
+    pub telegram: Option<crate::contact::Telegram>,
 }
 
 impl Config {
@@ -86,6 +89,10 @@ impl Config {
                 .unwrap_or_default(),
             trust_proxy: var("TRUST_PROXY").is_some_and(|v| v == "1" || v == "true"),
             json_logs: var("LOG_FORMAT").is_some_and(|v| v == "json"),
+            telegram: var("TELEGRAM_BOT_TOKEN").map(|token| crate::contact::Telegram {
+                token,
+                owner: var("TELEGRAM_OWNER").unwrap_or_else(|| "kewldan".into()),
+            }),
         })
     }
 
@@ -109,6 +116,7 @@ impl Config {
             allowed_origins: Vec::new(),
             trust_proxy: false,
             json_logs: false,
+            telegram: None,
         }
     }
 

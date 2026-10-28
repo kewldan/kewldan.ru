@@ -2,6 +2,7 @@
 
 pub mod auth;
 pub mod config;
+pub mod contact;
 pub mod content;
 pub mod pixels;
 pub mod stats;
@@ -37,6 +38,7 @@ pub struct AppState {
     pub hub: Arc<Hub>,
     pub watched: Arc<watched::Store>,
     pub auth: Arc<auth::Auth>,
+    pub contact: Arc<contact::Contact>,
 }
 
 impl AppState {
@@ -61,7 +63,23 @@ impl AppState {
             &config.valkey_namespace,
         )
         .await?;
+        let contact = Arc::new(
+            contact::Contact::open(
+                config.valkey_url.as_deref(),
+                &config.valkey_namespace,
+                config
+                    .admin_token
+                    .as_deref()
+                    .unwrap_or(&config.valkey_namespace),
+                config.telegram.clone(),
+            )
+            .await?,
+        );
+        if config.stats_refresh {
+            contact::spawn_bot(Arc::clone(&contact));
+        }
         Ok(Self {
+            contact,
             config: Arc::new(config),
             content,
             stats,
@@ -107,6 +125,8 @@ pub fn router(state: AppState) -> Router {
         .route("/pixels/ws", get(pixels::ws))
         .route("/pixels/history", get(pixels::history))
         .route("/watched", get(watched::list))
+        .route("/contact/challenge", get(contact::challenge))
+        .route("/contact", post(contact::send))
         .nest("/admin", admin);
 
     Router::new()

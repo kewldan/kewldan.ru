@@ -423,3 +423,72 @@ async fn history_replays_rewinds_and_erases() {
     let board = next_of(&mut ws, "board").await;
     assert_eq!(board["board"], before);
 }
+
+#[tokio::test]
+async fn contact_form_keeps_abuse_out() {
+    use portfolio_api::contact::proof_ok;
+
+    let addr = spawn().await;
+    let mut challenges = Vec::new();
+    for _ in 0..7 {
+        let (status, body) = request(addr, "GET", "/api/contact/challenge", None, None).await;
+        assert_eq!(status, 200);
+        let v: Value = serde_json::from_str(&body).unwrap();
+        challenges.push(v["id"].as_str().unwrap().to_owned());
+    }
+    let solve = |id: &str| {
+        (0u64..)
+            .map(|n| n.to_string())
+            .find(|n| proof_ok(id, n))
+            .unwrap()
+    };
+    let form = |id: &str, nonce: &str, message: &str, website: &str| {
+        json!({
+            "challenge": id, "nonce": nonce, "name": "Ann", "contact": "@ann",
+            "message": message, "website": website,
+        })
+    };
+    let post = |body: Value| request(addr, "POST", "/api/contact", None, Some(body));
+
+    // Answered at once: a script. The challenge is spent either way.
+    let id = &challenges[0];
+    let (status, body) = post(form(id, &solve(id), "Hello, I have a project", "")).await;
+    assert_eq!((status, body.contains("too_fast")), (400, true));
+
+    tokio::time::sleep(std::time::Duration::from_millis(3100)).await;
+    let (status, _) = post(form(id, &solve(id), "Hello, I have a project", "")).await;
+    assert_eq!(status, 400, "a challenge is good for one message");
+
+    let id = &challenges[1];
+    let (status, body) = post(form(id, "nope", "Hello, I have a project", "")).await;
+    assert_eq!((status, body.contains("challenge")), (400, true));
+
+    // The honeypot gets a quiet success and no delivery.
+    let id = &challenges[2];
+    let (status, _) = post(form(id, &solve(id), "Buy cheap stuff now", "https://spam")).await;
+    assert_eq!(status, 204);
+
+    let id = &challenges[3];
+    let (status, body) = post(form(id, &solve(id), "hi", "")).await;
+    assert_eq!((status, body.contains("message")), (422, true));
+
+    // Valid, but no Telegram in tests: unavailable. Still counted.
+    let id = &challenges[4];
+    let (status, _) = post(form(id, &solve(id), "Hello, I have a project", "")).await;
+    assert_eq!(status, 503);
+    let id = &challenges[5];
+    let (status, _) = post(form(id, &solve(id), "hello,  I have a PROJECT", "")).await;
+    assert_eq!(status, 409, "the same message twice a day");
+    let id = &challenges[6];
+    let (status, _) = post(form(id, &solve(id), "Another thing entirely", "")).await;
+    assert_eq!(status, 503);
+
+    let (_, body) = request(addr, "GET", "/api/contact/challenge", None, None).await;
+    let id = serde_json::from_str::<Value>(&body).unwrap()["id"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    tokio::time::sleep(std::time::Duration::from_millis(3100)).await;
+    let (status, body) = post(form(&id, &solve(&id), "A fourth message this hour", "")).await;
+    assert_eq!((status, body.contains("rate")), (429, true));
+}
