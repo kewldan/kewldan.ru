@@ -153,7 +153,7 @@ async fn github_graphql(
     token: &str,
     now: Instant,
 ) -> anyhow::Result<BTreeMap<String, u64>> {
-    const QUERY: &str = r"
+    const MAIN: &str = r"
 query($login: String!, $from: DateTime!, $to: DateTime!) {
   user(login: $login) {
     createdAt
@@ -161,49 +161,47 @@ query($login: String!, $from: DateTime!, $to: DateTime!) {
       contributionCalendar { totalContributions }
       restrictedContributionsCount
       totalPullRequestContributions
-      commitContributionsByRepository(maxRepositories: 100) {
-        repository { isPrivate }
-        contributions { totalCount }
-      }
     }
     pub: repositories(privacy: PUBLIC, ownerAffiliations: OWNER) { totalCount }
     priv: repositories(privacy: PRIVATE, ownerAffiliations: OWNER) { totalCount }
   }
 }";
-    let body = json!({
-        "query": QUERY,
-        "variables": { "login": login, "from": now.year_ago_iso(), "to": now.iso() },
-    });
-    let res: Value = http
-        .post("https://api.github.com/graphql")
-        .bearer_auth(token)
-        .json(&body)
-        .send()
-        .await?
-        .error_for_status()?
-        .json()
-        .await?;
-    // GraphQL answers partially: an organisation that refuses the token
-    // (say, over its lifetime) nulls only the fields that touch its repos.
-    if let Some(errors) = res.get("errors") {
-        if res["data"]["user"].is_null() {
-            anyhow::bail!("GraphQL: {errors}");
-        }
-        tracing::warn!(%errors, "stats: GitHub answered partially");
+    // Asked separately: it touches every repository, and one organisation
+    // refusing the token (e.g. over its lifetime) nulls the whole answer.
+    const BY_REPO: &str = r"
+query($login: String!, $from: DateTime!, $to: DateTime!) {
+  user(login: $login) {
+    contributionsCollection(from: $from, to: $to) {
+      commitContributionsByRepository(maxRepositories: 100) {
+        repository { isPrivate }
+        contributions { totalCount }
+      }
     }
-    let user = &res["data"]["user"];
+  }
+}";
+    let vars = json!({ "login": login, "from": now.year_ago_iso(), "to": now.iso() });
+    let res = graphql(http, token, MAIN, &vars).await?;
+    let user = &res["user"];
     let cc = &user["contributionsCollection"];
     let n = |v: &Value| v.as_u64().context("missing number");
 
     let total = n(&cc["contributionCalendar"]["totalContributions"])?;
     // Private work: what the token cannot itemise plus commits in private repos.
-    let private_commits: u64 = cc["commitContributionsByRepository"]
-        .as_array()
-        .into_iter()
-        .flatten()
-        .filter(|r| r["repository"]["isPrivate"].as_bool() == Some(true))
-        .filter_map(|r| r["contributions"]["totalCount"].as_u64())
-        .sum();
+    let private_commits: u64 = match graphql(http, token, BY_REPO, &vars).await {
+        Ok(by_repo) => {
+            by_repo["user"]["contributionsCollection"]["commitContributionsByRepository"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter(|r| r["repository"]["isPrivate"].as_bool() == Some(true))
+                .filter_map(|r| r["contributions"]["totalCount"].as_u64())
+                .sum()
+        }
+        Err(err) => {
+            tracing::warn!(error = %format!("{err:#}"), "stats: per-repo contributions unavailable");
+            0
+        }
+    };
     let private = (n(&cc["restrictedContributionsCount"])? + private_commits).min(total);
 
     let mut out = BTreeMap::new();
@@ -217,6 +215,28 @@ query($login: String!, $from: DateTime!, $to: DateTime!) {
         out.insert("gh.years".into(), now.years_since(created));
     }
     Ok(out)
+}
+
+/// One GraphQL request; `data` on success, an error if GitHub sent any.
+async fn graphql(
+    http: &reqwest::Client,
+    token: &str,
+    query: &str,
+    vars: &Value,
+) -> anyhow::Result<Value> {
+    let res: Value = http
+        .post("https://api.github.com/graphql")
+        .bearer_auth(token)
+        .json(&json!({ "query": query, "variables": vars }))
+        .send()
+        .await?
+        .error_for_status()?
+        .json()
+        .await?;
+    if let Some(errors) = res.get("errors") {
+        anyhow::bail!("GraphQL: {errors}");
+    }
+    Ok(res["data"].clone())
 }
 
 /// Without a token: what the public REST API tells anyone.
