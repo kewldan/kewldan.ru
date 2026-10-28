@@ -10,10 +10,13 @@ COPY . .
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/src/target \
     cargo build --release --locked \
-    && cp target/release/portfolio-api /portfolio-api
+    && cp target/release/portfolio-api /portfolio-api \
+    && mkdir /runtime-libs \
+    && cp -L /usr/lib/*-linux-gnu/libssl.so.3 /usr/lib/*-linux-gnu/libcrypto.so.3 /runtime-libs/
 
-# "base" rather than "cc": it carries libssl for webauthn-rs.
-FROM gcr.io/distroless/base-debian12:nonroot
+# "cc" has libgcc_s for Rust; OpenSSL for webauthn-rs comes from the build stage.
+FROM gcr.io/distroless/cc-debian12:nonroot
+COPY --from=build /runtime-libs/ /usr/lib/
 COPY --from=build /portfolio-api /portfolio-api
 # A copy of the content for CONTENT_PATH; the binary also embeds it.
 COPY content /content

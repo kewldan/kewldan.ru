@@ -56,6 +56,21 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.image }}
           cache-to: type=gha,scope=${{ matrix.image }},mode=max
 
+      # Образ должен хотя бы запуститься и ответить, иначе до сервера он не доедет.
+      - name: Смоук-тест образа
+        run: |
+          image=ghcr.io/${{ github.repository }}/${{ matrix.image }}:${{ github.sha }}
+          if [ "${{ matrix.image }}" = api ]; then
+            docker run -d --name smoke -p 8080:8080 -e STATS_REFRESH=0 -e ADMIN_TOKEN=smoke "$image"
+            url=http://localhost:8080/api/health
+          else
+            docker run -d --name smoke -p 3000:3000 -e API_URL=http://127.0.0.1:9 "$image"
+            url=http://localhost:3000/
+          fi
+          curl -fsS --retry 15 --retry-delay 2 --retry-all-errors -o /dev/null "$url" \
+            || { docker logs smoke; exit 1; }
+          docker rm -f smoke
+
   deploy:
     name: Деплой
     needs: build
