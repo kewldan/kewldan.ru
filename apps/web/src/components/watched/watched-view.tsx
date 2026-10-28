@@ -12,7 +12,17 @@ import type { Title } from "@/lib/api/generated/Title";
 import type { WatchedPage } from "@/lib/api/generated/WatchedPage";
 import { ease, rise, spring, stagger, viewport } from "@/lib/motion";
 import { cn } from "@/lib/utils";
-import { adminApi, adminToken, type Credential, errorKey, fmtScore, fmtWhen, tier, whenKey } from "@/lib/watched";
+import {
+  adminApi,
+  adminHint,
+  adminToken,
+  type Credential,
+  errorKey,
+  fmtScore,
+  fmtWhen,
+  tier,
+  whenKey,
+} from "@/lib/watched";
 
 import { AdminDialog } from "./admin-dialog";
 import { TitleForm } from "./title-form";
@@ -64,8 +74,12 @@ export function WatchedView({ page, initial }: { page: WatchedPage; initial: Tit
       () => {
         setToken(saved);
         setAdmin(true);
+        adminHint.set(true);
       },
-      () => adminToken.set(null),
+      () => {
+        adminToken.set(null);
+        adminHint.set(false);
+      },
     );
   }, []);
 
@@ -319,11 +333,13 @@ export function WatchedView({ page, initial }: { page: WatchedPage; initial: Tit
             onSignIn={(next) => {
               setToken(next);
               adminToken.set(next);
+              adminHint.set(true);
               setAdmin(true);
             }}
             onSignOut={() => {
               setToken(null);
               adminToken.set(null);
+              adminHint.set(false);
               setAdmin(false);
               setEditing(null);
             }}

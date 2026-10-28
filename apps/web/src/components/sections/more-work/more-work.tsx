@@ -4,6 +4,7 @@ import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import Image from "next/image";
 import { useState } from "react";
 
+import { LiveStatus } from "@/components/live-status";
 import { RichReveal } from "@/components/motion/rich-reveal";
 import { SectionLabel } from "@/components/section-label";
 import { t } from "@/lib/copy";
@@ -109,10 +110,14 @@ function Row({ item: x, index }: { item: WorkItem; index: number }) {
       </span>
       <span className="text-ink-muted transition-colors group-hover:text-cobalt-soft">
         {x.stack}
-        {x.status && (
-          <span className="ml-2 border-2 border-current px-1.75 py-px font-mono text-[11px] whitespace-nowrap uppercase">
-            {x.status}
-          </span>
+        {x.probe ? (
+          <LiveStatus url={x.probe} variant="badge" fallback={x.status} />
+        ) : (
+          x.status && (
+            <span className="ml-2 border-2 border-current px-1.75 py-px font-mono text-[11px] whitespace-nowrap uppercase">
+              {x.status}
+            </span>
+          )
         )}
       </span>
       <span className="font-mono text-[13px] tabular-nums md:text-right">

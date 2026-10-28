@@ -200,6 +200,7 @@
       },
       {
         "id": "omniflow",
+        "probe": "https://omniflow-vpn.mintlify.site",
         "name": "Omniflow",
         "theme": "light",
         "gradient": "linear-gradient(100deg,#7b5cff 0%,#b05cff 50%,#ff5fb8 100%)",
@@ -389,6 +390,7 @@
       },
       {
         "id": "m3105",
+        "probe": "https://m3105.ru",
         "name": "m3105.ru",
         "theme": "light",
         "gradient": "linear-gradient(90deg,#ff9f1c 0%,#ff5f5f 100%)",
@@ -697,7 +699,7 @@
       { "name": "ConsolePong", "categories": ["sys"], "year": "2022", "status": null, "what": "Pong, a Tetris prototype and a ray-traced demo.", "detail": "All of it inside the Windows console.", "stack": "C++", "href": "https://github.com/kewldan/ConsolePong", "media": null, "widget": null },
       { "name": "ZagranRead", "categories": ["sys"], "year": null, "status": null, "what": "Reads the NFC chip of a biometric passport.", "detail": "ICAO 9303: PACE/BAC, Passive Authentication, fully offline.", "stack": "Kotlin · Compose · JMRTD", "href": "https://github.com/kewldan/ZagranRead", "media": null, "widget": null },
       { "name": "SteelSeriesDisplay", "categories": ["sys"], "year": null, "status": null, "what": "Now playing on a keyboard OLED.", "detail": "Title, artist, 40×40 1-bit cover art and a live progress bar on the 128×40 OLED of an Apex 7 / Apex Pro, through the GameSense API.", "stack": "Python · GameSense API", "href": "https://github.com/kewldan/SteelSeriesDisplay", "media": null, "widget": "oled" },
-      { "name": "tsar-trava", "categories": ["web"], "year": null, "status": "live", "what": "Landing page for a lawn-care studio in Pushkin.", "detail": "A live 3D field of 14–72k grass blades in WebGL: wind in the vertex shader, the cursor parts the grass, a map from OpenStreetMap data.", "stack": "React · Three.js · Vite", "href": "https://kewldan.github.io/tsar-trava", "media": { "src": "/media/tt-hero.webp", "alt": "tsar-trava: hero with a 3D field of grass", "width": 1200, "height": 750 }, "widget": null },
+      { "name": "tsar-trava", "categories": ["web"], "year": null, "status": "live", "what": "Landing page for a lawn-care studio in Pushkin.", "detail": "A live 3D field of 14–72k grass blades in WebGL: wind in the vertex shader, the cursor parts the grass, a map from OpenStreetMap data.", "stack": "React · Three.js · Vite", "href": "https://kewldan.github.io/tsar-trava", "media": { "src": "/media/tt-hero.webp", "alt": "tsar-trava: hero with a 3D field of grass", "width": 1200, "height": 750 }, "widget": null, "probe": "https://kewldan.github.io/tsar-trava" },
       { "name": "selfsteal", "categories": ["web"], "year": null, "status": null, "what": "10 mask sites for VLESS Reality.", "detail": "One index.html each, zero external requests, all graphics inline SVG.", "stack": "HTML · SVG", "href": "https://github.com/kewldan/selfsteal", "media": null, "widget": null },
       { "name": "itmo-bot", "categories": ["tg", "itmo"], "year": "2026", "status": null, "what": "Watches ITMO admission lists and estimates your odds.", "detail": "Forecast up to the enrolment date, multi-user. It was counting my own chances.", "stack": "Python · aiogram · PostgreSQL", "href": "https://github.com/kewldan/itmo-bot", "media": null, "widget": null },
       { "name": "egeResults", "categories": ["tg"], "year": "2026", "status": null, "what": "Pings followers when new EGE scores land.", "detail": "Plus a score card ready for stories.", "stack": "Telegram bot", "href": "https://github.com/kewldan/egeResults", "media": null, "widget": null },

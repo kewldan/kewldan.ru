@@ -5,6 +5,7 @@ pub mod config;
 pub mod content;
 pub mod pixels;
 pub mod stats;
+pub mod status;
 pub mod watched;
 
 use std::{
@@ -32,6 +33,7 @@ pub struct AppState {
     pub config: Arc<Config>,
     pub content: Arc<RwLock<Arc<Library>>>,
     pub stats: Arc<stats::Stats>,
+    pub status: Arc<status::Monitor>,
     pub hub: Arc<Hub>,
     pub watched: Arc<watched::Store>,
     pub auth: Arc<auth::Auth>,
@@ -44,6 +46,12 @@ impl AppState {
         if config.stats_refresh {
             stats::spawn_refresh(Arc::clone(&stats), config.stats.clone());
         }
+        let content = Arc::new(RwLock::new(Arc::new(content)));
+        let status = Arc::new(status::Monitor::default());
+        // The same switch as the stats: tests and CI stay off the network.
+        if config.stats_refresh {
+            status::spawn(Arc::clone(&status), Arc::clone(&content));
+        }
         let hub = Hub::start(config.valkey_url.as_deref(), &config.valkey_namespace).await?;
         let watched =
             watched::Store::open(config.valkey_url.as_deref(), &config.valkey_namespace).await?;
@@ -55,8 +63,9 @@ impl AppState {
         .await?;
         Ok(Self {
             config: Arc::new(config),
-            content: Arc::new(RwLock::new(Arc::new(content))),
+            content,
             stats,
+            status,
             hub,
             watched: Arc::new(watched),
             auth: Arc::new(auth),
@@ -80,6 +89,8 @@ pub fn router(state: AppState) -> Router {
         )
         .route("/pixels/clear", post(pixels::clear))
         .route("/pixels/reset", post(pixels::reset))
+        .route("/pixels/rewind", post(pixels::rewind))
+        .route("/pixels/erase", post(pixels::erase))
         .route_layer(middleware::from_fn_with_state(state.clone(), require_admin));
 
     let api = Router::new()
@@ -90,8 +101,11 @@ pub fn router(state: AppState) -> Router {
         .route("/auth/logout", post(auth::logout))
         .route("/content", get(get_content))
         .route("/stats", get(get_stats))
+        .route("/github/calendar", get(get_calendar))
+        .route("/status", get(get_status))
         .route("/pixels", get(pixels::board))
         .route("/pixels/ws", get(pixels::ws))
+        .route("/pixels/history", get(pixels::history))
         .route("/watched", get(watched::list))
         .nest("/admin", admin);
 
@@ -156,6 +170,27 @@ async fn reload_content(State(app): State<AppState>) -> Response {
 /// `GET /api/stats`: the numbers behind the placeholders, live or fallback.
 async fn get_stats(State(app): State<AppState>) -> Json<std::collections::BTreeMap<String, u64>> {
     Json(app.stats.snapshot())
+}
+
+/// `GET /api/github/calendar`: `null` until GitHub has answered.
+async fn get_calendar(State(app): State<AppState>) -> Json<Option<stats::Calendar>> {
+    Json(app.stats.calendar())
+}
+
+/// `GET /api/status`: probe URL → its last check.
+async fn get_status(State(app): State<AppState>) -> Response {
+    (
+        [(header::CACHE_CONTROL, "public, max-age=30")],
+        Json(app.status.snapshot()),
+    )
+        .into_response()
+}
+
+/// Milliseconds since the Unix epoch.
+pub fn unix_ms() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| u64::try_from(d.as_millis()).unwrap_or(u64::MAX))
 }
 
 /// Admin routes take either `Authorization: Bearer $ADMIN_TOKEN` or the

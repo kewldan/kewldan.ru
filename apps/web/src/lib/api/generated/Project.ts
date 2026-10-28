@@ -18,4 +18,8 @@ lead: string, showcase: Showcase | null, specs: Array<Spec>, points: Array<strin
 /**
  * The long read at `/work/{id}`.
  */
-case: Case | null, };
+case: Case | null, 
+/**
+ * An https URL the API checks every few minutes for the live dot.
+ */
+probe?: string | null, };

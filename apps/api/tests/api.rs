@@ -351,3 +351,75 @@ async fn passkey_endpoints_guard_the_admin() {
     let (status, _) = request(addr, "POST", "/api/auth/logout", None, None).await;
     assert_eq!(status, 204);
 }
+
+#[tokio::test]
+async fn history_replays_rewinds_and_erases() {
+    let addr = spawn().await;
+    let mut ws = connect(addr).await;
+    let hello = next_of(&mut ws, "hello").await;
+    let before = hello["board"].as_str().unwrap().to_owned();
+    let color = if before.as_bytes()[7] == b'3' { 2 } else { 3 };
+    ws.send(Message::text(
+        json!({ "t": "paint", "cells": [[7, color], [8, color]] }).to_string(),
+    ))
+    .await
+    .unwrap();
+    next_of(&mut ws, "ack").await;
+    next_of(&mut ws, "paint").await;
+
+    // The history is public: the base, then one line per change.
+    let (status, body) = request(addr, "GET", "/api/pixels/history", None, None).await;
+    assert_eq!(status, 200);
+    let mut lines = body.lines();
+    assert_eq!(lines.next().unwrap(), before);
+    let last = lines.last().unwrap();
+    assert!(last.ends_with(&format!(" p 7:{color},8:{color}")), "{last}");
+    let painted_at: u64 = last.split(' ').next().unwrap().parse().unwrap();
+
+    // Moderation needs the token.
+    let erase = json!({ "x": 7, "y": 0, "w": 1, "h": 1 });
+    let (status, _) = request(
+        addr,
+        "POST",
+        "/api/admin/pixels/erase",
+        None,
+        Some(erase.clone()),
+    )
+    .await;
+    assert_eq!(status, 401);
+    let (status, _) = request(
+        addr,
+        "POST",
+        "/api/admin/pixels/erase",
+        Some("test-token"),
+        Some(erase),
+    )
+    .await;
+    assert_eq!(status, 204);
+    let erased = next_of(&mut ws, "paint").await;
+    assert_eq!(erased["cells"], json!([[7, -1]]));
+    let bad = json!({ "x": 60, "y": 0, "w": 10, "h": 1 });
+    let (status, _) = request(
+        addr,
+        "POST",
+        "/api/admin/pixels/erase",
+        Some("test-token"),
+        Some(bad),
+    )
+    .await;
+    assert_eq!(status, 422);
+
+    // Back to just before the paint: the board from `hello` again.
+    let rewind = json!({ "at": painted_at - 1 });
+    let (status, _) = request(
+        addr,
+        "POST",
+        "/api/admin/pixels/rewind",
+        Some("test-token"),
+        Some(rewind),
+    )
+    .await;
+    assert_eq!(status, 204);
+    let board = next_of(&mut ws, "board").await;
+    assert_eq!(board["board"], before);
+}

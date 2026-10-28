@@ -133,7 +133,7 @@ pub fn encode_cell(color: i8) -> u8 {
     }
 }
 
-fn decode_cell(b: u8) -> Option<i8> {
+pub fn decode_cell(b: u8) -> Option<i8> {
     match b {
         EMPTY_BYTE => Some(EMPTY),
         b'0'..=b'9' if usize::from(b - b'0') < PALETTE.len() => Some((b - b'0') as i8),

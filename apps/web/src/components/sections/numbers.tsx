@@ -1,13 +1,15 @@
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/reveal";
 import { Rich } from "@/components/rich";
+import type { Calendar } from "@/lib/api/generated/Calendar";
 import type { Numbers as NumbersContent } from "@/lib/api/generated/Numbers";
 
+import { ContributionCalendar } from "./contribution-calendar";
 import { CountUp, KeynoteTitle } from "./work/keynote";
 import { Stage } from "./work/stage";
 
 const GRADIENT = "linear-gradient(90deg,#5ef0c2 0%,#3fb6ff 60%,#8a6bff 100%)";
 
-export function Numbers({ numbers }: { numbers: NumbersContent }) {
+export function Numbers({ numbers, calendar }: { numbers: NumbersContent; calendar: Calendar | null }) {
   return (
     <Stage seamless>
       <div
@@ -28,6 +30,7 @@ export function Numbers({ numbers }: { numbers: NumbersContent }) {
           dimClass="text-stage-dim"
           className="text-[clamp(28px,4vw,54px)]"
         />
+        {calendar && <ContributionCalendar calendar={calendar} />}
         <RevealGroup
           each={0.08}
           className="mt-6 grid w-full max-w-230 grid-cols-1 gap-6 border-t border-[#2a2a2d] pt-7 md:grid-cols-3"

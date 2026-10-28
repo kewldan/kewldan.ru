@@ -1,5 +1,6 @@
 import Image from "next/image";
 
+import { LiveStatus } from "@/components/live-status";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/reveal";
 import { Rich } from "@/components/rich";
 import type { Project } from "@/lib/api/generated/Project";
@@ -80,8 +81,15 @@ function Slide({ project: p }: { project: Project }) {
             />
           </Reveal>
         )}
-        <Reveal>
+        <Reveal className="flex flex-col items-center gap-3">
           <p className="gradient-text text-eyebrow font-bold">{p.name}</p>
+          {p.probe && (
+            <LiveStatus
+              url={p.probe}
+              variant="pill"
+              className={t.light ? "bg-stage-light-tile text-stage-light-fg" : undefined}
+            />
+          )}
         </Reveal>
         <KeynoteTitle title={p.title} dim={p.titleDim} dimClass={t.dim} />
         {!bigNumbers && lead}

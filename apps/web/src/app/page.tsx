@@ -15,12 +15,13 @@ import { Work } from "@/components/sections/work/work";
 import { SiteFooter } from "@/components/site/footer";
 import { SiteHeader } from "@/components/site/header";
 import { getContent } from "@/lib/api/content";
+import { getCalendar } from "@/lib/api/live";
 import { t } from "@/lib/copy";
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 export default async function Home() {
-  const c = await getContent();
+  const [c, calendar] = await Promise.all([getContent(), getCalendar()]);
   return (
     <>
       <JsonLd data={{ "@context": "https://schema.org", ...person(c) }} />
@@ -30,7 +31,7 @@ export default async function Home() {
         <Pixels section={c.pixels} />
         <About about={c.about} t={t.about} />
         <Work work={c.work} />
-        <Numbers numbers={c.numbers} />
+        <Numbers numbers={c.numbers} calendar={calendar} />
         <MoreWork more={c.more} />
         <Stack stack={c.stack} usedIn={t.stack.usedIn} />
         <Timeline timeline={c.timeline} />

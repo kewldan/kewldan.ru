@@ -3,13 +3,14 @@
 //! Every change becomes a [`BusEvent`]. Without Valkey the event is applied
 //! and broadcast in-process. With Valkey a Lua script persists the change and
 //! publishes it in one atomic step; every instance (this one included) then
-//! applies it from its subscription, so all mirrors see the same order.
+//! applies it from its subscription, so all mirrors see the same order. The
+//! same step appends the change to the board's history.
 
 use std::{
     collections::HashMap,
     net::IpAddr,
     sync::{
-        Arc, Mutex, RwLock,
+        Arc, LazyLock, Mutex, RwLock,
         atomic::{AtomicU32, AtomicU64, Ordering},
     },
     time::{Duration, Instant},
@@ -22,6 +23,7 @@ use tokio::sync::broadcast;
 
 use super::{
     board::{self, Board, HEIGHT, PALETTE, WIDTH},
+    history,
     protocol::{Cell, ServerMessage},
 };
 
@@ -32,17 +34,75 @@ const MAX_BATCH: usize = 256;
 pub const INK_MAX: u32 = 40;
 pub const INK_REGEN: f32 = 5.0;
 
-/// Paints and publishes in one round trip: ARGV[1] is the event, then
-/// offset/byte pairs.
-const PAINT_LUA: &str = r"
-for i = 2, #ARGV, 2 do
+/// History helpers shared by both scripts. KEYS are the board, the event
+/// channel, the history list and its base board (see [`history`]).
+fn history_lua(max: usize, keep: usize) -> String {
+    format!(
+        r"
+local function init_base()
+  if redis.call('EXISTS', KEYS[4]) == 0 then
+    local current = redis.call('GET', KEYS[1])
+    if current then redis.call('SET', KEYS[4], current) end
+  end
+end
+local function fold()
+  local n = redis.call('LLEN', KEYS[3])
+  if n <= {max} then return end
+  local drop = n - {keep}
+  local base = redis.call('GET', KEYS[4])
+  if base then
+    local cells = {{}}
+    for i = 1, #base do cells[i] = string.sub(base, i, i) end
+    for _, line in ipairs(redis.call('LRANGE', KEYS[3], 0, drop - 1)) do
+      local kind, rest = string.match(line, '^%d+ (%a) (.*)$')
+      if kind == 'b' then
+        for i = 1, #rest do cells[i] = string.sub(rest, i, i) end
+      elseif kind == 'p' then
+        for idx, b in string.gmatch(rest, '(%d+):(.)') do cells[tonumber(idx) + 1] = b end
+      end
+    end
+    redis.call('SET', KEYS[4], table.concat(cells))
+  end
+  redis.call('LTRIM', KEYS[3], drop, -1)
+end
+",
+    )
+}
+
+/// Paints, records and publishes in one round trip: ARGV[1] is the event,
+/// ARGV[2] the history line, then offset/byte pairs.
+static PAINT: LazyLock<Script> = LazyLock::new(|| paint_script(history::MAX, history::KEEP));
+
+fn paint_script(max: usize, keep: usize) -> Script {
+    Script::new(&format!(
+        r"{}
+init_base()
+for i = 3, #ARGV, 2 do
   redis.call('SETRANGE', KEYS[1], ARGV[i], ARGV[i + 1])
 end
+redis.call('RPUSH', KEYS[3], ARGV[2])
+fold()
 redis.call('PUBLISH', KEYS[2], ARGV[1])
-";
-const REPLACE_LUA: &str = r"
+",
+        history_lua(max, keep)
+    ))
+}
+/// ARGV[1] is the event, ARGV[2] the board, ARGV[3] the history line.
+static REPLACE: LazyLock<Script> = LazyLock::new(|| {
+    Script::new(&format!(
+        r"{}
+init_base()
 redis.call('SET', KEYS[1], ARGV[2])
+redis.call('RPUSH', KEYS[3], ARGV[3])
+fold()
 redis.call('PUBLISH', KEYS[2], ARGV[1])
+",
+        history_lua(history::MAX, history::KEEP)
+    ))
+});
+/// The history's base and lines, read together so a fold cannot fall between.
+const HISTORY_LUA: &str = r"
+return {redis.call('GET', KEYS[2]) or redis.call('GET', KEYS[1]) or '', redis.call('LRANGE', KEYS[3], 0, -1)}
 ";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -66,11 +126,14 @@ enum Backend {
     },
 }
 
-/// `{ns}:board` holds the cells, `{ns}:events` carries the bus.
+/// `{ns}:board` holds the cells, `{ns}:events` carries the bus,
+/// `{ns}:history` and `{ns}:history:base` the past.
 #[derive(Clone)]
 struct Keys {
     board: String,
     events: String,
+    history: String,
+    history_base: String,
 }
 
 struct Bucket {
@@ -103,6 +166,8 @@ pub struct Hub {
     sent_peers: AtomicU32,
     remote_peers: Mutex<HashMap<u64, (u32, Instant)>>,
     ink: Mutex<HashMap<IpAddr, Bucket>>,
+    /// Only used without Valkey.
+    memory_history: Mutex<history::Memory>,
 }
 
 impl Hub {
@@ -115,6 +180,8 @@ impl Hub {
                 let keys = Keys {
                     board: format!("{namespace}:board"),
                     events: format!("{namespace}:events"),
+                    history: format!("{namespace}:history"),
+                    history_base: format!("{namespace}:history:base"),
                 };
                 let client = redis::Client::open(url)?;
                 let mut conn = ConnectionManager::new(client.clone()).await?;
@@ -125,6 +192,7 @@ impl Hub {
         let hub = Arc::new(Self {
             instance: instance_id(),
             backend,
+            memory_history: Mutex::new(history::Memory::new(board.clone())),
             board: RwLock::new(board),
             tx: broadcast::channel(1024).0,
             next_id: AtomicU64::new(1),
@@ -234,6 +302,36 @@ impl Hub {
         ServerMessage::Ack { ink, revert }
     }
 
+    /// The admin's brush: no ink, no batch limit. Unchanged cells are skipped.
+    pub async fn paint_admin(&self, cells: Vec<Cell>) {
+        let cells: Vec<Cell> = {
+            let board = self.board.read().unwrap();
+            cells
+                .into_iter()
+                .filter(|&(i, c)| board::is_valid_cell(i, c) && board.get(i) != c)
+                .collect()
+        };
+        if !cells.is_empty() {
+            self.emit(BusEvent::Paint { by: 0, cells }).await;
+        }
+    }
+
+    /// The base board and every history line since, oldest first.
+    pub async fn history(&self) -> anyhow::Result<(Board, Vec<String>)> {
+        let Backend::Valkey { conn, keys, .. } = &self.backend else {
+            let h = self.memory_history.lock().unwrap();
+            return Ok((h.base.clone(), h.lines.iter().cloned().collect()));
+        };
+        let (base, lines): (Vec<u8>, Vec<String>) = Script::new(HISTORY_LUA)
+            .key(&keys.board)
+            .key(&keys.history_base)
+            .key(&keys.history)
+            .invoke_async(&mut conn.clone())
+            .await?;
+        let base = Board::decode(&base).unwrap_or_else(|| self.board.read().unwrap().clone());
+        Ok((base, lines))
+    }
+
     pub async fn cursor(&self, id: u64, x: f32, y: f32, c: i8) {
         if !(0.0..=1.0).contains(&x) || !(0.0..=1.0).contains(&y) {
             return;
@@ -266,30 +364,42 @@ impl Hub {
     }
 
     async fn emit(&self, ev: BusEvent) {
+        let line = match &ev {
+            BusEvent::Paint { cells, .. } => Some(history::paint_line(crate::unix_ms(), cells)),
+            BusEvent::Board { board } => Some(history::board_line(crate::unix_ms(), board)),
+            _ => None,
+        };
         let Backend::Valkey { conn, keys, .. } = &self.backend else {
+            if let Some(line) = line {
+                self.memory_history.lock().unwrap().push(line);
+            }
             self.deliver(ev);
             return;
         };
         let mut conn = conn.clone();
         let payload = serde_json::to_string(&ev).expect("bus events serialize");
+        let line = line.unwrap_or_default();
+        let history_keys = |inv: &mut redis::ScriptInvocation<'_>| {
+            inv.key(&keys.board)
+                .key(&keys.events)
+                .key(&keys.history)
+                .key(&keys.history_base);
+        };
         let result: redis::RedisResult<()> = match &ev {
             BusEvent::Paint { cells, .. } => {
-                let script = Script::new(PAINT_LUA);
-                let mut inv = script.key(&keys.board);
-                inv.key(&keys.events).arg(&payload);
+                let mut inv = PAINT.prepare_invoke();
+                history_keys(&mut inv);
+                inv.arg(&payload).arg(&line);
                 for &(i, c) in cells {
                     inv.arg(i).arg(&[board::encode_cell(c)][..]);
                 }
                 inv.invoke_async(&mut conn).await
             }
             BusEvent::Board { board } => {
-                Script::new(REPLACE_LUA)
-                    .key(&keys.board)
-                    .key(&keys.events)
-                    .arg(&payload)
-                    .arg(board)
-                    .invoke_async(&mut conn)
-                    .await
+                let mut inv = REPLACE.prepare_invoke();
+                history_keys(&mut inv);
+                inv.arg(&payload).arg(board).arg(&line);
+                inv.invoke_async(&mut conn).await
             }
             _ => conn.publish(&keys.events, &payload).await,
         };
@@ -500,6 +610,48 @@ mod tests {
         };
         assert_eq!(ink, INK_MAX);
         assert!(revert.is_empty());
+    }
+
+    /// The Lua fold must agree with [`history::Memory`]. Needs `VALKEY_URL`
+    /// (CI has it); skipped otherwise.
+    #[tokio::test]
+    async fn valkey_folds_old_history_into_the_base() {
+        let Ok(url) = std::env::var("VALKEY_URL") else {
+            return;
+        };
+        let mut conn = ConnectionManager::new(redis::Client::open(url).unwrap())
+            .await
+            .unwrap();
+        let ns = format!("test:fold:{}", std::process::id());
+        let keys = [
+            format!("{ns}:board"),
+            format!("{ns}:events"),
+            format!("{ns}:history"),
+            format!("{ns}:history:base"),
+        ];
+        let _: () = conn.set(&keys[0], Board::empty().encode()).await.unwrap();
+        let script = paint_script(3, 2);
+        for i in 0..4u16 {
+            let line = history::paint_line(u64::from(i), &[(i, 2)]);
+            let mut inv = script.prepare_invoke();
+            for k in &keys {
+                inv.key(k);
+            }
+            inv.arg("{}").arg(&line).arg(i).arg(&b"2"[..]);
+            let () = inv.invoke_async(&mut conn).await.unwrap();
+        }
+        let base: Vec<u8> = conn.get(&keys[3]).await.unwrap();
+        let lines: Vec<String> = conn.lrange(&keys[2], 0, -1).await.unwrap();
+        let _: () = conn.del(&keys).await.unwrap();
+
+        // Four paints, at most three lines: the first two fold into the base.
+        let base = Board::decode(&base).unwrap();
+        assert_eq!(
+            (base.get(0), base.get(1), base.get(2)),
+            (2, 2, board::EMPTY)
+        );
+        assert_eq!(lines, vec!["2 p 2:2", "3 p 3:2"]);
+        assert_eq!(history::board_at(&base, &lines, u64::MAX).get(3), 2);
     }
 
     #[tokio::test]

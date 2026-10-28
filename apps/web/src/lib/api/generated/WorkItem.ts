@@ -5,4 +5,8 @@ export type WorkItem = { name: string, categories: Array<string>, year: string |
 /**
  * Name of a live widget rendered under the title (`"oled"`).
  */
-widget: string | null, };
+widget: string | null, 
+/**
+ * Like [`Project::probe`].
+ */
+probe?: string | null, };

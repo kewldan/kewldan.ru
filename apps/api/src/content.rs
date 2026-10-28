@@ -214,6 +214,10 @@ pub struct Project {
     pub links: Vec<Link>,
     /// The long read at `/work/{id}`.
     pub case: Option<Case>,
+    /// An https URL the API checks every few minutes for the live dot.
+    #[serde(default)]
+    #[ts(optional = nullable)]
+    pub probe: Option<String>,
 }
 
 /// A case study: the story behind a project.
@@ -346,6 +350,10 @@ pub struct WorkItem {
     pub media: Option<Media>,
     /// Name of a live widget rendered under the title (`"oled"`).
     pub widget: Option<String>,
+    /// Like [`Project::probe`].
+    #[serde(default)]
+    #[ts(optional = nullable)]
+    pub probe: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
@@ -593,7 +601,26 @@ impl Content {
                 }
             }
         }
+        for url in self.probes() {
+            if !url.starts_with("https://") {
+                bail!("probe {url:?} must be an https URL");
+            }
+        }
         Ok(())
+    }
+
+    /// Every URL the status monitor should check, without repeats.
+    pub fn probes(&self) -> Vec<String> {
+        let mut urls: Vec<String> = self
+            .work
+            .projects
+            .iter()
+            .filter_map(|p| p.probe.clone())
+            .chain(self.more.items.iter().filter_map(|i| i.probe.clone()))
+            .collect();
+        urls.sort();
+        urls.dedup();
+        urls
     }
 }
 

@@ -8,18 +8,38 @@
 use std::{collections::BTreeMap, sync::RwLock, time::Duration};
 
 use anyhow::Context;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
+use ts_rs::TS;
 
 pub struct Stats {
     values: RwLock<BTreeMap<String, u64>>,
+    calendar: RwLock<Option<Calendar>>,
+}
+
+/// The last year of GitHub contributions, one count per day.
+#[derive(Debug, Clone, PartialEq, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct Calendar {
+    pub total: u32,
+    /// `YYYY-MM-DD` of `days[0]`. GitHub weeks run Sunday to Saturday, and
+    /// the first one is usually partial.
+    pub start: String,
+    pub days: Vec<u16>,
 }
 
 impl Stats {
     pub fn new(defaults: BTreeMap<String, u64>) -> Self {
         Self {
             values: RwLock::new(defaults),
+            calendar: RwLock::new(None),
         }
+    }
+
+    /// `None` until GitHub has answered with a token at least once.
+    pub fn calendar(&self) -> Option<Calendar> {
+        self.calendar.read().unwrap().clone()
     }
 
     /// New defaults after a content reload; live values win over them.
@@ -112,7 +132,12 @@ pub fn spawn_refresh(stats: std::sync::Arc<Stats>, sources: Sources) {
         loop {
             tick.tick().await;
             match github(&http, &sources).await {
-                Ok(fresh) => stats.update(fresh),
+                Ok((fresh, calendar)) => {
+                    stats.update(fresh);
+                    if calendar.is_some() {
+                        *stats.calendar.write().unwrap() = calendar;
+                    }
+                }
                 Err(err) => {
                     tracing::warn!(error = %format!("{err:#}"), "stats: GitHub refresh failed")
                 }
@@ -133,11 +158,13 @@ pub fn spawn_refresh(stats: std::sync::Arc<Stats>, sources: Sources) {
     });
 }
 
-async fn github(http: &reqwest::Client, src: &Sources) -> anyhow::Result<BTreeMap<String, u64>> {
+type GithubFresh = (BTreeMap<String, u64>, Option<Calendar>);
+
+async fn github(http: &reqwest::Client, src: &Sources) -> anyhow::Result<GithubFresh> {
     let now = time_now();
     match &src.github_token {
         Some(token) => github_graphql(http, &src.github_login, token, now).await,
-        None => github_public(http, &src.github_login, now).await,
+        None => Ok((github_public(http, &src.github_login, now).await?, None)),
     }
 }
 
@@ -147,13 +174,16 @@ async fn github_graphql(
     login: &str,
     token: &str,
     now: Instant,
-) -> anyhow::Result<BTreeMap<String, u64>> {
+) -> anyhow::Result<GithubFresh> {
     const MAIN: &str = r"
 query($login: String!, $from: DateTime!, $to: DateTime!) {
   user(login: $login) {
     createdAt
     contributionsCollection(from: $from, to: $to) {
-      contributionCalendar { totalContributions }
+      contributionCalendar {
+        totalContributions
+        weeks { contributionDays { date contributionCount } }
+      }
       restrictedContributionsCount
       totalPullRequestContributions
     }
@@ -209,7 +239,29 @@ query($login: String!, $from: DateTime!, $to: DateTime!) {
     if let Some(created) = user["createdAt"].as_str() {
         out.insert("gh.years".into(), now.years_since(created));
     }
-    Ok(out)
+    Ok((out, parse_calendar(&cc["contributionCalendar"])))
+}
+
+/// GitHub's `weeks[].contributionDays[]` flattened into one run of days.
+fn parse_calendar(cal: &Value) -> Option<Calendar> {
+    let days: Vec<&Value> = cal["weeks"]
+        .as_array()?
+        .iter()
+        .filter_map(|w| w["contributionDays"].as_array())
+        .flatten()
+        .collect();
+    Some(Calendar {
+        total: u32::try_from(cal["totalContributions"].as_u64()?).ok()?,
+        start: days.first()?["date"].as_str()?.to_owned(),
+        days: days
+            .iter()
+            .map(|d| {
+                d["contributionCount"]
+                    .as_u64()
+                    .map_or(0, |n| n.min(u16::MAX.into()) as u16)
+            })
+            .collect(),
+    })
 }
 
 /// One GraphQL request; `data` on success, an error if GitHub sent any.
@@ -490,6 +542,29 @@ mod tests {
         assert_eq!(out["steam.games"], 3, "CS2 on both accounts counts once");
         assert_eq!(out["steam.cs2"], 12, "10 h + 2 h");
         assert_eq!(out["steam.level"], 12);
+    }
+
+    #[test]
+    fn flattens_the_contribution_calendar() {
+        let cal = json!({
+            "totalContributions": 7,
+            "weeks": [
+                { "contributionDays": [{ "date": "2025-10-26", "contributionCount": 1 }] },
+                { "contributionDays": [
+                    { "date": "2025-11-02", "contributionCount": 0 },
+                    { "date": "2025-11-03", "contributionCount": 6 }
+                ] }
+            ]
+        });
+        assert_eq!(
+            parse_calendar(&cal),
+            Some(Calendar {
+                total: 7,
+                start: "2025-10-26".into(),
+                days: vec![1, 0, 6],
+            })
+        );
+        assert_eq!(parse_calendar(&json!({})), None);
     }
 
     #[test]

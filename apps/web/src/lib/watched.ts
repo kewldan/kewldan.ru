@@ -64,6 +64,30 @@ export const adminToken = {
   },
 };
 
+const HINT_KEY = "kd-admin";
+
+/**
+ * "This browser signed in as admin before". Not a secret: it only spares
+ * every visitor an `/api/admin/check` that would answer 401.
+ */
+export const adminHint = {
+  get: () => {
+    try {
+      return localStorage.getItem(HINT_KEY) === "1";
+    } catch {
+      return false;
+    }
+  },
+  set: (on: boolean) => {
+    try {
+      if (on) localStorage.setItem(HINT_KEY, "1");
+      else localStorage.removeItem(HINT_KEY);
+    } catch {
+      /* private mode */
+    }
+  },
+};
+
 /** `null` means "the passkey session cookie", which the browser sends itself. */
 export type Credential = string | null;
 
@@ -85,7 +109,7 @@ async function request<T>(url: string, method: string, token: Credential, body?:
   return (res.status === 204 ? undefined : await res.json()) as T;
 }
 
-const call = <T>(token: Credential, method: string, path: string, body?: TitleInput) =>
+const call = <T>(token: Credential, method: string, path: string, body?: unknown) =>
   request<T>(`/api/admin${path}`, method, token, body);
 
 export const adminApi = {
@@ -93,6 +117,15 @@ export const adminApi = {
   create: (token: Credential, t: TitleInput) => call<Title>(token, "POST", "/watched", t),
   update: (token: Credential, id: string, t: TitleInput) => call<Title>(token, "PUT", `/watched/${id}`, t),
   remove: (token: Credential, id: string) => call<void>(token, "DELETE", `/watched/${id}`),
+};
+
+/** Moderation for the pixel board. */
+export const pixelAdmin = {
+  rewind: (token: Credential, at: number) => call<void>(token, "POST", "/pixels/rewind", { at }),
+  erase: (token: Credential, area: { x: number; y: number; w: number; h: number }) =>
+    call<void>(token, "POST", "/pixels/erase", area),
+  clear: (token: Credential) => call<void>(token, "POST", "/pixels/clear"),
+  reset: (token: Credential) => call<void>(token, "POST", "/pixels/reset"),
 };
 
 type Ceremony<O> = { id: string; options: { publicKey: O } };

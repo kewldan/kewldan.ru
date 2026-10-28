@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { LiveStatus } from "@/components/live-status";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/reveal";
 import { Rich } from "@/components/rich";
 import { KeynoteTitle, Specs } from "@/components/sections/work/keynote";
@@ -44,6 +45,7 @@ export function CaseView({ project: p, next }: { project: Project; next: Project
               <span className="text-stage-dim"> · {t.case.eyebrow}</span>
             </p>
           </Reveal>
+          {p.probe && <LiveStatus url={p.probe} variant="pill" />}
           <KeynoteTitle as="h1" title={p.title} dim={p.titleDim} dimClass="text-stage-dim" />
           <Reveal delay={0.15}>
             <p className="max-w-[52ch] text-sub font-medium text-stage-dim">

@@ -1,6 +1,7 @@
 //! Pixel battle: one shared 64×32 board, live for everyone on the page.
 
 pub mod board;
+pub mod history;
 mod hub;
 pub mod protocol;
 
@@ -16,7 +17,7 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use futures_util::{SinkExt, StreamExt};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tokio::{sync::broadcast::error::RecvError, time::Instant};
 
 pub use hub::Hub;
@@ -138,6 +139,76 @@ async fn session(hub: Arc<Hub>, socket: WebSocket, ip: IpAddr) {
     }
     hub.leave(id).await;
     tracing::debug!(id, "pixel session closed");
+}
+
+/// `GET /api/pixels/history`: the timelapse. Plain text, one board per
+/// line: the base first, then every change (see [`history`]).
+pub async fn history(State(app): State<AppState>) -> Response {
+    match app.hub.history().await {
+        Ok((base, lines)) => {
+            let mut body = base.encode();
+            for line in lines {
+                body.push('\n');
+                body.push_str(&line);
+            }
+            (
+                [
+                    (header::CONTENT_TYPE, "text/plain; charset=utf-8"),
+                    (header::CACHE_CONTROL, "public, max-age=15"),
+                ],
+                body,
+            )
+                .into_response()
+        }
+        Err(err) => {
+            tracing::warn!(%err, "pixel history unavailable");
+            StatusCode::SERVICE_UNAVAILABLE.into_response()
+        }
+    }
+}
+
+#[derive(Deserialize)]
+pub struct Rewind {
+    /// Unix ms; the board goes back to how it looked then.
+    at: u64,
+}
+
+/// `POST /api/admin/pixels/rewind`
+pub async fn rewind(State(app): State<AppState>, Json(r): Json<Rewind>) -> StatusCode {
+    match app.hub.history().await {
+        Ok((base, lines)) => {
+            app.hub
+                .replace(history::board_at(&base, &lines, r.at))
+                .await;
+            StatusCode::NO_CONTENT
+        }
+        Err(err) => {
+            tracing::warn!(%err, "pixel history unavailable");
+            StatusCode::SERVICE_UNAVAILABLE
+        }
+    }
+}
+
+/// A rectangle of cells, in board coordinates.
+#[derive(Deserialize)]
+pub struct Area {
+    x: usize,
+    y: usize,
+    w: usize,
+    h: usize,
+}
+
+/// `POST /api/admin/pixels/erase`: empties a rectangle, for the drawing
+/// that should not be there.
+pub async fn erase(State(app): State<AppState>, Json(a): Json<Area>) -> StatusCode {
+    if a.w == 0 || a.h == 0 || a.x + a.w > board::WIDTH || a.y + a.h > board::HEIGHT {
+        return StatusCode::UNPROCESSABLE_ENTITY;
+    }
+    let cells = (a.y..a.y + a.h)
+        .flat_map(|y| (a.x..a.x + a.w).map(move |x| ((y * board::WIDTH + x) as u16, board::EMPTY)))
+        .collect();
+    app.hub.paint_admin(cells).await;
+    StatusCode::NO_CONTENT
 }
 
 /// `POST /api/admin/pixels/clear`
