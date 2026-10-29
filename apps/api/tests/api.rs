@@ -575,7 +575,16 @@ async fn a_vandal_is_found_undone_and_banned_quietly() {
     let board = hello["board"].as_str().unwrap().as_bytes().to_vec();
     let other = |i: usize| if board[i] == b'4' { 5 } else { 4 };
 
-    // Two cells in the top-left corner.
+    // The browser introduces itself, then two cells in the top-left corner.
+    vandal
+        .send(Message::text(
+            json!({ "t": "hi", "device": "browser-0001", "tz": "Europe/Moscow", "screen": "1440×900@2",
+                    "umami": { "website": "95ea741c-8950-4c23-a5f7-5e1772a648dd",
+                               "visit": "9b1dbb5c-d5b9-5bde-bbd6-32b8fffee9bf" } })
+            .to_string(),
+        ))
+        .await
+        .unwrap();
     vandal
         .send(Message::text(
             json!({ "t": "paint", "cells": [[0, other(0)], [1, other(1)]] }).to_string(),
@@ -599,6 +608,17 @@ async fn a_vandal_is_found_undone_and_banned_quietly() {
     let painter = &found["items"][0];
     assert_eq!(painter["cells"], json!(2));
     let who = painter["who"].as_str().unwrap().to_owned();
+    let meta = &painter["meta"];
+    assert_eq!(
+        (meta["visits"].clone(), meta["cells"].clone()),
+        (json!(1), json!(2))
+    );
+    assert_eq!(meta["tz"], json!("Europe/Moscow"));
+    assert_eq!(meta["devices"], json!(["browser-0001"]));
+    assert_eq!(
+        meta["replays"][0]["visit"],
+        json!("9b1dbb5c-d5b9-5bde-bbd6-32b8fffee9bf")
+    );
 
     let (status, body) = request(
         addr,

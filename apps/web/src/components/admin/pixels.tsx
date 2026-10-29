@@ -3,15 +3,66 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
-import { ago } from "@/lib/admin";
+import { ago, device, fmtDate, fmtTime } from "@/lib/admin";
 import type { Painter } from "@/lib/api/generated/Painter";
+import type { PainterMeta } from "@/lib/api/generated/PainterMeta";
 import type { PixelBan } from "@/lib/api/generated/PixelBan";
+import type { PixelLinked } from "@/lib/api/generated/PixelLinked";
 import { pixelAdmin } from "@/lib/watched";
 
 import { useAdmin } from "./context";
 import { errorText, Head, Switch, useArmed, useToast } from "./ui";
 
 type Area = [number, number, number, number];
+
+/** Umami's dashboard, where the replays are. */
+const STATS = "https://stats.kewldan.ru";
+
+/**
+ * What is known about a painter: address, browser, the Umami replays of
+ * their visits, and other addresses the same browser painted from.
+ */
+function Profile({ meta, linked }: { meta: PainterMeta | null; linked: PixelLinked[] }) {
+  if (!meta) return <p className="ident">no profile: painted before profiles were kept</p>;
+  const agent = meta.agents.at(-1);
+  const where = [meta.ip, meta.tz, meta.lang?.split(",")[0], meta.screen].filter(Boolean).join(" · ");
+  return (
+    <>
+      <p className="ident">{where}</p>
+      <p className="ident" title={agent}>
+        {agent ? device(agent) : "browser unknown"} · {meta.visits} {meta.visits === 1 ? "visit" : "visits"} ·{" "}
+        {meta.cells} cells · since {fmtDate(meta.firstSeen)}
+      </p>
+      {meta.replays.length > 0 && (
+        <p className="ident">
+          {meta.replays
+            .slice(-3)
+            .reverse()
+            .map((r, i) => (
+              <span key={r.visit}>
+                {i > 0 && " · "}
+                <a href={`${STATS}/websites/${r.website}/replays/${r.visit}`} target="_blank" rel="noreferrer">
+                  replay {fmtTime(r.at)} ↗
+                </a>
+              </span>
+            ))}
+        </p>
+      )}
+      {linked.length > 0 && (
+        <p className="ident">
+          same browser as{" "}
+          {linked.map((l, i) => (
+            <span key={l.who} className={l.banned ? "err" : undefined}>
+              {i > 0 && ", "}
+              {l.who}
+              {l.banned && " (banned)"}
+            </span>
+          ))}
+        </p>
+      )}
+    </>
+  );
+}
 
 /**
  * The live board, an eraser for areas, who painted where (to undo and ban
@@ -237,6 +288,7 @@ export function Pixels() {
                     <p className="ident">
                       {p.cells} cells here · last {ago(p.last)}
                     </p>
+                    <Profile meta={p.meta} linked={p.linked} />
                   </div>
                   {p.banned ? (
                     <span className="tag">BANNED</span>
@@ -360,9 +412,10 @@ export function Pixels() {
         </div>
         {bans?.map((b) => (
           <div key={b.who} className="li">
-            <div>
+            <div style={{ minWidth: 0 }}>
               <span className="mono">{b.who}</span>
               <p className="ident">banned {ago(b.at)}</p>
+              <Profile meta={b.meta} linked={b.linked} />
             </div>
             <button
               className="txt"

@@ -30,6 +30,9 @@ use crate::AppState;
 const PING_EVERY: Duration = Duration::from_secs(20);
 const CURSOR_EVERY: Duration = Duration::from_millis(40);
 const MAX_MESSAGE: usize = 16 * 1024;
+/// A painter's profile is written on their first stroke, then at most this
+/// often, and once more when they leave.
+const NOTE_EVERY: Duration = Duration::from_secs(30);
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -63,14 +66,46 @@ pub async fn ws(
     if !app.config.origin_allowed(headers.get(header::ORIGIN)) {
         return (StatusCode::FORBIDDEN, "origin not allowed").into_response();
     }
+    let header = |name, max| {
+        headers
+            .get(name)
+            .and_then(|v| v.to_str().ok())
+            .and_then(|v| guard::clean(v, max))
+    };
+    let visit = guard::Visit {
+        agent: header(header::USER_AGENT, 256),
+        lang: header(header::ACCEPT_LANGUAGE, 64),
+        ..Default::default()
+    };
     upgrade
         .max_message_size(MAX_MESSAGE)
-        .on_upgrade(move |socket| session(app, socket, ip.0))
+        .on_upgrade(move |socket| session(app, socket, ip.0, visit))
 }
 
-async fn session(app: AppState, socket: WebSocket, ip: IpAddr) {
+/// Writes to the painter's profile; a failure only costs the profile.
+async fn note(
+    app: &AppState,
+    who: &str,
+    ip: IpAddr,
+    visit: &guard::Visit,
+    cells: u32,
+    new_visit: bool,
+) {
+    if let Err(err) = app
+        .guard
+        .note(who, ip, visit, cells, new_visit, crate::unix_ms())
+        .await
+    {
+        tracing::warn!(error = %format!("{err:#}"), "painter profile not saved");
+    }
+}
+
+async fn session(app: AppState, socket: WebSocket, ip: IpAddr, mut visit: guard::Visit) {
     let hub = Arc::clone(&app.hub);
     let who = app.guard.painter(ip);
+    // Cells painted since the profile was last written, and when that was.
+    let mut unsaved: u32 = 0;
+    let mut noted: Option<Instant> = None;
     let (mut sink, mut stream) = socket.split();
     let mut events = hub.subscribe();
     let hello = hub.join(ip).await;
@@ -98,6 +133,16 @@ async fn session(app: AppState, socket: WebSocket, ip: IpAddr) {
                     Some(Ok(_)) => continue,
                 };
                 let reply = match serde_json::from_str::<ClientMessage>(&text) {
+                    Ok(ClientMessage::Hi { device, tz, screen, umami }) => {
+                        visit.hi(
+                            &device,
+                            tz.as_deref(),
+                            screen.as_deref(),
+                            umami.as_ref().map(|u| (u.website.as_str(), u.visit.as_str())),
+                            crate::unix_ms(),
+                        );
+                        None
+                    }
                     Ok(ClientMessage::Paint { cells }) => {
                         // Taken before the paint, so the history's line for it is
                         // never earlier than the stroke log says: undo looks just
@@ -108,6 +153,11 @@ async fn session(app: AppState, socket: WebSocket, ip: IpAddr) {
                             && let Some(burst) = app.guard.record(&who, &painted, at).await
                         {
                             tokio::spawn(guard::alert(app.clone(), burst));
+                        }
+                        unsaved += painted.len() as u32;
+                        if unsaved > 0 && noted.is_none_or(|t| t.elapsed() >= NOTE_EVERY) {
+                            note(&app, &who, ip, &visit, std::mem::take(&mut unsaved), noted.is_none()).await;
+                            noted = Some(Instant::now());
                         }
                         Some(ack)
                     }
@@ -156,6 +206,9 @@ async fn session(app: AppState, socket: WebSocket, ip: IpAddr) {
         }
     }
     hub.leave(id).await;
+    if unsaved > 0 {
+        note(&app, &who, ip, &visit, unsaved, noted.is_none()).await;
+    }
     tracing::debug!(id, "pixel session closed");
 }
 

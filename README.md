@@ -91,11 +91,19 @@ web app's `/revalidate` (`WEB_URL`, authorised by `ADMIN_TOKEN`), so the page
 shows it on the next visit. Addresses in sessions and the sign-in log are
 kept as the network plus a salted hash.
 
-The pixel board logs who painted each stroke (a salted hash, never the
+The pixel board logs who painted each stroke (a salted hash of the
 address). Select an area in the admin to see who drew there, then take one
 painter's strokes back and ban them. Bans are hidden: the banned painter
 still sees their own strokes, nobody else does. A burst of painting sends
 the board to Telegram with buttons to undo the painter or lock the board.
+
+Those who paint get a profile, kept 30 days: the address, browser,
+language, time zone, screen, links to the Umami replays of their visits,
+and an id the browser keeps for itself. The same id under a new address
+links the two painters, so a banned one back on a VPN stands out.
+
+Umami loads with its recorder (`/u/recorder.js`) for replays and heatmaps;
+sampling and masking are set per site in Umami.
 
 </details>
 

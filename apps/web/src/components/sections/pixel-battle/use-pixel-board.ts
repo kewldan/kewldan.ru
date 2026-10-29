@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { PixelClientMessage } from "@/lib/api/generated/PixelClientMessage";
 import type { PixelServerMessage } from "@/lib/api/generated/PixelServerMessage";
+import type { UmamiVisit } from "@/lib/api/generated/UmamiVisit";
 
 export const WIDTH = 64;
 export const HEIGHT = 32;
@@ -14,6 +15,7 @@ export const EMPTY = -1;
 const FALLBACK_PALETTE = ["#0d0d0f", "#ffe14d", "#7aa2ff", "#5fe39a", "#ff9a4d", "#2a35ff", "#ff8fd0"];
 const FALLBACK_INK = { max: 20, regen: 1 };
 const STORAGE_KEY = "kd-pixels";
+const DEVICE_KEY = "kd-pixels-device";
 const FLUSH_MS = 50;
 
 export type Mode = "connecting" | "live" | "offline";
@@ -54,6 +56,44 @@ function saveLocal(board: Int8Array) {
   }
 }
 
+let device: string | null = null;
+
+/**
+ * What the browser says about itself before its first stroke, for the
+ * moderators: an id it keeps, its time zone and screen, and the Umami visit
+ * so its replay can be found.
+ */
+function introduce(): PixelClientMessage {
+  if (!device) {
+    try {
+      device = localStorage.getItem(DEVICE_KEY);
+      if (!device) localStorage.setItem(DEVICE_KEY, (device = crypto.randomUUID()));
+    } catch {
+      device = crypto.randomUUID();
+    }
+  }
+  let umami: UmamiVisit | null = null;
+  try {
+    const session = (window as { umami?: { getSession?: () => { cache?: string } } }).umami?.getSession?.();
+    const token = session?.cache?.split(".")[1];
+    if (token) {
+      const p = JSON.parse(atob(token.replace(/-/g, "+").replace(/_/g, "/")));
+      if (typeof p.websiteId === "string" && typeof p.visitId === "string") {
+        umami = { website: p.websiteId, visit: p.visitId };
+      }
+    }
+  } catch {
+    /* no tracker, or blocked */
+  }
+  return {
+    t: "hi",
+    device,
+    tz: Intl.DateTimeFormat().resolvedOptions().timeZone ?? null,
+    screen: `${screen.width}×${screen.height}@${devicePixelRatio}`,
+    umami,
+  };
+}
+
 /**
  * The shared board over a WebSocket. Painting is optimistic: cells change on
  * screen at once, go out in 50 ms batches, and the server's `ack` rolls back
@@ -68,6 +108,8 @@ export function usePixelBoard() {
   const me = useRef<number | null>(null);
   const inkRef = useRef(FALLBACK_INK.max);
   const pingKey = useRef(0);
+  // The socket that has had our `hi`.
+  const introduced = useRef<WebSocket | null>(null);
 
   const [mode, setMode] = useState<Mode>("connecting");
   const [palette, setPalette] = useState(FALLBACK_PALETTE);
@@ -194,6 +236,10 @@ export function usePixelBoard() {
       if (!pending.current.size) return;
       const cells = Array.from(pending.current) as [number, number][];
       pending.current.clear();
+      if (introduced.current !== socket.current) {
+        send(introduce());
+        introduced.current = socket.current;
+      }
       send({ t: "paint", cells });
     }, FLUSH_MS);
     return () => clearInterval(id);

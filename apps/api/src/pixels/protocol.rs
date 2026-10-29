@@ -10,12 +10,31 @@ pub type Cell = (u16, i8);
 #[serde(tag = "t", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[ts(export, rename = "PixelClientMessage")]
 pub enum ClientMessage {
+    /// Sent once before the first stroke: what the browser says about
+    /// itself, kept for moderation (see [`super::guard`]).
+    Hi {
+        /// A random id the browser keeps; it outlives a change of address.
+        device: String,
+        tz: Option<String>,
+        /// `1440×900@2`
+        screen: Option<String>,
+        /// This visit in Umami, to open its replay.
+        umami: Option<UmamiVisit>,
+    },
     /// A batch of strokes. Cells beyond the remaining ink are rejected.
     Paint { cells: Vec<Cell> },
     /// Pointer position as a fraction of the board, `c` is the held colour.
     Cursor { x: f32, y: f32, c: i8 },
     /// The pointer left the board.
     Leave,
+}
+
+/// Ids from the Umami tracker's session token.
+#[derive(Debug, Clone, Deserialize, TS)]
+#[ts(export)]
+pub struct UmamiVisit {
+    pub website: String,
+    pub visit: String,
 }
 
 #[derive(Debug, Clone, Serialize, TS)]
