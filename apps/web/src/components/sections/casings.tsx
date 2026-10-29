@@ -47,8 +47,13 @@ const MAX = 36;
 const FADE_MS = 500;
 const FOV = 30;
 const SEGMENTS = 28;
-/** How deep the card is: casings scatter this far in front of and behind it. */
-const DEPTH = 3;
+/**
+ * Half the depth of the box behind the card: the whole of it is about two
+ * case widths, so the cases lie in a shallow tray and pile up flat.
+ */
+const DEPTH = 1.5;
+/** Spawn spread in depth, so a fresh case starts clear of both faces. */
+const LANE = DEPTH - 0.85;
 const GRAVITY = 190;
 const FLASH_MS = 70;
 const SMOKE_MS = 900;
@@ -347,10 +352,14 @@ function createRange(T: Three, C: Cannon, RoomEnvironment: Room, canvas: HTMLCan
   const world = new C.World({ gravity: new C.Vec3(0, -GRAVITY, 0), allowSleep: true });
   const metal = new C.Material("brass");
   const ground = new C.Material("ground");
+  // The front and back are slick glass: in a tray this shallow any grip
+  // there wedges cases on end and they stack into a tower.
+  const glass = new C.Material("glass");
   world.addContactMaterial(new C.ContactMaterial(metal, metal, { friction: 0.25, restitution: 0.3 }));
   world.addContactMaterial(new C.ContactMaterial(metal, ground, { friction: 0.35, restitution: 0.42 }));
-  const wall = (x: number, y: number) => {
-    const body = new C.Body({ mass: 0, material: ground, shape: new C.Plane() });
+  world.addContactMaterial(new C.ContactMaterial(metal, glass, { friction: 0, restitution: 0.1 }));
+  const wall = (x: number, y: number, material = ground) => {
+    const body = new C.Body({ mass: 0, material, shape: new C.Plane() });
     body.quaternion.setFromEuler(x, y, 0);
     world.addBody(body);
     return body;
@@ -358,8 +367,8 @@ function createRange(T: Three, C: Cannon, RoomEnvironment: Room, canvas: HTMLCan
   const floor = wall(-Math.PI / 2, 0);
   const left = wall(0, Math.PI / 2);
   const right = wall(0, -Math.PI / 2);
-  wall(0, 0).position.z = -DEPTH;
-  wall(0, Math.PI).position.z = DEPTH;
+  wall(0, 0, glass).position.z = -DEPTH;
+  wall(0, Math.PI, glass).position.z = DEPTH;
 
   const casings: Casing[] = [];
   const pending: { at: number; x: number; y: number; z: number }[] = [];
@@ -383,17 +392,17 @@ function createRange(T: Three, C: Cannon, RoomEnvironment: Room, canvas: HTMLCan
     renderer.setSize(w, h, false);
     width = w / PX;
     height = h / PX;
-    // The card's plane fills the view exactly; the floor sits a little up so
-    // casings at the front of the pile are not cut off.
+    // The box is the card: its front face fills the view exactly, so a case
+    // against the floor, a side or the front glass is never cut off.
     camera.aspect = w / h;
-    camera.position.set(0, 0, height / 2 / Math.tan(((FOV / 2) * Math.PI) / 180));
+    camera.position.set(0, 0, DEPTH + height / 2 / Math.tan(((FOV / 2) * Math.PI) / 180));
     camera.lookAt(0, 0, 0);
     camera.updateProjectionMatrix();
-    const floorY = -height / 2 + 1.1;
+    const floorY = -height / 2;
     floor.position.y = floorY;
     floorShade.position.y = floorY + 0.01;
-    left.position.x = -width / 2 + 0.6;
-    right.position.x = width / 2 - 0.6;
+    left.position.x = -width / 2;
+    right.position.x = width / 2;
     sun.position.set(width * 0.25, height * 0.9, 40);
     sun.target.position.set(0, floorY, 0);
     const s = Math.max(width, height) / 2 + 6;
@@ -416,11 +425,11 @@ function createRange(T: Three, C: Cannon, RoomEnvironment: Room, canvas: HTMLCan
       sleepTimeLimit: 0.4,
     });
     body.position.set(x, y, z);
-    // Lying across the barrel, and spinning end over end as it leaves.
-    body.quaternion.setFromEuler(rand(0, Math.PI * 2), rand(-0.4, 0.4), Math.PI / 2 + rand(-0.3, 0.3));
+    // Lying across the barrel, flat to the card, spinning end over end.
+    body.quaternion.setFromEuler(rand(0, Math.PI * 2), rand(-0.12, 0.12), Math.PI / 2 + rand(-0.3, 0.3));
     if (fresh) {
-      body.velocity.set(rand(-17, -6), rand(3, 10), rand(-3, 3));
-      body.angularVelocity.set(rand(-6, 6), rand(-6, 6), rand(14, 30) * (Math.random() < 0.5 ? -1 : 1));
+      body.velocity.set(rand(-17, -6), rand(3, 10), rand(-0.6, 0.6));
+      body.angularVelocity.set(rand(-8, 8), rand(-1.5, 1.5), rand(14, 30) * (Math.random() < 0.5 ? -1 : 1));
     }
     world.addBody(body);
 
@@ -448,7 +457,7 @@ function createRange(T: Three, C: Cannon, RoomEnvironment: Room, canvas: HTMLCan
   const shoot = (now: number) => {
     const x = width / 2 - rand(4, 7);
     const y = height / 2 - rand(2.6, 3.4);
-    const z = rand(-1, 1);
+    const z = rand(-LANE, LANE);
     flashAt = now;
     flashSize = rand(10, 14);
     flash.material.map = flashes[Math.floor(Math.random() * flashes.length)];
@@ -530,7 +539,7 @@ function createRange(T: Three, C: Cannon, RoomEnvironment: Room, canvas: HTMLCan
         // A still pile: drop a handful and let them settle before showing anything.
         if (!casings.length) {
           for (let i = 0; i < 18; i++) {
-            eject(0, rand(-width / 2 + 3, width / 2 - 3), -height / 2 + 3 + i * 1.6, rand(-2, 2), false);
+            eject(0, rand(-width / 2 + 3, width / 2 - 3), -height / 2 + 3 + i * 1.6, rand(-LANE, LANE), false);
           }
           for (let i = 0; i < 600; i++) world.step(1 / 60);
           update(0, 0);
