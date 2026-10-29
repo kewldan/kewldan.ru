@@ -278,10 +278,37 @@ pub enum Showcase {
     Flow { steps: Vec<String> },
     /// Feature tiles.
     Tiles { tiles: Vec<Tile> },
-    /// An interactive switch → OR gate → lamp.
-    LogicDemo { hint_off: String, hint_on: String },
+    /// Logical System's own examples, simulated by the game's rules and
+    /// drawn with its sprites. The schemes live in the web app; each id
+    /// here picks one.
+    LogicDemo { examples: Vec<LogicExample> },
+    /// A screen recording in a Mac window, then the same job raced against
+    /// the usual tool, at the true ratio of their times.
+    Race {
+        media: Media,
+        /// What both lanes do, e.g. "Scan ~/projects · 2.06 M files".
+        task: String,
+        lanes: Vec<Lane>,
+    },
     /// Huge gradient numbers and an install command.
     BigNumbers { items: Vec<Spec>, command: String },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[ts(export)]
+pub struct LogicExample {
+    pub id: String,
+    pub label: String,
+    pub hint: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[ts(export)]
+pub struct Lane {
+    pub name: String,
+    pub seconds: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]

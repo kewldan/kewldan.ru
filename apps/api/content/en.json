@@ -79,10 +79,96 @@
   },
   "work": {
     "eyebrow": "Selected work",
-    "title": "Six projects.",
-    "titleDim": "Six launches.",
-    "lead": "Each one gets its own stage. Jump straight to one, or scroll through all six.",
+    "title": "Seven projects.",
+    "titleDim": "Seven launches.",
+    "lead": "Each one gets its own stage. Jump straight to one, or scroll through all seven.",
     "projects": [
+      {
+        "id": "sector",
+        "name": "Sector",
+        "theme": "dark",
+        "gradient": "linear-gradient(100deg,#5b7cfa 0%,#8a6bff 48%,#f2a33a 100%)",
+        "icon": { "src": "/media/se-icon.webp", "alt": "Sector app icon", "width": 160, "height": 160 },
+        "title": "What ate my disk?",
+        "titleDim": "Found in 6.5 seconds.",
+        "lead": "A native macOS disk analyzer and cleaner. Its own parallel scanner walks two million files **5× faster than du**, with byte-identical totals.",
+        "showcase": {
+          "kind": "race",
+          "media": { "src": "/media/se-disk-map.webp", "alt": "Sector: zooming into a folder on the disk map, switching between rings and tiles", "width": 800, "height": 500 },
+          "task": "Scan ~/projects · 2.06 M files and folders · M4 Pro",
+          "lanes": [
+            { "name": "Sector", "seconds": 6.5 },
+            { "name": "du -sk", "seconds": 30.7 }
+          ]
+        },
+        "specs": [
+          { "value": "6.5 s", "label": "for 2 million files; du takes 30.7" },
+          { "value": "10 ms", "label": "to load the last scan at launch" },
+          { "value": "117 MB", "label": "for a 2-million-node tree" },
+          { "value": "0", "label": "lines of network code. Nothing leaves the Mac." }
+        ],
+        "points": [],
+        "chips": [],
+        "links": [
+          { "label": "Download for macOS", "href": "https://github.com/kewldan/sector/releases/latest", "primary": true },
+          { "label": "GitHub ›", "href": "https://github.com/kewldan/sector" }
+        ],
+        "case": {
+          "summary": "A disk analyzer and cleaner for macOS 26, in Swift 6 and SwiftUI. It finds what is taking the space, shows it as rings or tiles, and gets it back **through the Trash, with undo**.",
+          "facts": [
+            { "value": "2026", "label": "first release" },
+            { "value": "Swift 6", "label": "SwiftUI, WidgetKit" },
+            { "value": "20k", "label": "lines of Swift" },
+            { "value": "5×", "label": "faster than du" }
+          ],
+          "pipeline": ["getattrlistbulk", "Shared work stack", "FileTree", "One reverse pass", "Rings · Tiles"],
+          "sections": [
+            {
+              "title": "A scanner built for speed",
+              "body": [
+                "Scanning `~/projects`, 2.06 million files and folders, takes 6.5 seconds; `du -sk` needs 30.7 for the same folder and arrives at the same total."
+              ],
+              "bullets": [
+                "`getattrlistbulk(2)` returns a whole directory's attributes in a few syscalls instead of one `stat` per file.",
+                "Worker threads share a depth-first work stack and open each directory with `openat` relative to its parent.",
+                "A directory's children are committed in one batch, so they sit together and always after their parent: rolling sizes up is **a single reverse pass**.",
+                "Hard links count once, mount points are skipped, so `/` never wanders into external drives."
+              ]
+            },
+            {
+              "title": "Two million nodes, cheaply",
+              "body": [
+                "The tree is a structure of arrays, about 35 bytes a node plus names: 117 MB for two million. The last scan is saved to disk and loads in 10 ms, so the app opens instantly and refreshes in the background."
+              ],
+              "bullets": []
+            },
+            {
+              "title": "What it finds",
+              "body": [],
+              "bullets": [
+                "**Disk Map**: rings and tiles from precomputed geometry; click a segment to fly into a folder.",
+                "**Smart Clean**: Xcode caches, stale `node_modules`, unused Docker images, old simulators, app caches and logs, in one pass.",
+                "**Duplicates**: size, then a partial hash, then full SHA-256. APFS clones are recognised, so the number is what deleting really frees.",
+                "**Apps**: every app with its hidden data in `~/Library`, to remove completely or just reset."
+              ]
+            },
+            {
+              "title": "Safe by default",
+              "body": [
+                "Everything goes to the Trash first, and History puts files back where they were for 30 days. Cleanup never follows a symlink out of its target, never crosses a mount point and refuses anything less than two levels inside your home folder."
+              ],
+              "bullets": []
+            },
+            {
+              "title": "Stack",
+              "body": [
+                "Swift 6 and SwiftUI with Liquid Glass, a UI-free engine package covered by tests, WidgetKit for two desktop widgets, a menu bar extra. English and Russian."
+              ],
+              "bullets": []
+            }
+          ]
+        }
+      },
       {
         "id": "larpguard",
         "name": "LarpGuard",
@@ -497,8 +583,12 @@
         "lead": "My oldest living project: released on itch.io in 2021 (rated 4.0/5), then remastered in C++20.",
         "showcase": {
           "kind": "logicDemo",
-          "hintOff": "Flip the switch.",
-          "hintOn": "Signal through. That is the whole idea, times 65,536 ticks a second."
+          "examples": [
+            { "id": "full-adder", "label": "Full adder", "hint": "Gates here count their inputs, so adding three bits takes one XOR and one AND. Flip A, B and Cin." },
+            { "id": "rs-latch", "label": "RS latch", "hint": "Two NANDs feeding each other remember. Flip S on and off, then R." },
+            { "id": "gates", "label": "Gates", "hint": "NOT, AND and XOR. A signal moves one block per tick: watch it walk." },
+            { "id": "blinker", "label": "Blinker", "hint": "A clock flips every tick; the lamp follows three blocks behind." }
+          ]
         },
         "specs": [
           { "value": "16", "label": "block types on an infinite grid" },
@@ -530,11 +620,11 @@
             }
           ],
           "pipeline": [
-            "Switch",
-            "Wire",
-            "OR",
-            "Wire",
-            "Lamp"
+            "Active blocks emit",
+            "Cells count inputs",
+            "Blocks recompute",
+            "Instanced draw",
+            "Bloom"
           ],
           "sections": [
             {
@@ -549,7 +639,9 @@
               "body": [],
               "bullets": [
                 "16 block types on an infinite 2D grid.",
-                "Event-driven: only what changed is recomputed, from 2 up to 65,536 ticks a second."
+                "Event-driven: only what changed is recomputed, from 2 up to 65,536 ticks a second.",
+                "A signal moves one block per tick, and wires merging into one cell act as an OR.",
+                "Gates count their inputs instead of reading two fixed pins: AND is \"at least two\", XOR is \"an odd number\". So a full adder is **one XOR and one AND**."
               ]
             },
             {

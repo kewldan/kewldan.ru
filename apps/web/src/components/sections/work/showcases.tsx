@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion, useInView, useScroll, useSpring, useTransform } from "motion/react";
+import { motion, useInView, useScroll, useSpring, useTransform } from "motion/react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -12,6 +12,8 @@ import { ease, rise, spring, stagger, viewport } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 import { CountUp } from "./keynote";
+import { LogicDemo } from "./logic-demo";
+import { Race } from "./race";
 import type { stageTheme } from "./stage-theme";
 
 type Theme = ReturnType<typeof stageTheme>;
@@ -27,7 +29,9 @@ export function Showcase({ data, theme }: { data: ShowcaseData; theme: Theme }) 
     case "tiles":
       return <Tiles tiles={data.tiles} />;
     case "logicDemo":
-      return <LogicDemo hintOff={data.hintOff} hintOn={data.hintOn} theme={theme} />;
+      return <LogicDemo examples={data.examples} theme={theme} />;
+    case "race":
+      return <Race media={data.media} task={data.task} lanes={data.lanes} theme={theme} />;
     case "bigNumbers":
       return <BigNumbers items={data.items} theme={theme} />;
   }
@@ -190,84 +194,6 @@ function Tiles({ tiles }: { tiles: { title: string; body: string }[] }) {
         </motion.div>
       ))}
     </motion.div>
-  );
-}
-
-/** Switch → wire → OR → wire → lamp, the signal travelling left to right. */
-function LogicDemo({ hintOff, hintOn, theme }: { hintOff: string; hintOn: string; theme: Theme }) {
-  const [on, setOn] = useState(false);
-  const wire = (delay: number) => (
-    <span className="relative h-1.5 flex-1 overflow-hidden rounded-[3px] bg-stage-frame">
-      <motion.span
-        className="absolute inset-0 origin-left bg-yellow shadow-[0_0_16px_rgb(255_225_77/0.8)]"
-        initial={false}
-        animate={{ scaleX: on ? 1 : 0 }}
-        transition={{ duration: 0.25, ease: "linear", delay: on ? delay : 0 }}
-      />
-    </span>
-  );
-
-  return (
-    <>
-      <div className="mt-7 flex w-full max-w-160 items-center">
-        <button
-          onClick={() => setOn((v) => !v)}
-          aria-pressed={on}
-          aria-label={t.work.inputSwitch}
-          className={cn(
-            "flex h-14 w-24 shrink-0 rounded-pill p-1.25 transition-colors duration-300",
-            on ? "justify-end bg-[#34c759]" : "justify-start bg-[#3a3a3c]",
-          )}
-        >
-          <motion.span
-            layout
-            transition={spring.press}
-            className="size-11.5 rounded-full bg-white shadow-[0_2px_8px_rgb(0_0_0/0.35)]"
-          />
-        </button>
-        {wire(0)}
-        <motion.span
-          initial={false}
-          animate={{
-            borderColor: on ? "#ffe14d" : "#3a3a3c",
-            boxShadow: on ? "0 0 24px rgb(255 225 77 / 0.35)" : "0 0 0 rgb(0 0 0 / 0)",
-          }}
-          transition={{ delay: on ? 0.22 : 0, duration: 0.2 }}
-          className="flex h-16 w-21 shrink-0 items-center justify-center rounded-lg border-2 font-mono text-[15px] font-bold"
-        >
-          OR
-        </motion.span>
-        {wire(0.35)}
-        <motion.span
-          role="img"
-          aria-label={on ? t.work.lampOn : t.work.lampOff}
-          initial={false}
-          animate={
-            on
-              ? { scale: [1, 1.12, 1], boxShadow: "0 0 60px 16px rgb(255 179 107 / 0.6)" }
-              : { scale: 1, boxShadow: "inset 0 0 0 2px #3a3a3c" }
-          }
-          transition={{ delay: on ? 0.55 : 0, duration: 0.45 }}
-          className={cn(
-            "size-21 shrink-0 rounded-full transition-[background] duration-300",
-            on ? "bg-[radial-gradient(circle,#fff7c9,#ffb36b)] delay-500" : "bg-[#1c1c1e]",
-          )}
-        />
-      </div>
-      <div className={cn("min-h-5.5 text-[15px]", theme.dim)} aria-live="polite">
-        <AnimatePresence mode="wait">
-          <motion.p
-            key={String(on)}
-            initial={{ opacity: 0, y: 8, filter: "blur(4px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            exit={{ opacity: 0, y: -8, filter: "blur(4px)" }}
-            transition={{ duration: 0.3 }}
-          >
-            {on ? hintOn : hintOff}
-          </motion.p>
-        </AnimatePresence>
-      </div>
-    </>
   );
 }
 
