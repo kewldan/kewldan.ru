@@ -20,6 +20,7 @@ use futures_util::StreamExt;
 use redis::{AsyncCommands, Script, aio::ConnectionManager};
 use serde::{Deserialize, Serialize};
 use tokio::sync::broadcast;
+use ts_rs::TS;
 
 use super::{
     board::{self, Board, HEIGHT, PALETTE, WIDTH},
@@ -33,6 +34,29 @@ const MAX_BATCH: usize = 256;
 
 pub const INK_MAX: u32 = 40;
 pub const INK_REGEN: f32 = 5.0;
+
+/// How much people may paint, and whether they may at all. The admin sets
+/// these at runtime; see [`crate::settings`].
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", default)]
+#[ts(export, rename = "BoardRules")]
+pub struct Rules {
+    /// The board stays visible but every stroke is refused.
+    pub locked: bool,
+    pub ink_max: u32,
+    /// Ink regained per second.
+    pub ink_regen: f32,
+}
+
+impl Default for Rules {
+    fn default() -> Self {
+        Self {
+            locked: false,
+            ink_max: INK_MAX,
+            ink_regen: INK_REGEN,
+        }
+    }
+}
 
 /// History helpers shared by both scripts. KEYS are the board, the event
 /// channel, the history list and its base board (see [`history`]).
@@ -113,6 +137,7 @@ enum BusEvent {
     Cursor { id: u64, x: f32, y: f32, c: i8 },
     Gone { id: u64 },
     Count { instance: u64, n: u32 },
+    Rules { rules: Rules },
 }
 
 // One per process, so the size gap between variants costs nothing.
@@ -142,16 +167,16 @@ struct Bucket {
 }
 
 impl Bucket {
-    fn full() -> Self {
+    fn full(rules: Rules) -> Self {
         Self {
-            tokens: INK_MAX as f32,
+            tokens: rules.ink_max as f32,
             at: Instant::now(),
         }
     }
 
-    fn refill(&mut self, now: Instant) {
-        let gained = now.duration_since(self.at).as_secs_f32() * INK_REGEN;
-        self.tokens = (self.tokens + gained).min(INK_MAX as f32);
+    fn refill(&mut self, now: Instant, rules: Rules) {
+        let gained = now.duration_since(self.at).as_secs_f32() * rules.ink_regen;
+        self.tokens = (self.tokens + gained).min(rules.ink_max as f32);
         self.at = now;
     }
 }
@@ -166,6 +191,7 @@ pub struct Hub {
     sent_peers: AtomicU32,
     remote_peers: Mutex<HashMap<u64, (u32, Instant)>>,
     ink: Mutex<HashMap<IpAddr, Bucket>>,
+    rules: RwLock<Rules>,
     /// Only used without Valkey.
     memory_history: Mutex<history::Memory>,
 }
@@ -200,6 +226,7 @@ impl Hub {
             sent_peers: AtomicU32::new(0),
             remote_peers: Mutex::new(HashMap::new()),
             ink: Mutex::new(HashMap::new()),
+            rules: RwLock::new(Rules::default()),
         });
         if let Backend::Valkey { client, keys, .. } = &hub.backend {
             let (ready, subscribed) = tokio::sync::oneshot::channel();
@@ -241,6 +268,7 @@ impl Hub {
     pub async fn join(&self, ip: IpAddr) -> ServerMessage {
         // Unique across instances and below 2^53, so JavaScript keeps it exact.
         let id = (self.instance << 32) | self.next_id.fetch_add(1, Ordering::Relaxed);
+        let rules = self.rules();
         self.local_peers.fetch_add(1, Ordering::Relaxed);
         self.publish_count().await;
         self.refresh_peers();
@@ -251,8 +279,9 @@ impl Hub {
             palette: PALETTE.iter().map(|c| (*c).to_owned()).collect(),
             board: self.snapshot(),
             ink: self.ink_left(ip),
-            ink_max: INK_MAX,
-            ink_regen: INK_REGEN,
+            ink_max: rules.ink_max,
+            ink_regen: rules.ink_regen,
+            locked: rules.locked,
             peers: self.total_peers(),
         }
     }
@@ -267,11 +296,12 @@ impl Hub {
     /// Applies what the painter can afford and reports the rest for rollback.
     pub async fn paint(&self, by: u64, ip: IpAddr, mut cells: Vec<Cell>) -> ServerMessage {
         cells.truncate(MAX_BATCH);
+        let rules = self.rules();
         let (accepted, revert, ink) = {
             let board = self.board.read().unwrap();
             let mut buckets = self.ink.lock().unwrap();
-            let bucket = buckets.entry(ip).or_insert_with(Bucket::full);
-            bucket.refill(Instant::now());
+            let bucket = buckets.entry(ip).or_insert_with(|| Bucket::full(rules));
+            bucket.refill(Instant::now(), rules);
 
             let mut accepted: Vec<Cell> = Vec::with_capacity(cells.len());
             let mut revert = Vec::new();
@@ -283,7 +313,7 @@ impl Hub {
                 if current == c {
                     continue;
                 }
-                if bucket.tokens >= 1.0 {
+                if !rules.locked && bucket.tokens >= 1.0 {
                     bucket.tokens -= 1.0;
                     accepted.push((i, c));
                 } else {
@@ -356,11 +386,30 @@ impl Hub {
     }
 
     pub fn ink_left(&self, ip: IpAddr) -> u32 {
+        let rules = self.rules();
         let mut buckets = self.ink.lock().unwrap();
-        buckets.get_mut(&ip).map_or(INK_MAX, |b| {
-            b.refill(Instant::now());
+        buckets.get_mut(&ip).map_or(rules.ink_max, |b| {
+            b.refill(Instant::now(), rules);
             b.tokens as u32
         })
+    }
+
+    pub fn rules(&self) -> Rules {
+        *self.rules.read().unwrap()
+    }
+
+    /// Changes the rules on every instance and tells everyone painting.
+    pub async fn set_rules(&self, rules: Rules) {
+        self.emit(BusEvent::Rules { rules }).await;
+    }
+
+    /// Sets the rules on this instance only: what it starts with.
+    pub fn load_rules(&self, rules: Rules) {
+        *self.rules.write().unwrap() = rules;
+    }
+
+    pub fn peers(&self) -> u32 {
+        self.total_peers()
     }
 
     async fn emit(&self, ev: BusEvent) {
@@ -428,6 +477,18 @@ impl Hub {
             }
             BusEvent::Cursor { id, x, y, c } => ServerMessage::Cursor { id, x, y, c },
             BusEvent::Gone { id } => ServerMessage::Gone { id },
+            BusEvent::Rules { rules } => {
+                self.load_rules(rules);
+                // A smaller tank applies at once, not after the next refill.
+                for b in self.ink.lock().unwrap().values_mut() {
+                    b.tokens = b.tokens.min(rules.ink_max as f32);
+                }
+                ServerMessage::Rules {
+                    ink_max: rules.ink_max,
+                    ink_regen: rules.ink_regen,
+                    locked: rules.locked,
+                }
+            }
             BusEvent::Count { instance, n } => {
                 if instance != self.instance {
                     self.remote_peers
@@ -487,9 +548,10 @@ impl Hub {
             .lock()
             .unwrap()
             .retain(|_, (_, seen)| now.duration_since(*seen) < PEER_TTL);
+        let rules = self.rules();
         self.ink.lock().unwrap().retain(|_, b| {
-            b.refill(now);
-            b.tokens < INK_MAX as f32
+            b.refill(now, rules);
+            b.tokens < rules.ink_max as f32
         });
         self.refresh_peers();
     }
@@ -596,6 +658,23 @@ mod tests {
         assert_eq!(revert.len(), 5);
         assert!(revert.iter().all(|&(_, c)| c == board::EMPTY));
         assert_eq!(hub.board.read().unwrap().get(free[0].0), 2);
+    }
+
+    #[tokio::test]
+    async fn a_locked_board_refuses_every_stroke() {
+        let hub = Hub::start(None, "px").await.unwrap();
+        hub.set_rules(Rules {
+            locked: true,
+            ..Rules::default()
+        })
+        .await;
+        let current = hub.board.read().unwrap().get(0);
+        let other = if current == 1 { 2 } else { 1 };
+        let ServerMessage::Ack { ink, revert } = hub.paint(1, IP, vec![(0, other)]).await else {
+            panic!("expected ack");
+        };
+        assert_eq!((ink, revert), (INK_MAX, vec![(0, current)]));
+        assert_eq!(hub.board.read().unwrap().get(0), current);
     }
 
     #[tokio::test]

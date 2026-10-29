@@ -20,7 +20,7 @@ use futures_util::{SinkExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use tokio::{sync::broadcast::error::RecvError, time::Instant};
 
-pub use hub::Hub;
+pub use hub::{Hub, Rules};
 use protocol::{ClientMessage, ServerMessage};
 
 use crate::AppState;
@@ -36,6 +36,8 @@ pub struct BoardResponse {
     height: usize,
     palette: &'static [&'static str],
     board: String,
+    /// People on the page right now.
+    peers: u32,
 }
 
 /// `GET /api/pixels`: the board for clients that only want to look.
@@ -45,6 +47,7 @@ pub async fn board(State(app): State<AppState>) -> Json<BoardResponse> {
         height: board::HEIGHT,
         palette: &board::PALETTE,
         board: app.hub.snapshot(),
+        peers: app.hub.peers(),
     })
 }
 

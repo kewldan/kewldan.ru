@@ -5,6 +5,7 @@ pub mod config;
 pub mod contact;
 pub mod content;
 pub mod pixels;
+pub mod settings;
 pub mod stats;
 pub mod status;
 pub mod tmdb;
@@ -21,7 +22,7 @@ use axum::{
     http::{HeaderMap, HeaderValue, StatusCode, header, request::Parts},
     middleware::{self, Next},
     response::{IntoResponse, Response},
-    routing::{get, post, put},
+    routing::{delete, get, post, put},
 };
 use serde_json::json;
 use tower_http::{compression::CompressionLayer, trace::TraceLayer};
@@ -41,6 +42,7 @@ pub struct AppState {
     pub auth: Arc<auth::Auth>,
     pub contact: Arc<contact::Contact>,
     pub tmdb: Option<Arc<tmdb::Tmdb>>,
+    pub settings: Arc<settings::Store>,
 }
 
 impl AppState {
@@ -57,12 +59,19 @@ impl AppState {
             status::spawn(Arc::clone(&status), Arc::clone(&content));
         }
         let hub = Hub::start(config.valkey_url.as_deref(), &config.valkey_namespace).await?;
+        let settings =
+            settings::Store::open(config.valkey_url.as_deref(), &config.valkey_namespace).await?;
+        hub.load_rules(settings.get().board);
         let watched =
             watched::Store::open(config.valkey_url.as_deref(), &config.valkey_namespace).await?;
         let auth = auth::Auth::open(
             &config.webauthn_origin,
             config.valkey_url.as_deref(),
             &config.valkey_namespace,
+            config
+                .admin_token
+                .as_deref()
+                .unwrap_or(&config.valkey_namespace),
         )
         .await?;
         let contact = Arc::new(
@@ -85,6 +94,7 @@ impl AppState {
             None => None,
         };
         Ok(Self {
+            settings: Arc::new(settings),
             tmdb,
             contact,
             config: Arc::new(config),
@@ -105,7 +115,11 @@ pub fn router(state: AppState) -> Router {
         .route("/passkeys", get(auth::list))
         .route("/passkeys/register/start", post(auth::register_start))
         .route("/passkeys/register/finish", post(auth::register_finish))
-        .route("/passkeys/{id}", axum::routing::delete(auth::delete))
+        .route("/passkeys/{id}", delete(auth::delete).patch(auth::rename))
+        .route("/sessions", get(auth::sessions).delete(auth::end_others))
+        .route("/sessions/{id}", delete(auth::end_session))
+        .route("/auth/log", get(auth::log))
+        .route("/settings", get(settings::get).put(settings::put))
         .route("/content/reload", post(reload_content))
         .route("/watched", post(watched::create))
         .route(
@@ -154,6 +168,18 @@ async fn health(State(app): State<AppState>) -> Json<serde_json::Value> {
 async fn get_content(State(app): State<AppState>, headers: HeaderMap) -> Response {
     let library = Arc::clone(&app.content.read().unwrap());
     let body = app.stats.render(&library.snapshot.json);
+    let settings = app.settings.get();
+    let body = if settings == settings::Settings::default() {
+        body
+    } else {
+        match serde_json::from_str::<serde_json::Value>(&body) {
+            Ok(mut v) => {
+                settings.apply(&mut v);
+                v.to_string()
+            }
+            Err(_) => body,
+        }
+    };
     let etag = HeaderValue::from_str(&format!("\"{:016x}\"", content::fnv1a(body.as_bytes())))
         .expect("etag is ascii");
     let cache = HeaderValue::from_static("public, max-age=60, stale-while-revalidate=600");
@@ -186,6 +212,7 @@ async fn reload_content(State(app): State<AppState>) -> Response {
             app.stats.merge_defaults(&next.stats);
             *app.content.write().unwrap() = Arc::new(next);
             tracing::info!("content reloaded");
+            revalidate_site(&app);
             StatusCode::NO_CONTENT.into_response()
         }
         Err(err) => (
@@ -215,6 +242,27 @@ async fn get_status(State(app): State<AppState>) -> Response {
         .into_response()
 }
 
+/// Tells the Next.js app (`WEB_URL`) to drop its cached content, so a change
+/// shows on the next visit instead of within the cache's minute.
+pub fn revalidate_site(app: &AppState) {
+    let (Some(url), Some(token)) = (app.config.web_url.clone(), app.config.admin_token.clone())
+    else {
+        return;
+    };
+    tokio::spawn(async move {
+        let sent = reqwest::Client::new()
+            .post(format!("{url}/revalidate"))
+            .bearer_auth(token)
+            .timeout(std::time::Duration::from_secs(5))
+            .send()
+            .await
+            .and_then(reqwest::Response::error_for_status);
+        if let Err(err) = sent {
+            tracing::warn!(%err, "site revalidation failed");
+        }
+    });
+}
+
 /// Milliseconds since the Unix epoch.
 pub fn unix_ms() -> u64 {
     std::time::SystemTime::now()
@@ -222,8 +270,8 @@ pub fn unix_ms() -> u64 {
         .map_or(0, |d| u64::try_from(d.as_millis()).unwrap_or(u64::MAX))
 }
 
-/// Admin routes take either `Authorization: Bearer $ADMIN_TOKEN` or the
-/// session cookie a passkey sign-in sets.
+/// Admin routes take either `Authorization: Bearer $ADMIN_TOKEN` (unless the
+/// admin turned it off) or the session cookie a passkey sign-in sets.
 async fn require_admin(State(app): State<AppState>, req: Request, next: Next) -> Response {
     let Some(token) = app.config.admin_token.as_deref() else {
         return StatusCode::NOT_FOUND.into_response();
@@ -233,7 +281,9 @@ async fn require_admin(State(app): State<AppState>, req: Request, next: Next) ->
         .get(header::AUTHORIZATION)
         .and_then(|v| v.to_str().ok())
         .and_then(|v| v.strip_prefix("Bearer "));
-    if bearer.is_some_and(|given| constant_time_eq(given.as_bytes(), token.as_bytes())) {
+    if app.settings.get().token_sign_in
+        && bearer.is_some_and(|given| constant_time_eq(given.as_bytes(), token.as_bytes()))
+    {
         return next.run(req).await;
     }
     if let Some(session) = auth::session_cookie(req.headers())

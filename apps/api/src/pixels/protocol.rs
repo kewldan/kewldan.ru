@@ -34,6 +34,8 @@ pub enum ServerMessage {
         ink_max: u32,
         /// Ink regained per second.
         ink_regen: f32,
+        /// Nobody may paint; the board is only shown.
+        locked: bool,
         peers: u32,
     },
     /// Cells someone painted. `by` is the painter's connection id.
@@ -68,5 +70,11 @@ pub enum ServerMessage {
     /// The whole board, after a clear or a resync.
     Board {
         board: String,
+    },
+    /// The admin changed how much people may paint.
+    Rules {
+        ink_max: u32,
+        ink_regen: f32,
+        locked: bool,
     },
 }

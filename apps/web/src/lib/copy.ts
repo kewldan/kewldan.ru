@@ -16,6 +16,7 @@ export const t = {
     inkLabel: "Ink: {n} of {max} pixels",
     connecting: "Connecting to the board…",
     live: "Live · {people} here now · everyone sees every pixel",
+    locked: "Closed for now · {people} looking · painting is off",
     people: { one: "{n} person", other: "{n} people" },
     offline: "Offline here · your pixels stay in this browser",
     timelapse: "Timelapse",

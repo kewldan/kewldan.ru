@@ -22,4 +22,8 @@ case: Case | null,
 /**
  * An https URL the API checks every few minutes for the live dot.
  */
-probe?: string | null, };
+probe?: string | null, 
+/**
+ * Left off the slides by the admin; see [`crate::settings`].
+ */
+hidden?: boolean, };

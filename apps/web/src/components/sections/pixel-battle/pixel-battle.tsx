@@ -117,7 +117,7 @@ export function PixelBattle() {
     if (!replay) draw(board.current);
   }, [replay, board, draw]);
 
-  const canDraw = px.mode !== "connecting" && !replay;
+  const canDraw = px.mode !== "connecting" && !px.locked && !replay;
   const value = erase ? EMPTY : color;
 
   const cellAt = (e: React.PointerEvent) => {
@@ -186,7 +186,7 @@ export function PixelBattle() {
 
   const status = {
     connecting: t.pixels.connecting,
-    live: fmt(t.pixels.live, { people: plural(px.peers, t.pixels.people) }),
+    live: fmt(px.locked ? t.pixels.locked : t.pixels.live, { people: plural(px.peers, t.pixels.people) }),
     offline: t.pixels.offline,
   }[px.mode];
 
@@ -206,7 +206,7 @@ export function PixelBattle() {
           aria-label={t.pixels.board}
           className={cn(
             "block aspect-[2/1] h-auto w-full touch-none [image-rendering:pixelated]",
-            replay ? "cursor-default" : canDraw ? "cursor-crosshair" : "cursor-wait",
+            replay || px.locked ? "cursor-default" : canDraw ? "cursor-crosshair" : "cursor-wait",
           )}
         />
         <div

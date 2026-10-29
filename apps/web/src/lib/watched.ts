@@ -110,7 +110,8 @@ async function request<T>(url: string, method: string, token: Credential, body?:
   return (res.status === 204 ? undefined : await res.json()) as T;
 }
 
-const call = <T>(token: Credential, method: string, path: string, body?: unknown) =>
+/** An admin endpoint under `/api/admin`, with the token or the session cookie. */
+export const call = <T>(token: Credential, method: string, path: string, body?: unknown) =>
   request<T>(`/api/admin${path}`, method, token, body);
 
 export const adminApi = {
@@ -136,7 +137,14 @@ export const pixelAdmin = {
 };
 
 type Ceremony<O> = { id: string; options: { publicKey: O } };
-export type PasskeyInfo = { id: string; name: string; createdAt: number };
+export type PasskeyInfo = {
+  id: string;
+  name: string;
+  createdAt: number;
+  lastUsed: number | null;
+  /** Backed up by a password manager rather than bound to one device. */
+  synced: boolean;
+};
 
 /** Passkey sign-in and management; the browser part is @simplewebauthn/browser. */
 export const passkeys = {

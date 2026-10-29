@@ -8,7 +8,11 @@ id: number, width: number, height: number, palette: Array<string>, board: string
 /**
  * Ink regained per second.
  */
-inkRegen: number, peers: number, } | { "t": "paint", 
+inkRegen: number, 
+/**
+ * Nobody may paint; the board is only shown.
+ */
+locked: boolean, peers: number, } | { "t": "paint", 
 /**
  * Below 2^53, safe as a JavaScript number.
  */
@@ -20,4 +24,4 @@ id: number, x: number, y: number, c: number, } | { "t": "gone",
 /**
  * Below 2^53, safe as a JavaScript number.
  */
-id: number, } | { "t": "peers", n: number, } | { "t": "board", board: string, };
+id: number, } | { "t": "peers", n: number, } | { "t": "board", board: string, } | { "t": "rules", inkMax: number, inkRegen: number, locked: boolean, };

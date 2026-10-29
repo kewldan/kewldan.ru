@@ -73,6 +73,7 @@ export function usePixelBoard() {
   const [palette, setPalette] = useState(FALLBACK_PALETTE);
   const [ink, setInk] = useState(FALLBACK_INK.max);
   const [inkCfg, setInkCfg] = useState(FALLBACK_INK);
+  const [locked, setLocked] = useState(false);
   const [peers, setPeers] = useState(1);
   const [cursors, setCursors] = useState<Record<number, Cursor>>({});
   const [pings, setPings] = useState<Ping[]>([]);
@@ -105,6 +106,7 @@ export function usePixelBoard() {
           decode(msg.board, board.current);
           setPalette(msg.palette);
           setInkCfg({ max: msg.inkMax, regen: msg.inkRegen });
+          setLocked(msg.locked);
           setInkBoth(msg.ink);
           setPeers(msg.peers);
           setMode("live");
@@ -144,6 +146,11 @@ export function usePixelBoard() {
         case "board":
           decode(msg.board, board.current);
           emit("all");
+          break;
+        case "rules":
+          setInkCfg({ max: msg.inkMax, regen: msg.inkRegen });
+          setLocked(msg.locked);
+          setInkBoth(Math.min(inkRef.current, msg.inkMax));
           break;
       }
     };
@@ -203,7 +210,7 @@ export function usePixelBoard() {
 
   const paint = useCallback(
     (cells: number[], color: number) => {
-      if (mode === "connecting") return;
+      if (mode === "connecting" || (mode === "live" && locked)) return;
       const changed: number[] = [];
       for (const i of cells) {
         if (board.current[i] === color || inkRef.current <= 0) continue;
@@ -216,7 +223,7 @@ export function usePixelBoard() {
       setInk(inkRef.current);
       emit(changed);
     },
-    [mode, emit],
+    [mode, locked, emit],
   );
 
   const strokeEnd = useCallback(() => {
@@ -244,6 +251,8 @@ export function usePixelBoard() {
     palette,
     ink,
     inkMax: inkCfg.max,
+    /** The admin closed the board: it is shown, not painted. */
+    locked: mode === "live" && locked,
     peers,
     cursors,
     pings,

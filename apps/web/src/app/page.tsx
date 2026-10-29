@@ -22,22 +22,24 @@ export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 export default async function Home() {
   const [c, calendar] = await Promise.all([getContent(), getCalendar()]);
+  // Blocks and projects the admin switched off.
+  const shown = (block: string) => !c.hidden?.includes(block);
   return (
     <>
       <JsonLd data={{ "@context": "https://schema.org", ...person(c) }} />
       <SiteHeader handle={c.profile.handle} nav={c.nav} marquee={c.marquee} />
       <main>
         <Hero hero={c.hero} />
-        <Pixels section={c.pixels} />
+        {shown("pixels") && <Pixels section={c.pixels} />}
         <About about={c.about} t={t.about} />
-        <Work work={c.work} />
+        <Work work={{ ...c.work, projects: c.work.projects.filter((p) => !p.hidden) }} />
         <Numbers numbers={c.numbers} calendar={calendar} />
         <MoreWork more={c.more} />
         <Stack stack={c.stack} usedIn={t.stack.usedIn} />
         <Timeline timeline={c.timeline} />
         <OffScreen off={c.offScreen} />
         <Contact contact={c.contact} email={c.profile.email} />
-        <Dropout dropout={c.dropout} />
+        {shown("dropout") && <Dropout dropout={c.dropout} />}
       </main>
       <SiteFooter footer={c.footer} />
     </>

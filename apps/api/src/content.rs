@@ -41,6 +41,11 @@ pub struct Content {
     pub dropout: Dropout,
     pub footer: Footer,
     pub watched: WatchedPage,
+    /// Blocks the admin switched off (`pixels`, `dropout`); set by
+    /// [`crate::settings`], never in the file.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub hidden: Option<Vec<String>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
@@ -218,6 +223,10 @@ pub struct Project {
     #[serde(default)]
     #[ts(optional = nullable)]
     pub probe: Option<String>,
+    /// Left off the slides by the admin; see [`crate::settings`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub hidden: Option<bool>,
 }
 
 /// A case study: the story behind a project.

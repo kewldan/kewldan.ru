@@ -67,7 +67,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           {children}
           <CommandPalette
             sections={nav}
-            cases={work.projects.filter((p) => p.case).map((p) => ({ id: p.id, name: p.name, title: p.title }))}
+            cases={work.projects
+              .filter((p) => p.case && !p.hidden)
+              .map((p) => ({ id: p.id, name: p.name, title: p.title }))}
             socials={contact.socials}
           />
           <Konami />

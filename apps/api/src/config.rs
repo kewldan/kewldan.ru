@@ -40,6 +40,9 @@ pub struct Config {
     pub telegram: Option<crate::contact::Telegram>,
     /// `TMDB_TOKEN`, a read access token: posters for Watched.
     pub tmdb_token: Option<String>,
+    /// `WEB_URL`, the Next.js app as the API reaches it (`http://web:3000`):
+    /// told to drop its cached content when the admin changes the site.
+    pub web_url: Option<String>,
 }
 
 impl Config {
@@ -96,6 +99,7 @@ impl Config {
                 owner: var("TELEGRAM_OWNER").unwrap_or_else(|| "kewldan".into()),
             }),
             tmdb_token: var("TMDB_TOKEN"),
+            web_url: var("WEB_URL").map(|v| v.trim_end_matches('/').to_owned()),
         })
     }
 
@@ -121,6 +125,7 @@ impl Config {
             json_logs: false,
             telegram: None,
             tmdb_token: None,
+            web_url: None,
         }
     }
 

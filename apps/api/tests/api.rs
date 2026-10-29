@@ -492,3 +492,75 @@ async fn contact_form_keeps_abuse_out() {
     let (status, body) = post(form(&id, &solve(&id), "A fourth message this hour", "")).await;
     assert_eq!((status, body.contains("rate")), (429, true));
 }
+
+#[tokio::test]
+async fn site_settings_reach_the_content_and_the_board() {
+    let addr = spawn().await;
+    assert_eq!(
+        request(addr, "GET", "/api/admin/settings", None, None)
+            .await
+            .0,
+        401
+    );
+    let (status, body) =
+        request(addr, "GET", "/api/admin/settings", Some("test-token"), None).await;
+    assert_eq!(status, 200);
+    let mut settings: Value = serde_json::from_str(&body).unwrap();
+    assert_eq!(settings["openToOffers"], json!(true));
+
+    let mut ws = connect(addr).await;
+    assert_eq!(next_of(&mut ws, "hello").await["locked"], json!(false));
+
+    settings["headline"] = json!("New ==headline==");
+    settings["pixels"] = json!(false);
+    settings["projectOrder"] = json!(["tether"]);
+    settings["hiddenProjects"] = json!(["goitmo"]);
+    settings["board"] = json!({ "locked": true, "inkMax": 10, "inkRegen": 1.5 });
+    let (status, _) = request(
+        addr,
+        "PUT",
+        "/api/admin/settings",
+        Some("test-token"),
+        Some(settings.clone()),
+    )
+    .await;
+    assert_eq!(status, 200);
+    let rules = next_of(&mut ws, "rules").await;
+    assert_eq!(
+        (rules["locked"].clone(), rules["inkMax"].clone()),
+        (json!(true), json!(10))
+    );
+
+    let (_, body) = request(addr, "GET", "/api/content", None, None).await;
+    let content: Value = serde_json::from_str(&body).unwrap();
+    assert_eq!(content["hero"]["headline"], "New ==headline==");
+    assert_eq!(content["hidden"], json!(["pixels"]));
+    assert_eq!(content["work"]["projects"][0]["id"], "tether");
+    let goitmo = content["work"]["projects"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|p| p["id"] == "goitmo")
+        .unwrap();
+    assert_eq!(goitmo["hidden"], json!(true));
+
+    // Turning the token off needs a passkey to fall back on.
+    settings["tokenSignIn"] = json!(false);
+    let (status, body) = request(
+        addr,
+        "PUT",
+        "/api/admin/settings",
+        Some("test-token"),
+        Some(settings),
+    )
+    .await;
+    assert_eq!(status, 409);
+    assert!(body.contains("no_passkeys"));
+
+    let (status, body) =
+        request(addr, "GET", "/api/admin/sessions", Some("test-token"), None).await;
+    assert_eq!((status, body.as_str()), (200, r#"{"items":[]}"#));
+    let (status, body) =
+        request(addr, "GET", "/api/admin/auth/log", Some("test-token"), None).await;
+    assert_eq!((status, body.as_str()), (200, r#"{"items":[]}"#));
+}

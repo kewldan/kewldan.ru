@@ -38,6 +38,8 @@ services:
       API_URL: http://api:8080
       # Сайт в Umami (Settings → Websites); пусто — счётчик не грузится.
       UMAMI_WEBSITE_ID: ${UMAMI_WEBSITE_ID:-}
+      # Пароль для /revalidate: api сбрасывает кэш контента после правок в админке.
+      ADMIN_TOKEN: ${ADMIN_TOKEN:?set ADMIN_TOKEN in .env}
       TZ: ${TZ:-Europe/Moscow}
     expose:
       - 3000
@@ -61,6 +63,8 @@ services:
       ADMIN_TOKEN: ${ADMIN_TOKEN:?set ADMIN_TOKEN in .env}
       # Passkeys привязаны к этому адресу; сменишь домен — придётся добавить их заново.
       WEBAUTHN_ORIGIN: https://${DOMAIN:-kewldan.ru}
+      # Куда слать /revalidate, чтобы правки из админки появлялись сразу.
+      WEB_URL: http://web:3000
       # Контент из репозитория (en.json, stats.json): после правки —
       #   curl -XPOST -H "Authorization: Bearer $ADMIN_TOKEN" https://kewldan.ru/api/admin/content/reload
       CONTENT_DIR: /content

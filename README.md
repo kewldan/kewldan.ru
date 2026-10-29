@@ -26,6 +26,7 @@
 - 🎨 **Two worlds on one page.** Neo-brutal *paper* (who I am) and a black keynote *stage* (the work), with a design-token system underneath.
 - 🟨 **Pixel battle.** One shared 64×32 board, live for everyone on the page: optimistic painting, server-side ink limits, other people's cursors.
 - 🎬 **Watched.** Films and series I've rated from 1 to 10, at [`/watched`](https://kewldan.ru/watched), editable from the site with an admin token.
+- 🛠️ **Admin panel.** `/admin`, behind passkeys: the Watched list, pixel-board moderation and rules, project order, the hero and page blocks, sessions and a sign-in log. Changes go live without a deploy.
 - 🦀 **Rust content API.** Every word of the site lives in one JSON file, checked against typed structs at startup; the TypeScript types are generated from Rust.
 - 🌀 **Smooth by default.** Lenis scrolling, Motion springs and scroll-linked scenes, and all of it respects `prefers-reduced-motion`.
 - 📱 **Adaptive.** Fluid type and layout from 320 px phones to wide screens.
@@ -81,6 +82,18 @@ the footer's **Admin** link takes the token once and keeps it on that device.
 </details>
 
 <details>
+<summary><b>🛠️ Admin panel</b></summary>
+
+`/admin` signs in with a passkey (the admin token is the fallback, and the
+way in before the first passkey). Site settings are one document in Valkey
+that the API lays over the content it serves; after a change it calls the
+web app's `/revalidate` (`WEB_URL`, authorised by `ADMIN_TOKEN`), so the page
+shows it on the next visit. Addresses in sessions and the sign-in log are
+kept as the network plus a salted hash.
+
+</details>
+
+<details>
 <summary><b>📊 Live stats</b></summary>
 
 Content strings hold placeholders like `{gh.contributions}` or `{steam.games}`.
@@ -132,8 +145,12 @@ cd apps/api && cargo fmt --check && cargo clippy --all-targets -- -D warnings &&
 | `POST /api/admin/watched` · `PUT` / `DELETE /api/admin/watched/{id}` | Edit the Watched list |
 | `POST /api/admin/content/reload` | Re-read `CONTENT_PATH`; rejects an invalid file |
 | `POST /api/admin/pixels/clear` · `/reset` | Empty the board / restore the seed |
+| `GET` / `PUT /api/admin/settings` | Page blocks, hero, project order, board rules, token sign-in |
+| `GET /api/admin/passkeys` · `PATCH` / `DELETE /api/admin/passkeys/{id}` | Passkeys: list, rename, remove |
+| `GET` / `DELETE /api/admin/sessions` · `DELETE /api/admin/sessions/{id}` | Sessions; sign out one or all others |
+| `GET /api/admin/auth/log` | The last 50 sign-in events |
 
-🔐 Admin routes need `Authorization: Bearer $ADMIN_TOKEN`.
+🔐 Admin routes need `Authorization: Bearer $ADMIN_TOKEN` (unless turned off in the admin) or the session cookie a passkey sign-in sets.
 
 ## 🚚 Deploy
 
