@@ -1,6 +1,7 @@
 //! Pixel battle: one shared 64×32 board, live for everyone on the page.
 
 pub mod board;
+pub mod guard;
 pub mod history;
 mod hub;
 pub mod protocol;
@@ -20,6 +21,7 @@ use futures_util::{SinkExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use tokio::{sync::broadcast::error::RecvError, time::Instant};
 
+pub use guard::Guard;
 pub use hub::{Hub, Rules};
 use protocol::{ClientMessage, ServerMessage};
 
@@ -61,13 +63,14 @@ pub async fn ws(
     if !app.config.origin_allowed(headers.get(header::ORIGIN)) {
         return (StatusCode::FORBIDDEN, "origin not allowed").into_response();
     }
-    let hub = Arc::clone(&app.hub);
     upgrade
         .max_message_size(MAX_MESSAGE)
-        .on_upgrade(move |socket| session(hub, socket, ip.0))
+        .on_upgrade(move |socket| session(app, socket, ip.0))
 }
 
-async fn session(hub: Arc<Hub>, socket: WebSocket, ip: IpAddr) {
+async fn session(app: AppState, socket: WebSocket, ip: IpAddr) {
+    let hub = Arc::clone(&app.hub);
+    let who = app.guard.painter(ip);
     let (mut sink, mut stream) = socket.split();
     let mut events = hub.subscribe();
     let hello = hub.join(ip).await;
@@ -95,7 +98,19 @@ async fn session(hub: Arc<Hub>, socket: WebSocket, ip: IpAddr) {
                     Some(Ok(_)) => continue,
                 };
                 let reply = match serde_json::from_str::<ClientMessage>(&text) {
-                    Ok(ClientMessage::Paint { cells }) => Some(hub.paint(id, ip, cells).await),
+                    Ok(ClientMessage::Paint { cells }) => {
+                        // Taken before the paint, so the history's line for it is
+                        // never earlier than the stroke log says: undo looks just
+                        // before this moment.
+                        let at = crate::unix_ms();
+                        let (ack, painted) = hub.paint(id, ip, cells, app.guard.is_banned(&who)).await;
+                        if !painted.is_empty()
+                            && let Some(burst) = app.guard.record(&who, &painted, at).await
+                        {
+                            tokio::spawn(guard::alert(app.clone(), burst));
+                        }
+                        Some(ack)
+                    }
                     Ok(ClientMessage::Cursor { x, y, c }) => {
                         if last_cursor.elapsed() >= CURSOR_EVERY {
                             last_cursor = Instant::now();

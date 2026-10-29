@@ -1,3 +1,5 @@
+import type { Painter } from "@/lib/api/generated/Painter";
+import type { PixelBan } from "@/lib/api/generated/PixelBan";
 import type { Title } from "@/lib/api/generated/Title";
 import type { TmdbHit } from "@/lib/api/generated/TmdbHit";
 import type { TitleInput } from "@/lib/api/generated/TitleInput";
@@ -134,6 +136,17 @@ export const pixelAdmin = {
     call<void>(token, "POST", "/pixels/erase", area),
   clear: (token: Credential) => call<void>(token, "POST", "/pixels/clear"),
   reset: (token: Credential) => call<void>(token, "POST", "/pixels/reset"),
+  /** Who painted in the area over the last day, most cells first. */
+  painters: async (token: Credential, area: { x: number; y: number; w: number; h: number }) =>
+    (await call<{ items: Painter[] }>(token, "POST", "/pixels/painters", area)).items,
+  /** Takes back one painter's strokes since `since` and bans them. */
+  undo: (token: Credential, who: string, since: number) =>
+    call<{ cells: number }>(token, "POST", "/pixels/undo", { who, since }),
+  bans: async (token: Credential) => (await call<{ items: PixelBan[] }>(token, "GET", "/pixels/bans")).items,
+  ban: (token: Credential, who: string) => call<void>(token, "PUT", `/pixels/bans/${who}`),
+  unban: (token: Credential, who: string) => call<void>(token, "DELETE", `/pixels/bans/${who}`),
+  /** A sample alert to the bot's chat. */
+  testAlert: (token: Credential) => call<void>(token, "POST", "/pixels/alert"),
 };
 
 type Ceremony<O> = { id: string; options: { publicKey: O } };

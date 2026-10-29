@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
+import { ago } from "@/lib/admin";
+import type { Painter } from "@/lib/api/generated/Painter";
+import type { PixelBan } from "@/lib/api/generated/PixelBan";
 import { pixelAdmin } from "@/lib/watched";
 
 import { useAdmin } from "./context";
@@ -10,7 +13,10 @@ import { errorText, Head, Switch, useArmed, useToast } from "./ui";
 
 type Area = [number, number, number, number];
 
-/** The live board, an eraser for areas, and the rules people paint by. */
+/**
+ * The live board, an eraser for areas, who painted where (to undo and ban
+ * them), the hidden bans, and the rules people paint by.
+ */
 export function Pixels() {
   const { cred, data, reload, saveSettings, expired } = useAdmin();
   const toast = useToast();
@@ -24,6 +30,13 @@ export function Pixels() {
   // Slider values not yet saved; null follows the saved rules.
   const [ink, setInk] = useState<number | null>(null);
   const [regen, setRegen] = useState<number | null>(null);
+  // Who painted in the selected area; null until a selection is made.
+  const [painters, setPainters] = useState<Painter[] | null>(null);
+  const [bans, setBans] = useState<PixelBan[] | null>(null);
+
+  useEffect(() => {
+    pixelAdmin.bans(cred).then(setBans, () => setBans([]));
+  }, [cred]);
 
   // A live look: the board changes while you moderate it.
   useEffect(() => {
@@ -64,7 +77,7 @@ export function Pixels() {
     try {
       await act();
       await reload("board");
-      toast(done);
+      if (done) toast(done);
     } catch (err) {
       if (!expired(err)) toast(errorText(err));
     } finally {
@@ -77,11 +90,25 @@ export function Pixels() {
     run(async () => {
       await pixelAdmin.erase(cred, { x: norm[0], y: norm[1], w: norm[2] - norm[0] + 1, h: norm[3] - norm[1] + 1 });
       setArea(null);
+      setPainters(null);
     }, `Cleared ${size} cells`);
 
+  const findPainters = (n: number[]) =>
+    pixelAdmin.painters(cred, { x: n[0], y: n[1], w: n[2] - n[0] + 1, h: n[3] - n[1] + 1 }).then(setPainters, (err) => {
+      if (!expired(err)) toast(errorText(err));
+    });
+
+  const undo = (p: Painter) =>
+    run(async () => {
+      const { cells } = await pixelAdmin.undo(cred, p.who, p.first);
+      setPainters((l) => l?.map((x) => (x.who === p.who ? { ...x, banned: true } : x)) ?? null);
+      setBans(await pixelAdmin.bans(cred));
+      toast(`Took back ${cells} cells · ${p.who} banned`);
+    }, "");
+
   const rules = settings?.board;
-  const inkNow = ink ?? rules?.inkMax ?? 40;
-  const regenNow = regen ?? rules?.inkRegen ?? 5;
+  const inkNow = ink ?? rules?.inkMax ?? 20;
+  const regenNow = regen ?? rules?.inkRegen ?? 1;
   const dirty = rules && (inkNow !== rules.inkMax || regenNow !== rules.inkRegen);
 
   const saveRules = async (next: Partial<NonNullable<typeof rules>>, done: string) => {
@@ -156,6 +183,7 @@ export function Pixels() {
               }}
               onPointerUp={() => {
                 drag.current = null;
+                if (norm) void findPainters(norm);
               }}
             />
             {norm && (
@@ -180,7 +208,14 @@ export function Pixels() {
             <button className="btn blk-o sm" disabled={!norm || busy} onClick={erase}>
               {norm ? `Clear ${size} cells` : "Clear selection"}
             </button>
-            <button className="btn ghost sm" disabled={!norm} onClick={() => setArea(null)}>
+            <button
+              className="btn ghost sm"
+              disabled={!norm}
+              onClick={() => {
+                setArea(null);
+                setPainters(null);
+              }}
+            >
               Cancel
             </button>
             {norm && (
@@ -189,6 +224,31 @@ export function Pixels() {
               </span>
             )}
           </div>
+          {painters && (
+            <div style={{ borderTop: "1px solid var(--ln)" }}>
+              <div className="li">
+                <b style={{ fontWeight: 500 }}>Who painted here · last 24 h</b>
+                <span className="lbl">{painters.length || "nobody"}</span>
+              </div>
+              {painters.map((p) => (
+                <div key={p.who} className="li">
+                  <div style={{ minWidth: 0 }}>
+                    <span className="mono">{p.who}</span>
+                    <p className="ident">
+                      {p.cells} cells here · last {ago(p.last)}
+                    </p>
+                  </div>
+                  {p.banned ? (
+                    <span className="tag">BANNED</span>
+                  ) : (
+                    <button className="btn blk-o sm" disabled={busy} onClick={() => undo(p)}>
+                      Undo and ban
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="card">
@@ -264,6 +324,24 @@ export function Pixels() {
               </button>
             </div>
           )}
+          <div className="setting">
+            <div>
+              <b>Telegram alerts</b>
+              <span>100+ cells from one painter in 3 minutes: the board, with undo and lock buttons</span>
+            </div>
+            <button
+              className="btn sec sm"
+              disabled={busy}
+              onClick={() =>
+                pixelAdmin.testAlert(cred).then(
+                  () => toast("Sent: check Telegram"),
+                  (err: unknown) => !expired(err) && toast(errorText(err)),
+                )
+              }
+            >
+              Test
+            </button>
+          </div>
           <div className="pad">
             <span className="lbl">Palette · {board?.palette.length ?? 0} colours</span>
             <div className="palette">
@@ -273,6 +351,36 @@ export function Pixels() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="card" style={{ marginTop: 12 }}>
+        <div className="card-h">
+          <h2 className="h2">Hidden bans</h2>
+          <span className="lbl">They still see their own strokes; nobody else does</span>
+        </div>
+        {bans?.map((b) => (
+          <div key={b.who} className="li">
+            <div>
+              <span className="mono">{b.who}</span>
+              <p className="ident">banned {ago(b.at)}</p>
+            </div>
+            <button
+              className="txt"
+              onClick={() =>
+                pixelAdmin.unban(cred, b.who).then(
+                  () => {
+                    setBans((l) => l?.filter((x) => x.who !== b.who) ?? null);
+                    toast(`Unbanned ${b.who}`);
+                  },
+                  (err: unknown) => !expired(err) && toast(errorText(err)),
+                )
+              }
+            >
+              Unban
+            </button>
+          </div>
+        ))}
+        {bans && !bans.length && <p className="empty">Nobody is banned.</p>}
       </div>
     </section>
   );

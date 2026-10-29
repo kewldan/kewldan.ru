@@ -91,6 +91,12 @@ web app's `/revalidate` (`WEB_URL`, authorised by `ADMIN_TOKEN`), so the page
 shows it on the next visit. Addresses in sessions and the sign-in log are
 kept as the network plus a salted hash.
 
+The pixel board logs who painted each stroke (a salted hash, never the
+address). Select an area in the admin to see who drew there, then take one
+painter's strokes back and ban them. Bans are hidden: the banned painter
+still sees their own strokes, nobody else does. A burst of painting sends
+the board to Telegram with buttons to undo the painter or lock the board.
+
 </details>
 
 <details>
@@ -149,6 +155,8 @@ cd apps/api && cargo fmt --check && cargo clippy --all-targets -- -D warnings &&
 | `GET /api/admin/passkeys` · `PATCH` / `DELETE /api/admin/passkeys/{id}` | Passkeys: list, rename, remove |
 | `GET` / `DELETE /api/admin/sessions` · `DELETE /api/admin/sessions/{id}` | Sessions; sign out one or all others |
 | `GET /api/admin/auth/log` | The last 50 sign-in events |
+| `POST /api/admin/pixels/painters` · `/undo` | Who painted in an area; take one painter back and ban them |
+| `GET /api/admin/pixels/bans` · `PUT` / `DELETE /api/admin/pixels/bans/{who}` | Hidden bans on the board |
 
 🔐 Admin routes need `Authorization: Bearer $ADMIN_TOKEN` (unless turned off in the admin) or the session cookie a passkey sign-in sets.
 

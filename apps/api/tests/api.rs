@@ -564,3 +564,77 @@ async fn site_settings_reach_the_content_and_the_board() {
         request(addr, "GET", "/api/admin/auth/log", Some("test-token"), None).await;
     assert_eq!((status, body.as_str()), (200, r#"{"items":[]}"#));
 }
+
+#[tokio::test]
+async fn a_vandal_is_found_undone_and_banned_quietly() {
+    let addr = spawn().await;
+    let mut vandal = connect(addr).await;
+    let mut watcher = connect(addr).await;
+    let hello = next_of(&mut vandal, "hello").await;
+    next_of(&mut watcher, "hello").await;
+    let board = hello["board"].as_str().unwrap().as_bytes().to_vec();
+    let other = |i: usize| if board[i] == b'4' { 5 } else { 4 };
+
+    // Two cells in the top-left corner.
+    vandal
+        .send(Message::text(
+            json!({ "t": "paint", "cells": [[0, other(0)], [1, other(1)]] }).to_string(),
+        ))
+        .await
+        .unwrap();
+    next_of(&mut vandal, "ack").await;
+    next_of(&mut watcher, "paint").await;
+
+    let area = json!({ "x": 0, "y": 0, "w": 4, "h": 4 });
+    let (status, body) = request(
+        addr,
+        "POST",
+        "/api/admin/pixels/painters",
+        Some("test-token"),
+        Some(area),
+    )
+    .await;
+    assert_eq!(status, 200);
+    let found: Value = serde_json::from_str(&body).unwrap();
+    let painter = &found["items"][0];
+    assert_eq!(painter["cells"], json!(2));
+    let who = painter["who"].as_str().unwrap().to_owned();
+
+    let (status, body) = request(
+        addr,
+        "POST",
+        "/api/admin/pixels/undo",
+        Some("test-token"),
+        Some(json!({ "who": who, "since": painter["first"] })),
+    )
+    .await;
+    assert_eq!((status, body.as_str()), (200, r#"{"cells":2}"#));
+    // The watcher sees the cells go back.
+    let back = next_of(&mut watcher, "paint").await;
+    assert_eq!(back["cells"].as_array().unwrap().len(), 2);
+
+    let (_, body) = request(
+        addr,
+        "GET",
+        "/api/admin/pixels/bans",
+        Some("test-token"),
+        None,
+    )
+    .await;
+    assert!(body.contains(&who));
+
+    // Banned: the vandal is answered as usual, nobody else sees a thing.
+    vandal
+        .send(Message::text(
+            json!({ "t": "paint", "cells": [[2, other(2)]] }).to_string(),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(next_of(&mut vandal, "ack").await["revert"], json!([]));
+    let quiet =
+        tokio::time::timeout(Duration::from_millis(500), next_of(&mut watcher, "paint")).await;
+    assert!(quiet.is_err(), "a banned stroke reached someone else");
+    let (_, body) = request(addr, "GET", "/api/pixels", None, None).await;
+    let now: Value = serde_json::from_str(&body).unwrap();
+    assert_eq!(now["board"].as_str().unwrap().as_bytes()[2], board[2]);
+}

@@ -43,6 +43,7 @@ pub struct AppState {
     pub contact: Arc<contact::Contact>,
     pub tmdb: Option<Arc<tmdb::Tmdb>>,
     pub settings: Arc<settings::Store>,
+    pub guard: Arc<pixels::Guard>,
 }
 
 impl AppState {
@@ -86,14 +87,21 @@ impl AppState {
             )
             .await?,
         );
-        if config.stats_refresh {
-            contact::spawn_bot(Arc::clone(&contact));
-        }
         let tmdb = match config.tmdb_token.clone() {
             Some(token) => Some(Arc::new(tmdb::Tmdb::new(token)?)),
             None => None,
         };
-        Ok(Self {
+        let guard = pixels::Guard::open(
+            config.valkey_url.as_deref(),
+            &config.valkey_namespace,
+            config
+                .admin_token
+                .as_deref()
+                .unwrap_or(&config.valkey_namespace),
+        )
+        .await?;
+        let state = Self {
+            guard: Arc::new(guard),
             settings: Arc::new(settings),
             tmdb,
             contact,
@@ -104,7 +112,12 @@ impl AppState {
             hub,
             watched: Arc::new(watched),
             auth: Arc::new(auth),
-        })
+        };
+        // The bot's buttons reach the board, so it starts with everything.
+        if state.config.stats_refresh {
+            contact::spawn_bot(state.clone());
+        }
+        Ok(state)
     }
 }
 
@@ -132,6 +145,14 @@ pub fn router(state: AppState) -> Router {
         .route("/watched/posters", post(tmdb::backfill))
         .route("/pixels/rewind", post(pixels::rewind))
         .route("/pixels/erase", post(pixels::erase))
+        .route("/pixels/painters", post(pixels::guard::painters))
+        .route("/pixels/alert", post(pixels::guard::test_alert))
+        .route("/pixels/undo", post(pixels::guard::undo))
+        .route("/pixels/bans", get(pixels::guard::bans))
+        .route(
+            "/pixels/bans/{who}",
+            put(pixels::guard::ban).delete(pixels::guard::unban),
+        )
         .route_layer(middleware::from_fn_with_state(state.clone(), require_admin));
 
     let api = Router::new()

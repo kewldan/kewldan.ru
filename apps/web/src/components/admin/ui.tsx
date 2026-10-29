@@ -195,6 +195,7 @@ const ERRORS: Record<string, string> = {
   last_passkey: "This is the only way in: add another passkey or turn the token back on.",
   name: "Give it a name.",
   tmdb: "TMDB is not answering.",
+  telegram: "Telegram did not take it. Has the bot had /start from you?",
 };
 
 export const errorText = (err: unknown) => ERRORS[(err as Error)?.message] ?? "Could not save. Try again.";

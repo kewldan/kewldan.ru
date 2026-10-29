@@ -12,7 +12,7 @@ export const EMPTY = -1;
 
 /** Used only until the server's `hello` arrives, or when offline. Mirrors apps/api/src/pixels/board.rs. */
 const FALLBACK_PALETTE = ["#0d0d0f", "#ffe14d", "#7aa2ff", "#5fe39a", "#ff9a4d", "#2a35ff", "#ff8fd0"];
-const FALLBACK_INK = { max: 40, regen: 5 };
+const FALLBACK_INK = { max: 20, regen: 1 };
 const STORAGE_KEY = "kd-pixels";
 const FLUSH_MS = 50;
 

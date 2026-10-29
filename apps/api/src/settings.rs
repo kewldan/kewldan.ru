@@ -202,7 +202,7 @@ impl Store {
         self.current.read().unwrap().clone()
     }
 
-    async fn save(&self, next: Settings) -> anyhow::Result<()> {
+    pub async fn save(&self, next: Settings) -> anyhow::Result<()> {
         if let Backend::Valkey { conn, key } = &self.backend {
             let _: () = conn.clone().set(key, serde_json::to_string(&next)?).await?;
         }

@@ -254,26 +254,62 @@ impl Contact {
         hex(&Sha256::digest(format!("{}:{ip}", self.salt)))[..16].to_owned()
     }
 
-    async fn owner_chat(&self) -> Option<i64> {
+    pub(crate) async fn owner_chat(&self) -> Option<i64> {
         self.kv.get(&self.key("owner")).await.ok()??.parse().ok()
     }
 
     async fn telegram(&self, method: &str, body: Value) -> anyhow::Result<Value> {
         let tg = self.telegram.as_ref().context("no TELEGRAM_BOT_TOKEN")?;
-        let res: Value = self
+        let req = self
             .http
             .post(format!("https://api.telegram.org/bot{}/{method}", tg.token))
-            .json(&body)
-            .send()
-            .await?
-            .json()
-            .await?;
+            .json(&body);
+        self.call(method, req).await
+    }
+
+    async fn call(&self, method: &str, req: reqwest::RequestBuilder) -> anyhow::Result<Value> {
+        let res: Value = req.send().await?.json().await?;
         anyhow::ensure!(
             res["ok"] == true,
             "Telegram {method}: {}",
             res["description"]
         );
         Ok(res["result"].clone())
+    }
+}
+
+impl Contact {
+    /// A picture to the owner's chat, with buttons under it. Fails before
+    /// the owner's `/start`.
+    pub async fn send_photo(
+        &self,
+        png: Vec<u8>,
+        caption: &str,
+        markup: Value,
+    ) -> anyhow::Result<()> {
+        let tg = self.telegram.as_ref().context("no TELEGRAM_BOT_TOKEN")?;
+        let chat = self
+            .owner_chat()
+            .await
+            .context("the owner has not sent /start to the bot")?;
+        let form = reqwest::multipart::Form::new()
+            .text("chat_id", chat.to_string())
+            .text("caption", caption.to_owned())
+            .text("reply_markup", markup.to_string())
+            .part(
+                "photo",
+                reqwest::multipart::Part::bytes(png)
+                    .file_name("board.png")
+                    .mime_str("image/png")?,
+            );
+        let req = self
+            .http
+            .post(format!(
+                "https://api.telegram.org/bot{}/sendPhoto",
+                tg.token
+            ))
+            .multipart(form);
+        self.call("sendPhoto", req).await.map(|_| ())
     }
 }
 
@@ -474,8 +510,10 @@ fn block_button(sender: &str, blocked: bool) -> Value {
 }
 
 /// Long-polls the bot: `/start` from the owner sets where messages go, the
-/// buttons under a message block or unblock its sender.
-pub fn spawn_bot(contact: Arc<Contact>) {
+/// buttons under a message block or unblock its sender, and the ones under
+/// a pixel alert undo a painter or lock the board.
+pub fn spawn_bot(app: AppState) {
+    let contact = Arc::clone(&app.contact);
     let Some(tg) = contact.telegram.clone() else {
         return;
     };
@@ -499,7 +537,7 @@ pub fn spawn_bot(contact: Arc<Contact>) {
             };
             for update in updates {
                 offset = offset.max(update["update_id"].as_i64().unwrap_or(0) + 1);
-                if let Err(err) = handle_update(&contact, &tg, &update).await {
+                if let Err(err) = handle_update(&app, &tg, &update).await {
                     tracing::warn!(error = %format!("{err:#}"), "contact bot: update failed");
                 }
             }
@@ -507,7 +545,8 @@ pub fn spawn_bot(contact: Arc<Contact>) {
     });
 }
 
-async fn handle_update(c: &Contact, tg: &Telegram, update: &Value) -> anyhow::Result<()> {
+async fn handle_update(app: &AppState, tg: &Telegram, update: &Value) -> anyhow::Result<()> {
+    let c = &*app.contact;
     if let Some(msg) = update.get("message") {
         let chat = msg["chat"]["id"].as_i64().unwrap_or(0);
         let text = msg["text"].as_str().unwrap_or("");
@@ -531,15 +570,40 @@ async fn handle_update(c: &Contact, tg: &Telegram, update: &Value) -> anyhow::Re
         return Ok(());
     };
     let owner = c.owner_chat().await;
+    if owner.is_none() || cb["from"]["id"].as_i64() != owner {
+        return Ok(());
+    }
     let data = cb["data"].as_str().unwrap_or("");
+    if let Some(px) = data.strip_prefix("px:") {
+        if px == "done" {
+            return Ok(());
+        }
+        let (text, markup) = crate::pixels::guard::button(app, px)
+            .await
+            .unwrap_or_else(|err| (format!("Не вышло: {err:#}"), Value::Null));
+        c.telegram(
+            "answerCallbackQuery",
+            json!({ "callback_query_id": cb["id"], "text": text }),
+        )
+        .await?;
+        if !markup.is_null() {
+            c.telegram(
+                "editMessageReplyMarkup",
+                json!({
+                    "chat_id": cb["message"]["chat"]["id"],
+                    "message_id": cb["message"]["message_id"],
+                    "reply_markup": markup,
+                }),
+            )
+            .await?;
+        }
+        return Ok(());
+    }
     let (blocked, sender) = match data.split_once(':') {
         Some(("block", s)) => (true, s),
         Some(("unblock", s)) => (false, s),
         _ => return Ok(()),
     };
-    if owner.is_none() || cb["from"]["id"].as_i64() != owner {
-        return Ok(());
-    }
     c.kv.set_add(&c.key("blocked"), sender, blocked).await?;
     c.telegram(
         "answerCallbackQuery",

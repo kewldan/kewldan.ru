@@ -32,8 +32,8 @@ const HEARTBEAT: Duration = Duration::from_secs(5);
 const PEER_TTL: Duration = Duration::from_secs(15);
 const MAX_BATCH: usize = 256;
 
-pub const INK_MAX: u32 = 40;
-pub const INK_REGEN: f32 = 5.0;
+pub const INK_MAX: u32 = 20;
+pub const INK_REGEN: f32 = 1.0;
 
 /// How much people may paint, and whether they may at all. The admin sets
 /// these at runtime; see [`crate::settings`].
@@ -294,7 +294,15 @@ impl Hub {
     }
 
     /// Applies what the painter can afford and reports the rest for rollback.
-    pub async fn paint(&self, by: u64, ip: IpAddr, mut cells: Vec<Cell>) -> ServerMessage {
+    /// Also returns the cells that went on the board. A `shadow` painter (a
+    /// hidden ban) is answered as usual, but nobody else sees the strokes.
+    pub async fn paint(
+        &self,
+        by: u64,
+        ip: IpAddr,
+        mut cells: Vec<Cell>,
+        shadow: bool,
+    ) -> (ServerMessage, Vec<Cell>) {
         cells.truncate(MAX_BATCH);
         let rules = self.rules();
         let (accepted, revert, ink) = {
@@ -322,14 +330,15 @@ impl Hub {
             }
             (accepted, revert, bucket.tokens as u32)
         };
-        if !accepted.is_empty() {
-            self.emit(BusEvent::Paint {
-                by,
-                cells: accepted,
-            })
-            .await;
+        if shadow || accepted.is_empty() {
+            return (ServerMessage::Ack { ink, revert }, Vec::new());
         }
-        ServerMessage::Ack { ink, revert }
+        self.emit(BusEvent::Paint {
+            by,
+            cells: accepted.clone(),
+        })
+        .await;
+        (ServerMessage::Ack { ink, revert }, accepted)
     }
 
     /// The admin's brush: no ink, no batch limit. Unchanged cells are skipped.
@@ -651,7 +660,8 @@ mod tests {
             .map(|i| (i, 2))
             .collect();
 
-        let ServerMessage::Ack { ink, revert } = hub.paint(1, IP, free.clone()).await else {
+        let (ServerMessage::Ack { ink, revert }, _) = hub.paint(1, IP, free.clone(), false).await
+        else {
             panic!("expected ack");
         };
         assert_eq!(ink, 0);
@@ -670,7 +680,9 @@ mod tests {
         .await;
         let current = hub.board.read().unwrap().get(0);
         let other = if current == 1 { 2 } else { 1 };
-        let ServerMessage::Ack { ink, revert } = hub.paint(1, IP, vec![(0, other)]).await else {
+        let (ServerMessage::Ack { ink, revert }, _) =
+            hub.paint(1, IP, vec![(0, other)], false).await
+        else {
             panic!("expected ack");
         };
         assert_eq!((ink, revert), (INK_MAX, vec![(0, current)]));
@@ -678,11 +690,26 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn a_shadow_painter_only_paints_for_themselves() {
+        let hub = Hub::start(None, "px").await.unwrap();
+        let current = hub.board.read().unwrap().get(5);
+        let other = if current == 1 { 2 } else { 1 };
+        let (ServerMessage::Ack { ink, revert }, accepted) =
+            hub.paint(1, IP, vec![(5, other)], true).await
+        else {
+            panic!("expected ack");
+        };
+        // Looks like it worked to them: ink spent, nothing rolled back.
+        assert_eq!((ink, revert, accepted), (INK_MAX - 1, vec![], vec![]));
+        assert_eq!(hub.board.read().unwrap().get(5), current);
+    }
+
+    #[tokio::test]
     async fn noop_and_invalid_cells_are_free() {
         let hub = Hub::start(None, "px").await.unwrap();
         let current = hub.board.read().unwrap().get(0);
-        let ServerMessage::Ack { ink, revert } = hub
-            .paint(1, IP, vec![(0, current), (CELLS as u16, 1), (1, 42)])
+        let (ServerMessage::Ack { ink, revert }, _) = hub
+            .paint(1, IP, vec![(0, current), (CELLS as u16, 1), (1, 42)], false)
             .await
         else {
             panic!("expected ack");
@@ -737,7 +764,7 @@ mod tests {
     async fn paints_are_broadcast() {
         let hub = Hub::start(None, "px").await.unwrap();
         let mut rx = hub.subscribe();
-        hub.paint(7, IP, vec![(0, 3)]).await;
+        hub.paint(7, IP, vec![(0, 3)], false).await;
         let text = rx.recv().await.unwrap();
         assert!(text.contains(r#""t":"paint""#) && text.contains(r#""by":7"#));
     }
