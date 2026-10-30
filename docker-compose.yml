@@ -80,6 +80,11 @@ services:
       TELEGRAM_OWNER: ${TELEGRAM_OWNER:-kewldan}
       # Постеры для Watched (Read Access Token с themoviedb.org).
       TMDB_TOKEN: ${TMDB_TOKEN:-}
+      # «Слушаю сейчас» в About: приложение на developer.spotify.com,
+      # refresh token — из scripts/spotify-token.mjs. Нужны все три.
+      SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID:-}
+      SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET:-}
+      SPOTIFY_REFRESH_TOKEN: ${SPOTIFY_REFRESH_TOKEN:-}
       LOG_FORMAT: json
       TZ: ${TZ:-Europe/Moscow}
     volumes:

@@ -6,6 +6,7 @@ pub mod contact;
 pub mod content;
 pub mod pixels;
 pub mod settings;
+pub mod spotify;
 pub mod stats;
 pub mod status;
 pub mod tmdb;
@@ -42,6 +43,7 @@ pub struct AppState {
     pub auth: Arc<auth::Auth>,
     pub contact: Arc<contact::Contact>,
     pub tmdb: Option<Arc<tmdb::Tmdb>>,
+    pub spotify: Option<Arc<spotify::Spotify>>,
     pub settings: Arc<settings::Store>,
     pub guard: Arc<pixels::Guard>,
 }
@@ -91,6 +93,10 @@ impl AppState {
             Some(token) => Some(Arc::new(tmdb::Tmdb::new(token)?)),
             None => None,
         };
+        let spotify = match config.spotify.clone() {
+            Some(creds) => Some(Arc::new(spotify::Spotify::new(creds)?)),
+            None => None,
+        };
         let guard = pixels::Guard::open(
             config.valkey_url.as_deref(),
             &config.valkey_namespace,
@@ -104,6 +110,7 @@ impl AppState {
             guard: Arc::new(guard),
             settings: Arc::new(settings),
             tmdb,
+            spotify,
             contact,
             config: Arc::new(config),
             content,
@@ -164,6 +171,7 @@ pub fn router(state: AppState) -> Router {
         .route("/content", get(get_content))
         .route("/stats", get(get_stats))
         .route("/github/calendar", get(get_calendar))
+        .route("/spotify", get(spotify::now))
         .route("/status", get(get_status))
         .route("/pixels", get(pixels::board))
         .route("/pixels/ws", get(pixels::ws))

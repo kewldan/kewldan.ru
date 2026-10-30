@@ -1,9 +1,12 @@
-import { Reveal, RevealGroup, RevealItem } from "@/components/motion/reveal";
+import { Reveal, RevealGroup } from "@/components/motion/reveal";
 import { Rich } from "@/components/rich";
 import { SectionLabel } from "@/components/section-label";
 import type { Copy } from "@/lib/copy";
 import type { About as AboutContent } from "@/lib/api/generated/About";
 import { cn } from "@/lib/utils";
+
+import { Row } from "./about-row";
+import { NowPlaying } from "./now-playing";
 
 const STAMPS = [
   "-rotate-3 bg-yellow text-on-accent",
@@ -11,15 +14,6 @@ const STAMPS = [
   "-rotate-1 bg-pink text-on-accent",
   "rotate-3 bg-surface",
 ];
-
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <RevealItem className="grid grid-cols-1 gap-4 border-b border-rule py-4.5 text-md leading-normal md:grid-cols-[1fr_2.4fr]">
-      <span className="pt-0.75 text-sm text-ink-muted">{label}</span>
-      <div>{children}</div>
-    </RevealItem>
-  );
-}
 
 export function About({ about, t }: { about: AboutContent; t: Copy["about"] }) {
   return (
@@ -37,6 +31,7 @@ export function About({ about, t }: { about: AboutContent; t: Copy["about"] }) {
               ))}
             </ul>
           </Row>
+          <NowPlaying t={t} />
           <Row label={t.character}>
             <ul className="mb-2.5 flex flex-wrap gap-2.5">
               {about.traits.map((t, i) => (

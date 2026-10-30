@@ -272,10 +272,21 @@
   --animate-beat: beat 1.1s ease-in-out infinite;
   --animate-ring: ring 1.4s infinite;
   --animate-flow: flow 2.6s var(--motion-ease-out) infinite;
+  --animate-eq: eq 0.9s ease-in-out infinite;
 
   @keyframes marquee {
     to {
       transform: translateX(-50%);
+    }
+  }
+  /* Equalizer bars of the now-playing card. */
+  @keyframes eq {
+    0%,
+    100% {
+      transform: scaleY(0.35);
+    }
+    50% {
+      transform: scaleY(1);
     }
   }
   @keyframes live {

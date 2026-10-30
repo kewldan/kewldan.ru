@@ -154,6 +154,7 @@ cd apps/api && cargo fmt --check && cargo clippy --all-targets -- -D warnings &&
 | `GET /api/content` | Site content with stats filled in, with `ETag` |
 | `GET /api/stats` | The live (or fallback) numbers behind the placeholders |
 | `GET /api/watched` | Rated titles, newest first |
+| `GET /api/spotify` | The track playing now, or the last one; `204` without Spotify |
 | `GET /api/pixels` | Board snapshot |
 | `GET /api/pixels/ws` | Pixel battle WebSocket |
 | `POST /api/admin/watched` · `PUT` / `DELETE /api/admin/watched/{id}` | Edit the Watched list |
@@ -191,6 +192,11 @@ GitHub secrets: `DEPLOY_SSH_KEY`, `DEPLOY_KNOWN_HOSTS`, `DEPLOY_USER`,
 
 Optional, for live stats: `GITHUB_TOKEN` (fine-grained, read-only) and
 `STEAM_API_KEY` + `STEAM_ID` in the same `.env`.
+
+Optional, for "Listening" in About: a Spotify app (redirect URI
+`http://127.0.0.1:8888/callback`), its `SPOTIFY_CLIENT_ID` and
+`SPOTIFY_CLIENT_SECRET`, and a `SPOTIFY_REFRESH_TOKEN` from
+`node scripts/spotify-token.mjs` with those two set.
 
 Edit copy without a release: change `apps/api/content/en.json` on the server, then
 
