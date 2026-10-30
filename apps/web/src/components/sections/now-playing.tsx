@@ -4,13 +4,10 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 
 import { type Copy, fmt } from "@/lib/copy";
-import type { NowPlaying as Track } from "@/lib/api/generated/NowPlaying";
+import { position, useNowPlaying } from "@/lib/now-playing";
 import { cn } from "@/lib/utils";
 
 import { Row } from "./about-row";
-
-/** How often to ask again while the page is open. */
-const POLL_MS = 20_000;
 
 function ago(iso: string, now: number) {
   const s = Math.round((Date.parse(iso) - now) / 1000);
@@ -36,41 +33,19 @@ const clock = (ms: number) => {
  * row at all when Spotify has nothing to say.
  */
 export function NowPlaying({ t }: { t: Copy["about"] }) {
-  const [track, setTrack] = useState<Track | null>(null);
-  // When the answer arrived, to move the progress bar on from it.
-  const [got, setGot] = useState(0);
+  const listening = useNowPlaying();
   const [now, setNow] = useState(0);
 
-  useEffect(() => {
-    let stop = false;
-    const load = () =>
-      fetch("/api/spotify", { cache: "no-store" })
-        .then((r) => (r.status === 200 ? (r.json() as Promise<Track>) : null))
-        .catch(() => null)
-        .then((next) => {
-          if (stop) return;
-          setTrack(next);
-          setGot(Date.now());
-        });
-    void load();
-    const id = setInterval(() => {
-      if (document.visibilityState === "visible") void load();
-    }, POLL_MS);
-    return () => {
-      stop = true;
-      clearInterval(id);
-    };
-  }, []);
-
-  const playing = track?.playing ?? false;
+  const playing = listening?.track.playing ?? false;
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), playing ? 1000 : 30_000);
     return () => clearInterval(id);
   }, [playing]);
 
-  if (!track) return null;
-  const at = Math.max(now, got);
-  const progress = playing ? Math.min(track.durationMs, (track.progressMs ?? 0) + (at - got)) : 0;
+  if (!listening) return null;
+  const { track } = listening;
+  const at = Math.max(now, listening.got);
+  const progress = position(listening, at);
 
   return (
     <Row label={t.listening}>
