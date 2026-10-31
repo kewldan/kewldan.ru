@@ -9,7 +9,8 @@ import { enUS } from "react-day-picker/locale";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { fmt, t } from "@/lib/copy";
+import { fmt } from "@/lib/copy";
+import { useT } from "@/components/lang";
 import type { Kind } from "@/lib/api/generated/Kind";
 import type { Title } from "@/lib/api/generated/Title";
 import type { TitleInput } from "@/lib/api/generated/TitleInput";
@@ -43,6 +44,7 @@ type Props = {
 };
 
 export function TitleForm({ token, editing, onSaved, onCancel }: Props) {
+  const t = useT();
   const f = t.watched.form;
   const [form, setForm] = useState<Omit<TitleInput, "year"> & { year: string }>(() =>
     editing === "new"

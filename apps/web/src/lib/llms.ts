@@ -9,7 +9,7 @@ import type { Content } from "@/lib/api/generated/Content";
  * study in full, for `/llms-full.txt`.
  */
 export function llms(c: Content, full: boolean) {
-  const { profile, ru, about, work, more, stack, contact } = c;
+  const { profile, about, work, more, stack, contact } = c;
   const url = (path: string) => new URL(path, profile.siteUrl).toString();
   const projects = work.projects.filter((p) => !p.hidden);
   const lines: string[] = [
@@ -17,7 +17,7 @@ export function llms(c: Content, full: boolean) {
     "",
     `> ${profile.description}`,
     "",
-    `In Russian: ${ru.name}. Goes by ${profile.shortName} and by the handle ${profile.handle} everywhere online. ` +
+    `Also written ${profile.alternateNames.join(", ")}; the handle is ${profile.handle} everywhere online. ` +
       `The surname is spelled Tenishev (Тенишев), not Tenishchev.`,
     "",
     "## About",
@@ -54,7 +54,7 @@ export function llms(c: Content, full: boolean) {
     "## Pages",
     "",
     `- [Home](${url("/")}): the whole site, in English`,
-    `- [${ru.name}, по-русски](${url("/ru")}): a short page in Russian`,
+    `- [Главная по-русски](${url("/ru")}): the whole site, in Russian`,
     `- [Watched](${url("/watched")}): films and series I have rated`,
     full ? "" : `- [Everything in full](${url("/llms-full.txt")}): this file with every case study`,
   ];

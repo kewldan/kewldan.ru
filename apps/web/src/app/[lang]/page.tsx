@@ -16,29 +16,38 @@ import { SiteFooter } from "@/components/site/footer";
 import { SiteHeader } from "@/components/site/header";
 import { getContent } from "@/lib/api/content";
 import { getCalendar } from "@/lib/api/live";
-import { t } from "@/lib/copy";
+import { copy } from "@/lib/copy";
+import { alternates, langOf, localize } from "@/lib/i18n";
 
-export const metadata: Metadata = { alternates: { canonical: "/" } };
+export async function generateMetadata({ params }: PageProps<"/[lang]">): Promise<Metadata> {
+  return { alternates: alternates(langOf(await params), "/") };
+}
 
-export default async function Home() {
-  const [c, calendar] = await Promise.all([getContent(), getCalendar()]);
+export default async function Home({ params }: PageProps<"/[lang]">) {
+  const lang = langOf(await params);
+  const t = copy[lang];
+  const [c, calendar] = await Promise.all([getContent(lang), getCalendar()]);
   // Blocks and projects the admin switched off.
   const shown = (block: string) => !c.hidden?.includes(block);
   return (
     <>
       <JsonLd
         data={profilePage(c, {
-          path: "/",
+          path: localize(lang, "/"),
           name: `${c.profile.name} (${c.profile.handle}): ${c.profile.role}`,
-          lang: "en",
+          lang,
         })}
       />
-      <SiteHeader handle={c.profile.handle} nav={c.nav} marquee={c.marquee} />
+      <SiteHeader
+        handle={c.profile.handle}
+        nav={c.nav.map((l) => ({ ...l, href: localize(lang, l.href) }))}
+        marquee={c.marquee}
+      />
       <main>
         <Hero hero={c.hero} />
         {shown("pixels") && <Pixels section={c.pixels} />}
         <About about={c.about} t={t.about} />
-        <Work work={{ ...c.work, projects: c.work.projects.filter((p) => !p.hidden) }} />
+        <Work work={{ ...c.work, projects: c.work.projects.filter((p) => !p.hidden) }} lang={lang} />
         <Numbers numbers={c.numbers} calendar={calendar} />
         <MoreWork more={c.more} />
         <Stack stack={c.stack} usedIn={t.stack.usedIn} />
@@ -47,7 +56,7 @@ export default async function Home() {
         <Contact contact={c.contact} email={c.profile.email} />
         {shown("dropout") && <Dropout dropout={c.dropout} />}
       </main>
-      <SiteFooter footer={c.footer} ru={c.ru} />
+      <SiteFooter footer={c.footer} lang={lang} />
     </>
   );
 }

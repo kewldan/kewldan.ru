@@ -3,7 +3,7 @@
 import { motion, type Variants } from "motion/react";
 import { Fragment } from "react";
 
-import { t } from "@/lib/copy";
+import { useT } from "@/components/lang";
 import { ease, rise, stagger, viewport } from "@/lib/motion";
 
 const draw: Variants = {
@@ -17,6 +17,7 @@ const draw: Variants = {
  * the wires: a vertical stack on phones, one row from `lg`.
  */
 export function Pipeline({ steps }: { steps: string[] }) {
+  const t = useT();
   return (
     <motion.ol
       aria-label={t.work.flow.replace("{steps}", steps.join(t.work.flowJoin))}

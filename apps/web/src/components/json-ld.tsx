@@ -10,7 +10,7 @@ export function JsonLd({ data }: { data: object }) {
   );
 }
 
-type Who = Pick<Content, "profile" | "contact" | "hero" | "stack" | "ru">;
+type Who = Pick<Content, "profile" | "contact" | "hero" | "stack">;
 
 const ref = (siteUrl: string, name: string) => `${siteUrl}/#${name}`;
 
@@ -19,7 +19,7 @@ const ref = (siteUrl: string, name: string) => `${siteUrl}/#${name}`;
  * section. Every spelling of the name is here, Russian included, so a
  * search for any of them lands on the same person.
  */
-export function person({ profile, contact, hero, stack, ru }: Who) {
+export function person({ profile, contact, hero, stack }: Who) {
   const [given, ...rest] = profile.name.split(" ");
   const family = rest.join(" ");
   return {
@@ -28,7 +28,7 @@ export function person({ profile, contact, hero, stack, ru }: Who) {
     name: profile.name,
     givenName: given,
     familyName: family,
-    alternateName: [ru.name, `${profile.shortName} ${family}`, profile.shortName, profile.handle],
+    alternateName: [...profile.alternateNames, profile.handle],
     url: profile.siteUrl,
     image: hero.photo && new URL(hero.photo.src, profile.siteUrl).toString(),
     jobTitle: profile.role,
@@ -42,19 +42,19 @@ export function person({ profile, contact, hero, stack, ru }: Who) {
 }
 
 /** The site itself, published by that person. */
-export function website({ profile, ru }: Who) {
+export function website({ profile }: Who) {
   return {
     "@type": "WebSite",
     "@id": ref(profile.siteUrl, "website"),
     url: profile.siteUrl,
     name: `${profile.name} (${profile.handle})`,
-    alternateName: [profile.handle, ru.name, new URL(profile.siteUrl).host],
+    alternateName: [profile.handle, ...profile.alternateNames, new URL(profile.siteUrl).host],
     inLanguage: ["en", "ru"],
     publisher: { "@id": ref(profile.siteUrl, "person") },
   };
 }
 
-/** A page about the person: the home page in English, `/ru` in Russian. */
+/** A page about the person: the home page, in either language. */
 export function profilePage(c: Who, { path, name, lang }: { path: string; name: string; lang: string }) {
   const url = new URL(path, c.profile.siteUrl).toString();
   return {

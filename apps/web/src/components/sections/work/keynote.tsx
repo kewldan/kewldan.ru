@@ -6,6 +6,8 @@ import { useEffect, useRef } from "react";
 import type { Spec } from "@/lib/api/generated/Spec";
 import { duration, ease, rise, stagger, viewport } from "@/lib/motion";
 import { cn } from "@/lib/utils";
+import { useLang } from "@/components/lang";
+import { locale } from "@/lib/i18n";
 
 const lineUp: Variants = {
   hidden: { y: "110%", rotate: 2 },
@@ -48,17 +50,18 @@ export function KeynoteTitle({
 
 /** "65,536" counts up from zero; values that are not numbers just rise in. */
 export function CountUp({ value, className }: { value: string; className?: string }) {
+  const lang = useLang();
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, viewport);
-  // "2,195" (the API formats it) plus an optional suffix.
-  const match = value.match(/^(\d{1,3}(?:,\d{3})+|\d+)(.*)$/);
+  // "2,195" or "2 195" (the API formats it) plus an optional suffix.
+  const match = value.match(/^(\d{1,3}(?:[,\u00a0 ]\d{3})+|\d+)(.*)$/);
   const target = match ? Number(match[1].replace(/\D/g, "")) : NaN;
   // "2026" is a year, not "2,026": group digits only when the source does.
-  const grouped = match?.[1].includes(",") ?? false;
+  const grouped = /\D/.test(match?.[1] ?? "");
   const mv = useMotionValue(0);
   const text = useTransform(
     mv,
-    (v) => (grouped ? Math.round(v).toLocaleString("en-US") : String(Math.round(v))) + (match?.[2] ?? ""),
+    (v) => (grouped ? Math.round(v).toLocaleString(locale[lang]) : String(Math.round(v))) + (match?.[2] ?? ""),
   );
 
   useEffect(() => {

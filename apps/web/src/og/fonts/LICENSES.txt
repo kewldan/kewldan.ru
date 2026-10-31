@@ -1,3 +1,4 @@
 Fonts for the share images (src/og). All are licensed under the SIL Open Font License 1.1:
 Instrument Sans and Instrument Serif (Instrument),
-JetBrains Mono (JetBrains), Geist (Vercel).
+JetBrains Mono (JetBrains), Geist (Vercel), Roboto Flex (Font Bureau)
+and Playfair Display (Claus Eggers Sørensen), the last two cut to Cyrillic.

@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { t } from "@/lib/copy";
+import { useT } from "@/components/lang";
 import { ease } from "@/lib/motion";
 import { adminApi, type Credential, deviceName, passkeys } from "@/lib/watched";
 
@@ -27,6 +27,7 @@ type Props = {
  * is the fallback, and the way in before the first passkey exists.
  */
 export function AdminDialog({ admin, token, onSignIn, onSignOut }: Props) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [hasPasskey, setHasPasskey] = useState<boolean | null>(null);
   const [showToken, setShowToken] = useState(false);

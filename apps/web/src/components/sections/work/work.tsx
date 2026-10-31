@@ -5,7 +5,8 @@ import { Reveal, RevealGroup, RevealItem } from "@/components/motion/reveal";
 import { Rich } from "@/components/rich";
 import type { Project } from "@/lib/api/generated/Project";
 import type { Work as WorkContent } from "@/lib/api/generated/Work";
-import { t as copy } from "@/lib/copy";
+import { copy } from "@/lib/copy";
+import { type Lang, localize } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 import { KeynoteTitle, Points, Specs } from "./keynote";
@@ -16,7 +17,7 @@ import { stageTheme } from "./stage-theme";
 
 type Vars = React.CSSProperties & { "--g": string };
 
-export function Work({ work }: { work: WorkContent }) {
+export function Work({ work, lang }: { work: WorkContent; lang: Lang }) {
   const first = work.projects[0];
   return (
     <Stage id="work">
@@ -45,13 +46,13 @@ export function Work({ work }: { work: WorkContent }) {
         </RevealGroup>
       </div>
       {work.projects.map((p) => (
-        <Slide key={p.id} project={p} />
+        <Slide key={p.id} project={p} lang={lang} />
       ))}
     </Stage>
   );
 }
 
-function Slide({ project: p }: { project: Project }) {
+function Slide({ project: p, lang }: { project: Project; lang: Lang }) {
   const t = stageTheme(p.theme);
   const bigNumbers = p.showcase?.kind === "bigNumbers" ? p.showcase : null;
   const lead = (
@@ -114,7 +115,9 @@ function Slide({ project: p }: { project: Project }) {
           </RevealGroup>
         )}
         <SlideLinks
-          links={p.case ? [...p.links, { label: copy.work.readCase, href: `/work/${p.id}` }] : p.links}
+          links={
+            p.case ? [...p.links, { label: copy[lang].work.readCase, href: localize(lang, `/work/${p.id}`) }] : p.links
+          }
           linkClass={t.link}
         />
       </div>

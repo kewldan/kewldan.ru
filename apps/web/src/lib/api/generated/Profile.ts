@@ -4,4 +4,9 @@ export type Profile = { name: string, shortName: string, handle: string,
 /**
  * "full-stack & systems developer", for titles and the share card.
  */
-role: string, description: string, siteUrl: string, email: string | null, };
+role: string, description: string, 
+/**
+ * Other spellings of the name, for search: the name in the other
+ * language, the short form.
+ */
+alternateNames: Array<string>, siteUrl: string, email: string | null, };

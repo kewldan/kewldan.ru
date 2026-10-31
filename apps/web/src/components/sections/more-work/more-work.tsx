@@ -7,7 +7,7 @@ import { useState } from "react";
 import { LiveStatus } from "@/components/live-status";
 import { RichReveal } from "@/components/motion/rich-reveal";
 import { SectionLabel } from "@/components/section-label";
-import { t } from "@/lib/copy";
+import { useT } from "@/components/lang";
 import type { More } from "@/lib/api/generated/More";
 import type { WorkItem } from "@/lib/api/generated/WorkItem";
 import { ease, spring } from "@/lib/motion";
@@ -18,6 +18,7 @@ import { Oled } from "./oled";
 const ALL = "all";
 
 export function MoreWork({ more }: { more: More }) {
+  const t = useT();
   const [filter, setFilter] = useState(ALL);
   const chips = [{ id: ALL, label: t.more.all }, ...more.categories].map((c) => ({
     ...c,
@@ -78,6 +79,7 @@ export function MoreWork({ more }: { more: More }) {
 }
 
 function Row({ item: x, index }: { item: WorkItem; index: number }) {
+  const t = useT();
   return (
     <motion.li
       layout="position"

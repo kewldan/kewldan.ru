@@ -10,14 +10,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { t } from "@/lib/copy";
+import { useT } from "@/components/lang";
 import { readTheme, resolvedTheme, setTheme, subscribeTheme, type Theme, THEME_SWITCH } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
 /** "paper" for the neo-brutal header, "stage" for the dark keynote pages. */
-type Tone = "paper" | "stage";
+export type Tone = "paper" | "stage";
 
-const trigger: Record<Tone, string> = {
+export const trigger: Record<Tone, string> = {
   paper:
     "brutal bg-surface px-2.5 min-h-10 shadow-brutal-sm transition-[translate,box-shadow] duration-(--dur-fast) hover:-translate-y-0.5 hover:shadow-[4px_6px_0_var(--ink)] data-[state=open]:translate-x-0.5 data-[state=open]:translate-y-0.5 data-[state=open]:shadow-none",
   stage:
@@ -49,6 +49,7 @@ export function Switches({ tone = "paper" }: { tone?: Tone }) {
 }
 
 export function ThemeSwitch({ tone = "paper" }: { tone?: Tone }) {
+  const t = useT();
   const theme = useSyncExternalStore<Theme>(subscribeTheme, readTheme, () => "system");
   const resolved = useSyncExternalStore(subscribeTheme, resolvedTheme, () => undefined);
   // The theme is only known in the browser; render a neutral icon until then.

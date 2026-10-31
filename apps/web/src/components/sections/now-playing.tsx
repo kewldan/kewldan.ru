@@ -3,15 +3,17 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
+import { useLang } from "@/components/lang";
 import { type Copy, fmt } from "@/lib/copy";
+import type { Lang } from "@/lib/i18n";
 import { position, useNowPlaying } from "@/lib/now-playing";
 import { cn } from "@/lib/utils";
 
 import { Row } from "./about-row";
 
-function ago(iso: string, now: number) {
+function ago(iso: string, now: number, lang: Lang) {
   const s = Math.round((Date.parse(iso) - now) / 1000);
-  const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+  const rtf = new Intl.RelativeTimeFormat(lang, { numeric: "auto" });
   for (const [unit, size] of [
     ["day", 86_400],
     ["hour", 3_600],
@@ -34,6 +36,7 @@ const clock = (ms: number) => {
  */
 export function NowPlaying({ t }: { t: Copy["about"] }) {
   const listening = useNowPlaying();
+  const lang = useLang();
   const [now, setNow] = useState(0);
 
   const playing = listening?.track.playing ?? false;
@@ -81,7 +84,7 @@ export function NowPlaying({ t }: { t: Copy["about"] }) {
             ) : (
               <span aria-hidden className="size-2 rounded-full bg-ink-muted" />
             )}
-            {playing ? t.playingNow : fmt(t.lastPlayed, { ago: track.playedAt ? ago(track.playedAt, at) : "" })}
+            {playing ? t.playingNow : fmt(t.lastPlayed, { ago: track.playedAt ? ago(track.playedAt, at, lang) : "" })}
           </span>
           <span className="truncate font-bold group-hover:underline">{track.title}</span>
           <span className="truncate text-sm text-ink-muted">{track.artists}</span>

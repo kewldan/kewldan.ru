@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { Schibsted_Grotesk } from "next/font/google";
+import Script from "next/script";
 
+import { fontVariables } from "@/lib/fonts";
+import { themeScript } from "@/lib/theme";
+import "../globals.css";
 import "./admin.css";
 
 const schibsted = Schibsted_Grotesk({
@@ -14,6 +18,16 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+/** Its own root layout: the site's lives under `[lang]`, and the admin is English only. */
 export default function AdminLayout({ children }: LayoutProps<"/admin">) {
-  return <div className={schibsted.variable}>{children}</div>;
+  return (
+    <html lang="en" suppressHydrationWarning className={`${fontVariables} ${schibsted.variable}`}>
+      <body>
+        <Script id="theme" strategy="beforeInteractive">
+          {themeScript}
+        </Script>
+        {children}
+      </body>
+    </html>
+  );
 }

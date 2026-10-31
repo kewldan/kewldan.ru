@@ -1,9 +1,10 @@
 //! Site content: the typed model, loading and validation.
 //!
-//! The JSON in `content/en.json` is the single source of truth. It is parsed
-//! into these types at startup (so a typo fails fast instead of rendering
-//! `undefined`), and `cargo test` exports the same types to TypeScript for the
-//! web app.
+//! The JSON in `content/en.json` and its Russian twin `content/ru.json` is
+//! the single source of truth. Both are parsed into these types at startup
+//! (so a typo fails fast instead of rendering `undefined`), checked to
+//! describe the same projects, and `cargo test` exports the types to
+//! TypeScript for the web app.
 //!
 //! Text fields marked "rich" accept a tiny inline markup that the web app
 //! renders: `**bold**`, `_serif italic accent_` and `==highlighter box==`.
@@ -19,6 +20,7 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 const EMBEDDED: &str = include_str!("../content/en.json");
+const EMBEDDED_RU: &str = include_str!("../content/ru.json");
 const EMBEDDED_STATS: &str = include_str!("../content/stats.json");
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
@@ -41,7 +43,6 @@ pub struct Content {
     pub dropout: Dropout,
     pub footer: Footer,
     pub watched: WatchedPage,
-    pub ru: Russian,
     /// Blocks the admin switched off (`pixels`, `dropout`); set by
     /// [`crate::settings`], never in the file.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -59,6 +60,9 @@ pub struct Profile {
     /// "full-stack & systems developer", for titles and the share card.
     pub role: String,
     pub description: String,
+    /// Other spellings of the name, for search: the name in the other
+    /// language, the short form.
+    pub alternate_names: Vec<String>,
     pub site_url: String,
     pub email: Option<String>,
 }
@@ -525,31 +529,6 @@ pub struct Dropout {
     pub ringtone: String,
 }
 
-/// The short Russian page (`/ru`) and my name in Russian, so a search in
-/// Russian finds the site too.
-#[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[ts(export)]
-pub struct Russian {
-    /// "Даниил Тенишев".
-    pub name: String,
-    /// The page title, after the name.
-    pub role: String,
-    pub description: String,
-    /// The link to the page from the English site.
-    pub link: String,
-    /// Paragraphs about me.
-    pub about: Vec<String>,
-    pub work_title: String,
-    /// A line per project, by id; a project without one is left out.
-    pub projects: BTreeMap<String, String>,
-    pub more: String,
-    pub contact_title: String,
-    pub contact: String,
-    /// The link back to the full English site.
-    pub english: String,
-}
-
 /// Copy for `/watched`; the titles themselves come from `/api/watched`.
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -590,32 +569,67 @@ impl Snapshot {
     }
 }
 
-/// The content plus the fallback numbers for its placeholders; swapped
-/// atomically on reload.
+/// The site's languages: English at `/`, Russian at `/ru`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Lang {
+    #[default]
+    En,
+    Ru,
+}
+
+impl Lang {
+    /// `ru` is Russian; anything else, or nothing, is English.
+    pub fn from_query(lang: Option<&str>) -> Self {
+        match lang {
+            Some("ru") => Self::Ru,
+            _ => Self::En,
+        }
+    }
+}
+
+/// The content in both languages plus the fallback numbers for its
+/// placeholders; swapped atomically on reload.
 #[derive(Debug)]
 pub struct Library {
     pub snapshot: Snapshot,
+    pub ru: Snapshot,
     pub stats: BTreeMap<String, u64>,
 }
 
 impl Library {
-    pub fn parse(raw: &str, stats: &str) -> anyhow::Result<Self> {
+    pub fn parse(en: &str, ru: &str, stats: &str) -> anyhow::Result<Self> {
         let stats: BTreeMap<String, u64> =
             serde_json::from_str(stats).context("stats.json must map keys to numbers")?;
-        let snapshot = Snapshot::parse(raw).context("in en.json")?;
-        for key in placeholders(&snapshot.json) {
-            if !stats.contains_key(key) {
-                bail!("en.json uses {{{key}}}, which stats.json does not define");
+        let snapshot = Snapshot::parse(en).context("in en.json")?;
+        let ru = Snapshot::parse(ru).context("in ru.json")?;
+        for (file, snap) in [("en.json", &snapshot), ("ru.json", &ru)] {
+            for key in placeholders(&snap.json) {
+                if !stats.contains_key(key) {
+                    bail!("{file} uses {{{key}}}, which stats.json does not define");
+                }
             }
         }
-        Ok(Self { snapshot, stats })
+        same_shape(&snapshot.content, &ru.content).context("ru.json differs from en.json")?;
+        Ok(Self {
+            snapshot,
+            ru,
+            stats,
+        })
     }
 
     pub fn embedded() -> anyhow::Result<Self> {
-        Self::parse(EMBEDDED, EMBEDDED_STATS)
+        Self::parse(EMBEDDED, EMBEDDED_RU, EMBEDDED_STATS)
     }
 
-    /// Reads `en.json` and `stats.json` from `dir`, or uses the embedded copies.
+    pub fn get(&self, lang: Lang) -> &Snapshot {
+        match lang {
+            Lang::En => &self.snapshot,
+            Lang::Ru => &self.ru,
+        }
+    }
+
+    /// Reads `en.json`, `ru.json` and `stats.json` from `dir`, or uses the
+    /// embedded copies.
     pub async fn load(dir: Option<&Path>) -> anyhow::Result<Self> {
         let Some(dir) = dir else {
             return Self::embedded();
@@ -626,8 +640,52 @@ impl Library {
                 .await
                 .with_context(|| format!("reading {}", path.display()))
         };
-        Self::parse(&read("en.json").await?, &read("stats.json").await?)
+        Self::parse(
+            &read("en.json").await?,
+            &read("ru.json").await?,
+            &read("stats.json").await?,
+        )
     }
+}
+
+/// The two languages must tell the same story: the same projects in the
+/// same order (the admin orders and hides them by id), the same smaller
+/// projects and categories, the same links.
+fn same_shape(en: &Content, ru: &Content) -> anyhow::Result<()> {
+    fn check<T: PartialEq + std::fmt::Debug>(what: &str, en: T, ru: T) -> anyhow::Result<()> {
+        if en != ru {
+            bail!("{what}: {en:?} in English, {ru:?} in Russian");
+        }
+        Ok(())
+    }
+    let ids = |c: &Content| {
+        c.work
+            .projects
+            .iter()
+            .map(|p| p.id.clone())
+            .collect::<Vec<_>>()
+    };
+    check("project ids", ids(en), ids(ru))?;
+    let cats = |c: &Content| {
+        c.more
+            .categories
+            .iter()
+            .map(|c| c.id.clone())
+            .collect::<Vec<_>>()
+    };
+    check("more categories", cats(en), cats(ru))?;
+    let items = |c: &Content| {
+        c.more
+            .items
+            .iter()
+            .map(|i| i.name.clone())
+            .collect::<Vec<_>>()
+    };
+    check("more items", items(en), items(ru))?;
+    let nav = |c: &Content| c.nav.iter().map(|l| l.href.clone()).collect::<Vec<_>>();
+    check("nav links", nav(en), nav(ru))?;
+    check("site url", &en.profile.site_url, &ru.profile.site_url)?;
+    Ok(())
 }
 
 /// Every `{gh.*}` / `{steam.*}` key mentioned in `json`.
@@ -656,11 +714,6 @@ impl Content {
         for p in &self.work.projects {
             if !ids.insert(p.id.as_str()) {
                 bail!("duplicate project id {:?}", p.id);
-            }
-        }
-        for id in self.ru.projects.keys() {
-            if !ids.contains(id.as_str()) {
-                bail!("ru.projects names unknown project {id:?}");
             }
         }
         let cats: std::collections::HashSet<_> =
@@ -709,6 +762,7 @@ mod tests {
     fn embedded_content_is_valid() {
         let lib = Library::embedded().expect("content must parse");
         assert!(!lib.snapshot.content.work.projects.is_empty());
+        assert_eq!(lib.get(Lang::Ru).content.profile.handle, "kewldan");
     }
 
     #[test]
@@ -723,8 +777,16 @@ mod tests {
     fn rejects_undefined_placeholders() {
         let mut v: serde_json::Value = serde_json::from_str(EMBEDDED).unwrap();
         v["numbers"]["value"] = serde_json::json!("{gh.nope}");
-        let err = Library::parse(&v.to_string(), EMBEDDED_STATS).unwrap_err();
+        let err = Library::parse(&v.to_string(), EMBEDDED_RU, EMBEDDED_STATS).unwrap_err();
         assert!(format!("{err:#}").contains("gh.nope"));
+    }
+
+    #[test]
+    fn rejects_languages_that_disagree() {
+        let mut v: serde_json::Value = serde_json::from_str(EMBEDDED_RU).unwrap();
+        v["work"]["projects"].as_array_mut().unwrap().reverse();
+        let err = Library::parse(EMBEDDED, &v.to_string(), EMBEDDED_STATS).unwrap_err();
+        assert!(format!("{err:#}").contains("project ids"));
     }
 
     #[test]

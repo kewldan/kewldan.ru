@@ -5,7 +5,8 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { fmt, t } from "@/lib/copy";
+import { fmt } from "@/lib/copy";
+import { useT } from "@/components/lang";
 import type { Media } from "@/lib/api/generated/Media";
 import type { Showcase as ShowcaseData } from "@/lib/api/generated/Showcase";
 import { ease, rise, spring, stagger, viewport } from "@/lib/motion";
@@ -126,6 +127,7 @@ function Duo({ back, front }: { back: Media; front: Media }) {
 
 /** Pipeline steps; a pulse keeps walking through them while visible. */
 function Flow({ steps, theme }: { steps: string[]; theme: Theme }) {
+  const t = useT();
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { margin: "-20% 0px" });
   const [active, setActive] = useState(-1);
@@ -221,6 +223,7 @@ function BigNumbers({ items, theme }: { items: { value: string; label: string }[
 
 /** A shell command you can click to copy. */
 export function CopyCommand({ command }: { command: string }) {
+  const t = useT();
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(command);

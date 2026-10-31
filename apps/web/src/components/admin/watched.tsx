@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { Kind } from "@/lib/api/generated/Kind";
@@ -201,9 +202,9 @@ export function Watched() {
   return (
     <section>
       <Head n="02 · Content" title="Watched" lead="One row per film or per show. Seasons as a range, when in words.">
-        <a className="btn ghost" href="/watched">
+        <Link className="btn ghost" href="/watched">
           Public page ↗
-        </a>
+        </Link>
         <button className="btn sec" disabled={busy} onClick={findPosters}>
           Find posters
         </button>

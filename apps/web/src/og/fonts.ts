@@ -28,6 +28,12 @@ export async function ogFonts(): Promise<Font[]> {
     load("JetBrainsMono-Bold.ttf", "Mono", 700),
     load("Geist-Medium.ttf", "Geist", 500),
     load("Geist-Bold.ttf", "Geist", 700),
+    // Instrument has no Cyrillic: these carry only that range (the same
+    // fallbacks the site uses), cut from the variable fonts.
+    load("RobotoFlex-Condensed-SemiBold.ttf", "CyrillicDisplay", 600),
+    load("RobotoFlex-Medium.ttf", "CyrillicSans", 500),
+    load("RobotoFlex-SemiBold.ttf", "CyrillicSans", 600),
+    load("PlayfairDisplay-Italic.ttf", "CyrillicSerif", 400, "italic"),
   ]);
 }
 
@@ -35,9 +41,9 @@ export const ogSize = { width: 1200, height: 630 };
 
 /** Font families as Satori knows them. */
 export const ogFamily = {
-  display: "InstrumentDisplay",
-  paper: "InstrumentSans",
-  serif: "InstrumentSerif",
+  display: "InstrumentDisplay, CyrillicDisplay",
+  paper: "InstrumentSans, CyrillicSans",
+  serif: "InstrumentSerif, CyrillicSerif",
   mono: "Mono",
   stage: "Geist",
 };

@@ -19,7 +19,7 @@ use std::{
 
 use axum::{
     Json, Router,
-    extract::{ConnectInfo, FromRequestParts, Request, State},
+    extract::{ConnectInfo, FromRequestParts, Query, Request, State},
     http::{HeaderMap, HeaderValue, StatusCode, header, request::Parts},
     middleware::{self, Next},
     response::{IntoResponse, Response},
@@ -192,11 +192,22 @@ async fn health(State(app): State<AppState>) -> Json<serde_json::Value> {
     Json(json!({ "status": "ok", "board": app.hub.backend_name() }))
 }
 
-/// `GET /api/content`, with ETag revalidation. Stats placeholders are
-/// filled in here, so the ETag changes when the numbers do.
-async fn get_content(State(app): State<AppState>, headers: HeaderMap) -> Response {
+#[derive(serde::Deserialize)]
+struct ContentQuery {
+    lang: Option<String>,
+}
+
+/// `GET /api/content?lang=ru`, with ETag revalidation; English without
+/// `lang`. Stats placeholders are filled in here, so the ETag changes when
+/// the numbers do.
+async fn get_content(
+    State(app): State<AppState>,
+    Query(q): Query<ContentQuery>,
+    headers: HeaderMap,
+) -> Response {
+    let lang = content::Lang::from_query(q.lang.as_deref());
     let library = Arc::clone(&app.content.read().unwrap());
-    let body = app.stats.render(&library.snapshot.json);
+    let body = app.stats.render(&library.get(lang).json, lang);
     let settings = app.settings.get();
     let body = if settings == settings::Settings::default() {
         body

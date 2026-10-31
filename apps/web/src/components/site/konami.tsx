@@ -4,7 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { t } from "@/lib/copy";
+import { useT } from "@/components/lang";
 
 const CODE = [
   "ArrowUp",
@@ -36,6 +36,7 @@ const rain = (): Pixel[] =>
 
 /** ↑↑↓↓←→←→BA anywhere on the site: it rains pixels. */
 export function Konami() {
+  const t = useT();
   const [pixels, setPixels] = useState<Pixel[] | null>(null);
   const reduced = useReducedMotion();
 
@@ -53,7 +54,7 @@ export function Konami() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [reduced]);
+  }, [reduced, t]);
 
   useEffect(() => {
     if (!pixels) return;

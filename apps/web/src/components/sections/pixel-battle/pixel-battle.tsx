@@ -7,7 +7,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { fmt, plural, t } from "@/lib/copy";
+import { fmt } from "@/lib/copy";
+import { useI18n } from "@/components/lang";
 import { ease, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { adminApi, adminHint, adminToken, type Credential, pixelAdmin } from "@/lib/watched";
@@ -70,6 +71,7 @@ function useAdmin() {
 }
 
 export function PixelBattle() {
+  const { t, plural } = useI18n();
   const px = usePixelBoard();
   const canvas = useRef<HTMLCanvasElement>(null);
   const [color, setColor] = useState(0);
@@ -387,6 +389,7 @@ type Moderate = (action: (token: Credential) => Promise<void>) => Promise<boolea
 
 /** Play/pause, the scrubber, the way back; for the admin, "restore this". */
 function Timelapse({ tl, admin, moderate }: { tl: Tl; admin: Credential | undefined; moderate: Moderate }) {
+  const { t } = useI18n();
   const track = useRef<HTMLDivElement>(null);
   const seekAt = (e: React.PointerEvent) => {
     const r = track.current!.getBoundingClientRect();
@@ -480,6 +483,7 @@ function Moderation({
   onErase: () => void;
   moderate: Moderate;
 }) {
+  const { t } = useI18n();
   const [armed, setArmed] = useState<"clear" | "reset" | null>(null);
   useEffect(() => {
     if (!armed) return;

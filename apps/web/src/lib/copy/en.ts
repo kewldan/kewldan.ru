@@ -1,8 +1,13 @@
+/** A word that changes with its number; Russian needs `few` and `many` too. */
+export type Plural = { one: string; few?: string; many?: string; other: string };
+const forms = (f: Plural) => f;
+
 /**
- * Interface strings: buttons, statuses, labels, plurals. Everything the site
- * says about Daniel lives in the API (apps/api/content/en.json).
+ * Interface strings in English: buttons, statuses, labels, plurals.
+ * Everything the site says about Daniel lives in the API
+ * (apps/api/content/en.json); the Russian twin is ./ru.ts.
  */
-export const t = {
+export const en = {
   nav: { sections: "Sections", menu: "Menu", backHome: "← kewldan.ru" },
   theme: { label: "Theme", light: "Light", dark: "Dark", system: "System" },
   photoPlaceholder: "Photo placeholder",
@@ -17,7 +22,7 @@ export const t = {
     connecting: "Connecting to the board…",
     live: "Live · {people} here now · everyone sees every pixel",
     locked: "Closed for now · {people} looking · painting is off",
-    people: { one: "{n} person", other: "{n} people" },
+    people: forms({ one: "{n} person", other: "{n} people" }),
     offline: "Offline here · your pixels stay in this browser",
     timelapse: "Timelapse",
     loading: "Loading the history…",
@@ -64,7 +69,7 @@ export const t = {
   },
   calendar: {
     label: "{n} contributions in the last year, day by day",
-    day: { one: "{n} contribution on {date}", other: "{n} contributions on {date}" },
+    day: forms({ one: "{n} contribution on {date}", other: "{n} contributions on {date}" }),
     none: "No contributions on {date}",
     hint: "Hover a day.",
     less: "Less",
@@ -126,7 +131,7 @@ export const t = {
   more: { all: "All", filter: "Filter projects", open: "open" },
   stack: { usedIn: "Used in" },
   watched: {
-    titles: { one: "{n} title.", other: "{n} titles." },
+    titles: forms({ one: "{n} title.", other: "{n} titles." }),
     average: "Average {avg} out of 10.",
     scored: "Scored from 1 to 10.",
     movies: "movies",
@@ -199,7 +204,7 @@ export const t = {
     },
     findPosters: "Find posters",
     findingPosters: "Looking on TMDB…",
-    postersFound: { one: "Found {n} poster.", other: "Found {n} posters." },
+    postersFound: forms({ one: "Found {n} poster.", other: "Found {n} posters." }),
     postersMissed: "No match for: {titles}.",
     postersFailed: "TMDB did not answer. Is TMDB_TOKEN set?",
   },
@@ -226,12 +231,4 @@ export const t = {
   },
 };
 
-export type Copy = typeof t;
-
-/** `"{n} of {max}"` style substitution. */
-export const fmt = (s: string, vars: Record<string, string | number>) =>
-  s.replace(/\{(\w+)\}/g, (_, k: string) => String(vars[k] ?? `{${k}}`));
-
-/** English plurals: one, or everything else. */
-export const plural = (n: number, forms: { one: string; other: string }) =>
-  (n === 1 ? forms.one : forms.other).replace("{n}", n.toLocaleString("en-US"));
+export type Copy = typeof en;

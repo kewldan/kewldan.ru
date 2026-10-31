@@ -1,30 +1,25 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Instrument_Sans, Instrument_Serif, JetBrains_Mono } from "next/font/google";
+import { notFound } from "next/navigation";
 import Script from "next/script";
 
+import { LangProvider } from "@/components/lang";
 import { Providers } from "@/components/providers";
 import { CommandPalette } from "@/components/site/command-palette";
 import { Konami } from "@/components/site/konami";
 import { getContent } from "@/lib/api/content";
+import { fontVariables } from "@/lib/fonts";
+import { isLang, LANGS, localize, ogLocale } from "@/lib/i18n";
 import { themeScript } from "@/lib/theme";
-import "./globals.css";
+import "../globals.css";
 
-const instrumentSans = Instrument_Sans({ variable: "--font-instrument-sans", subsets: ["latin"], axes: ["wdth"] });
-const instrumentSerif = Instrument_Serif({
-  variable: "--font-instrument-serif",
-  subsets: ["latin"],
-  weight: "400",
-  style: "italic",
-});
-const geist = Geist({ variable: "--font-geist", subsets: ["latin"] });
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-jetbrains-mono",
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-});
+export function generateStaticParams() {
+  return LANGS.map((lang) => ({ lang }));
+}
 
-export async function generateMetadata(): Promise<Metadata> {
-  const { profile } = await getContent();
+export async function generateMetadata({ params }: LayoutProps<"/[lang]">): Promise<Metadata> {
+  const { lang } = await params;
+  if (!isLang(lang)) return {};
+  const { profile } = await getContent(lang);
   // The full name first: that is what people search for.
   const title = `${profile.name} (${profile.handle}): ${profile.role}`;
   return {
@@ -41,8 +36,8 @@ export async function generateMetadata(): Promise<Metadata> {
       title,
       description: profile.description,
       siteName: `${profile.name} (${profile.handle})`,
-      locale: "en_US",
-      alternateLocale: "ru_RU",
+      locale: ogLocale[lang],
+      alternateLocale: LANGS.filter((l) => l !== lang).map((l) => ogLocale[l]),
     },
     twitter: { card: "summary_large_image", creator: `@${profile.handle}` },
   };
@@ -56,30 +51,30 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const { nav, work, contact } = await getContent();
+export default async function RootLayout({ children, params }: LayoutProps<"/[lang]">) {
+  const { lang } = await params;
+  if (!isLang(lang)) notFound();
+  const { nav, work, contact } = await getContent(lang);
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={[instrumentSans, instrumentSerif, geist, jetbrainsMono].map((f) => f.variable).join(" ")}
-    >
+    <html lang={lang} suppressHydrationWarning className={fontVariables}>
       <body>
         <Script id="theme" strategy="beforeInteractive">
           {themeScript}
         </Script>
         <Script src="/insights.js" strategy="afterInteractive" />
-        <Providers>
-          {children}
-          <CommandPalette
-            sections={nav}
-            cases={work.projects
-              .filter((p) => p.case && !p.hidden)
-              .map((p) => ({ id: p.id, name: p.name, title: p.title }))}
-            socials={contact.socials}
-          />
-          <Konami />
-        </Providers>
+        <LangProvider lang={lang}>
+          <Providers>
+            {children}
+            <CommandPalette
+              sections={nav.map((l) => ({ ...l, href: localize(lang, l.href) }))}
+              cases={work.projects
+                .filter((p) => p.case && !p.hidden)
+                .map((p) => ({ id: p.id, name: p.name, title: p.title }))}
+              socials={contact.socials}
+            />
+            <Konami />
+          </Providers>
+        </LangProvider>
       </body>
     </html>
   );

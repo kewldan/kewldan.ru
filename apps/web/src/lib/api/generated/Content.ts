@@ -10,13 +10,12 @@ import type { Numbers } from "./Numbers";
 import type { OffScreen } from "./OffScreen";
 import type { PixelsSection } from "./PixelsSection";
 import type { Profile } from "./Profile";
-import type { Russian } from "./Russian";
 import type { Stack } from "./Stack";
 import type { Timeline } from "./Timeline";
 import type { WatchedPage } from "./WatchedPage";
 import type { Work } from "./Work";
 
-export type Content = { profile: Profile, nav: Array<Link>, marquee: Array<string>, hero: Hero, pixels: PixelsSection, about: About, work: Work, numbers: Numbers, more: More, stack: Stack, timeline: Timeline, offScreen: OffScreen, contact: Contact, dropout: Dropout, footer: Footer, watched: WatchedPage, ru: Russian, 
+export type Content = { profile: Profile, nav: Array<Link>, marquee: Array<string>, hero: Hero, pixels: PixelsSection, about: About, work: Work, numbers: Numbers, more: More, stack: Stack, timeline: Timeline, offScreen: OffScreen, contact: Contact, dropout: Dropout, footer: Footer, watched: WatchedPage, 
 /**
  * Blocks the admin switched off (`pixels`, `dropout`); set by
  * [`crate::settings`], never in the file.

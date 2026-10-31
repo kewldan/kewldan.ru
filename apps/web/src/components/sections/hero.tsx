@@ -7,7 +7,7 @@ import { useRef } from "react";
 import { RichReveal } from "@/components/motion/rich-reveal";
 import { SectionLabel } from "@/components/section-label";
 import { Button } from "@/components/ui/button";
-import { t } from "@/lib/copy";
+import { useT } from "@/components/lang";
 import { accentBg } from "@/lib/accent";
 import type { Hero as HeroContent } from "@/lib/api/generated/Hero";
 import { ease, spring } from "@/lib/motion";
@@ -90,6 +90,7 @@ export function Hero({ hero }: { hero: HeroContent }) {
 }
 
 function Photo({ hero }: { hero: HeroContent }) {
+  const t = useT();
   return (
     <motion.div
       initial={{ opacity: 0, rotate: 12, scale: 0.8, y: 30 }}

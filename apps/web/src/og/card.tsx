@@ -1,3 +1,5 @@
+import { copy } from "@/lib/copy";
+import { type Lang, localize } from "@/lib/i18n";
 import { parseRich } from "@/components/rich";
 import type { Content } from "@/lib/api/generated/Content";
 import type { Project } from "@/lib/api/generated/Project";
@@ -258,7 +260,17 @@ export function WatchedCard({ content, domain }: { content: Content; domain: str
 }
 
 /** A case study's share card: the project's gradient name, its headline and pipeline. */
-export function CaseCard({ project: p, handle, domain }: { project: Project; handle: string; domain: string }) {
+export function CaseCard({
+  project: p,
+  handle,
+  domain,
+  lang,
+}: {
+  project: Project;
+  handle: string;
+  domain: string;
+  lang: Lang;
+}) {
   const nameSize = Math.min(200, Math.floor(1088 / (p.name.length * 0.56)));
   const steps = p.case?.pipeline ?? [];
   return (
@@ -277,10 +289,13 @@ export function CaseCard({ project: p, handle, domain }: { project: Project; han
       <div style={{ display: "flex", width: "100%", justifyContent: "space-between", fontSize: 22 }}>
         <span style={{ fontWeight: 700 }}>{handle}</span>
         <span style={{ fontWeight: 500, color: "#d2d2d7" }}>
-          {domain}/work/{p.id}
+          {domain}
+          {localize(lang, `/work/${p.id}`)}
         </span>
       </div>
-      <div style={{ display: "flex", marginTop: 60, fontSize: 28, fontWeight: 500, color: "#8a8a90" }}>Case study</div>
+      <div style={{ display: "flex", marginTop: 60, fontSize: 28, fontWeight: 500, color: "#8a8a90" }}>
+        {copy[lang].case.eyebrow}
+      </div>
       <div
         style={{
           display: "flex",

@@ -4,10 +4,11 @@ import { AnimatePresence, motion, useInView } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
 import type { LogicExample } from "@/lib/api/generated/LogicExample";
-import { fmt, t } from "@/lib/copy";
+import { fmt } from "@/lib/copy";
+import { useLang, useT } from "@/components/lang";
 import { cn } from "@/lib/utils";
 
-import { at, CATALOG, type Circuit, load, SCHEMES, SWITCH, tick } from "./logic-schemes";
+import { at, CATALOG, CATALOG_RU, type Circuit, load, SCHEMES, SWITCH, tick } from "./logic-schemes";
 import type { stageTheme } from "./stage-theme";
 
 /** The game's colours: RenderPipeline.cpp (blocks) and background.frag. */
@@ -43,6 +44,8 @@ function holes(atlas: HTMLImageElement, color: string) {
  * block names it, as the game's inspector does.
  */
 export function LogicDemo({ examples, theme }: { examples: LogicExample[]; theme: Theme }) {
+  const t = useT();
+  const catalog = useLang() === "ru" ? CATALOG_RU : CATALOG;
   const list = examples.filter((e) => SCHEMES[e.id]);
   const [current, setCurrent] = useState(list[0]?.id ?? "");
   const scheme = SCHEMES[current];
@@ -231,7 +234,7 @@ export function LogicDemo({ examples, theme }: { examples: LogicExample[]; theme
           </span>
           {hovered && (
             <span className="pointer-events-none absolute right-2.5 bottom-2 left-2.5 truncate text-left font-mono text-[11px] text-white/70">
-              <b className="font-semibold text-white">{CATALOG[hovered.t][0]}</b> · {CATALOG[hovered.t][1]} ·{" "}
+              <b className="font-semibold text-white">{catalog[hovered.t][0]}</b> · {catalog[hovered.t][1]} ·{" "}
               <span style={{ color: hovered.a ? ON : OFF }}>{hovered.a ? "ON" : "OFF"}</span>
             </span>
           )}

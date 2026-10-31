@@ -4,14 +4,15 @@ import { useInView } from "motion/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { Calendar } from "@/lib/api/generated/Calendar";
-import { fmt, plural, t } from "@/lib/copy";
+import { fmt } from "@/lib/copy";
+import { useI18n } from "@/components/lang";
 import { viewport } from "@/lib/motion";
 import { cn } from "@/lib/utils";
+import { type Lang, locale } from "@/lib/i18n";
 
 /** Empty, then four steps from the Numbers gradient. */
 const LEVELS = ["#1c1c1f", "#0f3d3a", "#14776b", "#2fb9a2", "#5ef0c2"];
 const DAY_MS = 86_400_000;
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 type Day = { date: Date; count: number; level: number };
 
@@ -23,14 +24,22 @@ function levels(days: number[]) {
   return (n: number) => (n === 0 ? 0 : 1 + cuts.filter((c) => n > c).length);
 }
 
-const fmtDate = (d: Date) =>
-  d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
+const fmtDate = (d: Date, lang: Lang) =>
+  d.toLocaleDateString(lang === "en" ? "en-GB" : locale[lang], {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  });
+const monthName = (d: Date, lang: Lang) =>
+  d.toLocaleDateString(locale[lang], { month: "short", timeZone: "UTC" }).replace(".", "");
 
 /**
  * The last year of commits as GitHub draws it: a column per week, Sunday on
  * top. The weeks light up left to right as it scrolls into view.
  */
 export function ContributionCalendar({ calendar }: { calendar: Calendar }) {
+  const { t, plural, lang } = useI18n();
   const ref = useRef<HTMLDivElement>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const shown = useInView(ref, viewport);
@@ -63,19 +72,19 @@ export function ContributionCalendar({ calendar }: { calendar: Calendar }) {
       const first = week.find(Boolean);
       const prev = w > 0 ? weeks[w - 1].find(Boolean) : null;
       return first && (!prev || prev.date.getUTCMonth() !== first.date.getUTCMonth())
-        ? MONTHS[first.date.getUTCMonth()]
+        ? monthName(first.date, lang)
         : null;
     });
     return starts.map((label, w) => {
       const next = starts.findIndex((l, i) => i > w && l);
       return label && (next < 0 || next - w >= 3) ? label : null;
     });
-  }, [weeks]);
+  }, [weeks, lang]);
 
   const caption = hover
     ? hover.count
-      ? fmt(plural(hover.count, t.calendar.day), { date: fmtDate(hover.date) })
-      : fmt(t.calendar.none, { date: fmtDate(hover.date) })
+      ? fmt(plural(hover.count, t.calendar.day), { date: fmtDate(hover.date, lang) })
+      : fmt(t.calendar.none, { date: fmtDate(hover.date, lang) })
     : t.calendar.hint;
 
   return (
@@ -83,7 +92,7 @@ export function ContributionCalendar({ calendar }: { calendar: Calendar }) {
       <div ref={scroller} className="[scrollbar-width:none] overflow-x-auto pb-1">
         <div
           role="img"
-          aria-label={fmt(t.calendar.label, { n: calendar.total.toLocaleString("en-US") })}
+          aria-label={fmt(t.calendar.label, { n: calendar.total.toLocaleString(locale[lang]) })}
           className="mx-auto grid w-max grid-flow-col gap-[3px]"
           style={{ gridTemplateRows: "auto repeat(7, 13px)", gridAutoColumns: "13px" }}
           onPointerLeave={() => setHover(null)}

@@ -8,7 +8,8 @@ import { KeynoteTitle, Specs } from "@/components/sections/work/keynote";
 import { SlideLinks } from "@/components/sections/work/slide-links";
 import type { CaseSection } from "@/lib/api/generated/CaseSection";
 import type { Project } from "@/lib/api/generated/Project";
-import { t } from "@/lib/copy";
+import { copy } from "@/lib/copy";
+import { type Lang, localize } from "@/lib/i18n";
 
 import { Pipeline } from "./pipeline";
 
@@ -17,7 +18,8 @@ type Vars = React.CSSProperties & { "--g": string };
 const onStage = { bold: "font-semibold text-stage-fg", code: "bg-white/10 text-stage-fg" };
 
 /** The long read behind a work slide. */
-export function CaseView({ project: p, next }: { project: Project; next: Project | null }) {
+export function CaseView({ project: p, next, lang }: { project: Project; next: Project | null; lang: Lang }) {
+  const t = copy[lang];
   const c = p.case!;
   return (
     <main style={{ "--g": p.gradient } as Vars}>
@@ -94,12 +96,12 @@ export function CaseView({ project: p, next }: { project: Project; next: Project
 
       <nav className="border-t border-stage-rule">
         <div className="wrap flex flex-col gap-10 py-16 md:flex-row md:items-end md:justify-between">
-          <Link href="/#work" className="text-stage-chip transition-colors hover:text-stage-fg">
+          <Link href={localize(lang, "/#work")} className="text-stage-chip transition-colors hover:text-stage-fg">
             ← {t.case.allWork}
           </Link>
           {next && (
             <Link
-              href={`/work/${next.id}`}
+              href={localize(lang, `/work/${next.id}`)}
               style={{ "--g": next.gradient } as Vars}
               className="group flex flex-col gap-1 md:items-end md:text-right"
             >

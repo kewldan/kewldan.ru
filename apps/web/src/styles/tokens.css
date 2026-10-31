@@ -206,8 +206,8 @@
   --color-input: var(--ink);
   --color-ring: var(--focus);
 
-  --font-paper: var(--font-instrument-sans), "Helvetica Neue", Arial, sans-serif;
-  --font-serif: var(--font-instrument-serif), Georgia, serif;
+  --font-paper: var(--font-cyrillic-sans), var(--font-instrument-sans), "Helvetica Neue", Arial, sans-serif;
+  --font-serif: var(--font-cyrillic-serif), var(--font-instrument-serif), Georgia, serif;
   --font-stage: var(--font-geist), "Helvetica Neue", Arial, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
   --font-sans: var(--font-paper);

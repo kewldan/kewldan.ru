@@ -6,7 +6,8 @@ import { useEffect, useRef, useState } from "react";
 
 import type { Lane } from "@/lib/api/generated/Lane";
 import type { Media } from "@/lib/api/generated/Media";
-import { fmt, t } from "@/lib/copy";
+import { fmt } from "@/lib/copy";
+import { useT } from "@/components/lang";
 import { ease, viewport } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +24,7 @@ const pace = (lanes: Lane[]) => 8 / Math.max(...lanes.map((l) => l.seconds));
  * clocks show the measured seconds, not the shortened ones.
  */
 export function Race({ media, task, lanes, theme }: { media: Media; task: string; lanes: Lane[]; theme: Theme }) {
+  const t = useT();
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-15% 0px" });
   const [run, setRun] = useState(0);

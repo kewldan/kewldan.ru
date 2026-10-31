@@ -39,8 +39,9 @@
 apps/
   api/   🦀 Rust (axum): /api/content, /api/watched, /api/pixels/ws, admin routes
          content/en.json   ← all site copy lives here
+         content/ru.json   ← the same in Russian (served at /ru)
   web/   ⚛️ Next.js 16, React 19, Tailwind 4, shadcn/ui, Motion, Lenis
-         src/lib/copy.ts   ← interface strings (buttons, statuses)
+         src/lib/copy/     ← interface strings (buttons, statuses), en.ts + ru.ts
 deploy/  🚚 nginx config and the server-side deploy script
 docker-compose.yml   🐳 production stack behind the server-wide Traefik
 ```
@@ -50,14 +51,19 @@ docker-compose.yml   🐳 production stack behind the server-wide Traefik
 <details>
 <summary><b>📝 Content</b></summary>
 
-`apps/api/content/en.json` is parsed into typed Rust structs at startup
-(`apps/api/src/content.rs`), so a broken file fails loudly instead of rendering
-`undefined`. `cargo test` exports the same types to
+`apps/api/content/en.json` and its Russian twin `ru.json` are parsed into
+typed Rust structs at startup (`apps/api/src/content.rs`), so a broken file
+fails loudly instead of rendering `undefined`; the two must list the same
+projects in the same order. `cargo test` exports the same types to
 `apps/web/src/lib/api/generated`, and CI fails if they drift. Next.js fetches
-`/api/content` with `'use cache'` and a one-minute lifetime; if the API is down
+`/api/content?lang=ru` (English without `lang`) with `'use cache'` and a
+one-minute lifetime; if the API is down
 it renders from the copy of the JSON bundled at build time.
 
 Inline markup in text fields: `**bold**`, `_serif accent_`, `==highlighter box==`.
+
+The pages live under `apps/web/src/app/[lang]`: English is served at the root
+(a rewrite to `/en`), Russian under `/ru`, with hreflang links between them.
 
 </details>
 
@@ -198,7 +204,7 @@ Optional, for "Listening" in About: a Spotify app (redirect URI
 `SPOTIFY_CLIENT_SECRET`, and a `SPOTIFY_REFRESH_TOKEN` from
 `node scripts/spotify-token.mjs` with those two set.
 
-Edit copy without a release: change `apps/api/content/en.json` on the server, then
+Edit copy without a release: change `apps/api/content/en.json` or `ru.json` on the server, then
 
 ```bash
 curl -XPOST -H "Authorization: Bearer $ADMIN_TOKEN" https://kewldan.ru/api/admin/content/reload

@@ -5,6 +5,7 @@
     "handle": "kewldan",
     "role": "full-stack & systems developer",
     "description": "Daniil Tenishev (kewldan), 18, full-stack and systems developer at ITMO Software Engineering. From the kernel up to the UI: XDP filters, Go backends, desktop apps and Telegram Mini Apps.",
+    "alternateNames": ["Даниил Тенишев", "Daniel Tenishev", "Daniel"],
     "siteUrl": "https://kewldan.ru",
     "email": null
   },
@@ -917,31 +918,5 @@
     "description": "Every film and series I have watched lately, scored from 1 to 10 with one line on why.",
     "emptyTitle": "Nothing rated yet.",
     "emptyBody": "Daniel hasn’t rated anything yet. Check back soon."
-  },
-  "ru": {
-    "name": "Даниил Тенишев",
-    "role": "full-stack и системный разработчик",
-    "description": "Даниил Тенишев (kewldan), 18 лет: full-stack и системный разработчик, студент «Программной инженерии» в ИТМО. XDP-фильтры, бэкенды на Go, десктопные приложения и Telegram Mini Apps.",
-    "link": "По-русски",
-    "about": [
-      "Привет, я Даниил Тенишев, в сети kewldan. Мне 18, я на первом курсе «Программной инженерии» в ИТМО: группа M3105, выпуск 2030. Живу в Пушкине и каждый день езжу в Петербург.",
-      "Пишу от ядра до интерфейса: XDP-фильтры, бэкенды на Go, десктопные приложения и Telegram Mini Apps. Всё это работает в продакшене, и этим пользуются живые люди.",
-      "Сейчас учусь, параллельно работаю разработчиком и делаю Omniflow, свой VPN-сервис. Открыт к стажировкам и предложениям.",
-      "Основной стек: C++20, Go, TypeScript и Rust; React и Next.js; PostgreSQL, ClickHouse и Valkey; Docker, Traefik и Linux."
-    ],
-    "workTitle": "Проекты",
-    "projects": {
-      "sector": "Нативный анализатор и чистильщик диска для macOS. Свой параллельный сканер обходит два миллиона файлов в 5 раз быстрее du, и итоги совпадают до байта.",
-      "larpguard": "Self-hosted Cloudflare: бот-фильтр перед Traefik. Читает каждый слой соединения, от TCP и TLS до HTTP/2, и проверяет, похож ли клиент на браузер, которым представился.",
-      "omniflow": "Мой VPN-бизнес, ставший открытой платформой: Telegram-бот, подписки, платежи, поддержка, маркетинг и админка поверх Remnawave.",
-      "tether": "adb без текстового файла с командами: всё, что нужно Android-разработчику, в одном тихом окне с управлением с клавиатуры.",
-      "m3105": "Сайт моей группы: дедлайны, лабы, конспекты лекций, квизы и запись на защиту. Им пользуется весь поток.",
-      "logical": "Симулятор логики, от вентилей до компьютера. Мой самый старый живой проект: вышел на itch.io в 2021 году (оценка 4.0 из 5), потом переписан на C++20.",
-      "goitmo": "Весь ИТМО одним импортом на Go, включая полный вход через ITMO.ID: Keycloak, PKCE, OTP, SSO и ротацию refresh-токенов. Зависимости: только x/oauth2 и x/net."
-    },
-    "more": "И ещё три десятка проектов поменьше: от симуляции жизни в 2020 году до клиентских заказов в 2026-м.",
-    "contactTitle": "Связаться",
-    "contact": "Быстрее всего отвечаю в Telegram, код лежит на GitHub.",
-    "english": "Полная версия сайта на английском"
   }
 }

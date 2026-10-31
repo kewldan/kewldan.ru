@@ -5,16 +5,18 @@ import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { t } from "@/lib/copy";
+import { useT } from "@/components/lang";
 import type { Link } from "@/lib/api/generated/Link";
 import { ease, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
+import { LangSwitch } from "./lang-switch";
 import { Switches } from "./switches";
 
 type Props = { handle: string; nav: Link[]; marquee: string[] };
 
 export function SiteHeader({ handle, nav, marquee }: Props) {
+  const t = useT();
   return (
     <>
       <Marquee words={marquee} />
@@ -29,6 +31,7 @@ export function SiteHeader({ handle, nav, marquee }: Props) {
           ))}
         </nav>
         <div className="col-start-3 flex items-center justify-end gap-2.5">
+          <LangSwitch />
           <Switches />
           <MobileNav nav={nav} />
         </div>
@@ -91,6 +94,7 @@ function useActiveSection(ids: string[]) {
  * reading down and returns on the slightest scroll up.
  */
 function FloatingNav({ handle, nav }: { handle: string; nav: Link[] }) {
+  const t = useT();
   const { scrollY, scrollYProgress } = useScroll();
   const progress = useSpring(scrollYProgress, { stiffness: 260, damping: 40, restDelta: 0.001 });
   const [shown, setShown] = useState(false);
@@ -136,6 +140,7 @@ function FloatingNav({ handle, nav }: { handle: string; nav: Link[] }) {
               })}
             </nav>
             <div className="col-start-3 flex items-center justify-end gap-2">
+              <LangSwitch />
               <Switches />
               <MobileNav nav={nav} />
             </div>
@@ -148,6 +153,7 @@ function FloatingNav({ handle, nav }: { handle: string; nav: Link[] }) {
 }
 
 function MobileNav({ nav }: { nav: Link[] }) {
+  const t = useT();
   return (
     <Sheet>
       <SheetTrigger asChild>

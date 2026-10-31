@@ -16,7 +16,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import type { Link } from "@/lib/api/generated/Link";
-import { t } from "@/lib/copy";
+import { useI18n } from "@/components/lang";
 
 export type PaletteData = {
   sections: Link[];
@@ -30,6 +30,7 @@ const group =
 
 /** ⌘K / Ctrl+K: every section, case study and profile, one keystroke away. */
 export function CommandPalette({ sections, cases, socials }: PaletteData) {
+  const { t, href: local } = useI18n();
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -55,7 +56,8 @@ export function CommandPalette({ sections, cases, socials }: PaletteData) {
   const go = (href: string) => {
     if (/^https?:/.test(href)) return void window.open(href, "_blank", "noopener");
     if (!href.startsWith("#")) return router.push(href);
-    if (pathname !== "/") return router.push(`/${href}`);
+    const home = local("/");
+    if (pathname !== home) return router.push(`${home}${href}`);
     if (lenis) lenis.scrollTo(href, { offset: -72 });
     else document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
     history.replaceState(null, "", href);
@@ -94,7 +96,7 @@ export function CommandPalette({ sections, cases, socials }: PaletteData) {
               <CommandItem
                 key={c.id}
                 value={`${c.name} ${c.title}`}
-                onSelect={() => run(() => go(`/work/${c.id}`))}
+                onSelect={() => run(() => go(local(`/work/${c.id}`)))}
                 className={item}
               >
                 <FileTextIcon className="text-stage-dim" />

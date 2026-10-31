@@ -65,7 +65,7 @@ services:
       WEBAUTHN_ORIGIN: https://${DOMAIN:-kewldan.ru}
       # Куда слать /revalidate, чтобы правки из админки появлялись сразу.
       WEB_URL: http://web:3000
-      # Контент из репозитория (en.json, stats.json): после правки —
+      # Контент из репозитория (en.json, ru.json, stats.json): после правки —
       #   curl -XPOST -H "Authorization: Bearer $ADMIN_TOKEN" https://kewldan.ru/api/admin/content/reload
       CONTENT_DIR: /content
       # Живые цифры: без токенов берётся то, что GitHub отдаёт публично.

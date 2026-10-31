@@ -9,7 +9,7 @@ import { SectionLabel } from "@/components/section-label";
 import { accentBg } from "@/lib/accent";
 import type { Car as CarContent } from "@/lib/api/generated/Car";
 import type { OffScreen as OffScreenContent } from "@/lib/api/generated/OffScreen";
-import { t } from "@/lib/copy";
+import { useT } from "@/components/lang";
 import { ease, spring, viewport } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
@@ -134,6 +134,7 @@ const FEATHER = 12;
  * A click switches them by hand until the car leaves the screen.
  */
 function Car({ car }: { car: CarContent }) {
+  const t = useT();
   const ref = useRef<HTMLButtonElement>(null);
   const inView = useInView(ref, { amount: 0.6 });
   const reduced = useReducedMotion();

@@ -7,12 +7,13 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { ContactChallenge } from "@/lib/api/generated/ContactChallenge";
 import type { ContactInput } from "@/lib/api/generated/ContactInput";
-import { t } from "@/lib/copy";
+import { useT } from "@/components/lang";
+import type { Copy } from "@/lib/copy";
 import { ease, spring } from "@/lib/motion";
 import { solve } from "@/lib/proof-of-work";
 import { cn } from "@/lib/utils";
 
-type Errors = typeof t.contactForm.errors;
+type Errors = Copy["contactForm"]["errors"];
 type Proof = { id: string; nonce: string; at: number };
 
 /** The API holds a reply this soon after its challenge for a script. */
@@ -34,6 +35,7 @@ const field =
  * visitor is.
  */
 export function ContactForm() {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);

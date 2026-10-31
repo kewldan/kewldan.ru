@@ -1,11 +1,13 @@
 "use client";
 
 import { format, formatDistanceToNowStrict } from "date-fns";
+import { ru } from "date-fns/locale";
 import { useEffect, useState } from "react";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { ProbeStatus } from "@/lib/api/generated/ProbeStatus";
-import { fmt, t } from "@/lib/copy";
+import { fmt } from "@/lib/copy";
+import { useI18n } from "@/components/lang";
 import { cn } from "@/lib/utils";
 
 type Statuses = Record<string, ProbeStatus>;
@@ -31,6 +33,8 @@ type Props = {
 
 /** A dot that says whether the project's site answers right now. */
 export function LiveStatus({ url, variant, fallback, className }: Props) {
+  const { t, lang } = useI18n();
+  const dateLocale = lang === "ru" ? ru : undefined;
   const [status, setStatus] = useState<ProbeStatus | null>(null);
 
   useEffect(() => {
@@ -47,8 +51,8 @@ export function LiveStatus({ url, variant, fallback, className }: Props) {
 
   const label = status.up ? t.status.up : t.status.down;
   const detail = fmt(status.up ? t.status.upSince : t.status.downSince, {
-    when: format(status.since, "d MMM, HH:mm"),
-    ago: formatDistanceToNowStrict(status.checked, { addSuffix: true }),
+    when: format(status.since, "d MMM, HH:mm", { locale: dateLocale }),
+    ago: formatDistanceToNowStrict(status.checked, { addSuffix: true, locale: dateLocale }),
   });
   const dot = (
     <i
