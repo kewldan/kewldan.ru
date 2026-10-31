@@ -25,18 +25,24 @@ const jetbrainsMono = JetBrains_Mono({
 
 export async function generateMetadata(): Promise<Metadata> {
   const { profile } = await getContent();
-  const title = `${profile.shortName} (${profile.handle}): ${profile.role}`;
+  // The full name first: that is what people search for.
+  const title = `${profile.name} (${profile.handle}): ${profile.role}`;
   return {
     metadataBase: new URL(profile.siteUrl),
-    title: { default: title, template: `%s · ${profile.handle}` },
+    title: { default: title, template: `%s · ${profile.name}` },
     description: profile.description,
+    applicationName: profile.handle,
     authors: [{ name: profile.name, url: profile.siteUrl }],
+    creator: profile.name,
+    // The same, written for language models: /llms.txt.
+    alternates: { types: { "text/markdown": "/llms.txt" } },
     openGraph: {
       type: "website",
       title,
       description: profile.description,
-      siteName: profile.handle,
+      siteName: `${profile.name} (${profile.handle})`,
       locale: "en_US",
+      alternateLocale: "ru_RU",
     },
     twitter: { card: "summary_large_image", creator: `@${profile.handle}` },
   };

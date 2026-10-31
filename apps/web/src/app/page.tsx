@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { JsonLd, person } from "@/components/json-ld";
+import { JsonLd, profilePage } from "@/components/json-ld";
 import { About } from "@/components/sections/about";
 import { Contact } from "@/components/sections/contact";
 import { Dropout } from "@/components/sections/dropout";
@@ -26,7 +26,13 @@ export default async function Home() {
   const shown = (block: string) => !c.hidden?.includes(block);
   return (
     <>
-      <JsonLd data={{ "@context": "https://schema.org", ...person(c) }} />
+      <JsonLd
+        data={profilePage(c, {
+          path: "/",
+          name: `${c.profile.name} (${c.profile.handle}): ${c.profile.role}`,
+          lang: "en",
+        })}
+      />
       <SiteHeader handle={c.profile.handle} nav={c.nav} marquee={c.marquee} />
       <main>
         <Hero hero={c.hero} />
@@ -41,7 +47,7 @@ export default async function Home() {
         <Contact contact={c.contact} email={c.profile.email} />
         {shown("dropout") && <Dropout dropout={c.dropout} />}
       </main>
-      <SiteFooter footer={c.footer} />
+      <SiteFooter footer={c.footer} ru={c.ru} />
     </>
   );
 }

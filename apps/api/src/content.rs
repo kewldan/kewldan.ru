@@ -41,6 +41,7 @@ pub struct Content {
     pub dropout: Dropout,
     pub footer: Footer,
     pub watched: WatchedPage,
+    pub ru: Russian,
     /// Blocks the admin switched off (`pixels`, `dropout`); set by
     /// [`crate::settings`], never in the file.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -524,6 +525,31 @@ pub struct Dropout {
     pub ringtone: String,
 }
 
+/// The short Russian page (`/ru`) and my name in Russian, so a search in
+/// Russian finds the site too.
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[ts(export)]
+pub struct Russian {
+    /// "Даниил Тенишев".
+    pub name: String,
+    /// The page title, after the name.
+    pub role: String,
+    pub description: String,
+    /// The link to the page from the English site.
+    pub link: String,
+    /// Paragraphs about me.
+    pub about: Vec<String>,
+    pub work_title: String,
+    /// A line per project, by id; a project without one is left out.
+    pub projects: BTreeMap<String, String>,
+    pub more: String,
+    pub contact_title: String,
+    pub contact: String,
+    /// The link back to the full English site.
+    pub english: String,
+}
+
 /// Copy for `/watched`; the titles themselves come from `/api/watched`.
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -630,6 +656,11 @@ impl Content {
         for p in &self.work.projects {
             if !ids.insert(p.id.as_str()) {
                 bail!("duplicate project id {:?}", p.id);
+            }
+        }
+        for id in self.ru.projects.keys() {
+            if !ids.contains(id.as_str()) {
+                bail!("ru.projects names unknown project {id:?}");
             }
         }
         let cats: std::collections::HashSet<_> =

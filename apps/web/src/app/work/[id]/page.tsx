@@ -58,14 +58,26 @@ async function Case({ params }: Pick<PageProps<"/work/[id]">, "params">) {
       <JsonLd
         data={{
           "@context": "https://schema.org",
-          "@type": "Article",
-          headline: `${p.name}: ${p.title} ${p.titleDim}`,
-          description: plainRich(p.case!.summary),
-          url,
-          mainEntityOfPage: url,
-          image: `${url}/opengraph-image`,
-          author: person(content),
-          about: { "@type": "SoftwareApplication", name: p.name, applicationCategory: "DeveloperApplication" },
+          "@graph": [
+            {
+              "@type": "Article",
+              headline: `${p.name}: ${p.title} ${p.titleDim}`,
+              description: plainRich(p.case!.summary),
+              url,
+              mainEntityOfPage: url,
+              inLanguage: "en",
+              image: `${url}/opengraph-image`,
+              author: person(content),
+              about: { "@type": "SoftwareApplication", name: p.name, applicationCategory: "DeveloperApplication" },
+            },
+            {
+              "@type": "BreadcrumbList",
+              itemListElement: [
+                { "@type": "ListItem", position: 1, name: content.profile.name, item: content.profile.siteUrl },
+                { "@type": "ListItem", position: 2, name: p.name, item: url },
+              ],
+            },
+          ],
         }}
       />
       <CaseView project={p} next={next} />

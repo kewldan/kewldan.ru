@@ -10,17 +10,66 @@ export function JsonLd({ data }: { data: object }) {
   );
 }
 
-/** Daniel as a schema.org Person, linked to every profile in the contact section. */
-export function person({ profile, contact }: Pick<Content, "profile" | "contact">) {
+type Who = Pick<Content, "profile" | "contact" | "hero" | "stack" | "ru">;
+
+const ref = (siteUrl: string, name: string) => `${siteUrl}/#${name}`;
+
+/**
+ * Daniel as a schema.org Person, linked to every profile in the contact
+ * section. Every spelling of the name is here, Russian included, so a
+ * search for any of them lands on the same person.
+ */
+export function person({ profile, contact, hero, stack, ru }: Who) {
+  const [given, ...rest] = profile.name.split(" ");
+  const family = rest.join(" ");
   return {
     "@type": "Person",
-    "@id": `${profile.siteUrl}/#person`,
+    "@id": ref(profile.siteUrl, "person"),
     name: profile.name,
-    alternateName: [profile.shortName, profile.handle],
+    givenName: given,
+    familyName: family,
+    alternateName: [ru.name, `${profile.shortName} ${family}`, profile.shortName, profile.handle],
     url: profile.siteUrl,
+    image: hero.photo && new URL(hero.photo.src, profile.siteUrl).toString(),
     jobTitle: profile.role,
     description: profile.description,
+    knowsAbout: stack.groups.flatMap((g) => g.items.map((i) => i.replace(/\s*\(.*\)$/, ""))),
+    knowsLanguage: ["ru", "en"],
+    homeLocation: { "@type": "Place", name: "Pushkin, Saint Petersburg, Russia" },
     affiliation: { "@type": "CollegeOrUniversity", name: "ITMO University", url: "https://itmo.ru" },
     sameAs: contact.socials.map((s) => s.href),
+  };
+}
+
+/** The site itself, published by that person. */
+export function website({ profile, ru }: Who) {
+  return {
+    "@type": "WebSite",
+    "@id": ref(profile.siteUrl, "website"),
+    url: profile.siteUrl,
+    name: `${profile.name} (${profile.handle})`,
+    alternateName: [profile.handle, ru.name, new URL(profile.siteUrl).host],
+    inLanguage: ["en", "ru"],
+    publisher: { "@id": ref(profile.siteUrl, "person") },
+  };
+}
+
+/** A page about the person: the home page in English, `/ru` in Russian. */
+export function profilePage(c: Who, { path, name, lang }: { path: string; name: string; lang: string }) {
+  const url = new URL(path, c.profile.siteUrl).toString();
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      website(c),
+      {
+        "@type": "ProfilePage",
+        "@id": `${url}#page`,
+        url,
+        name,
+        inLanguage: lang,
+        isPartOf: { "@id": ref(c.profile.siteUrl, "website") },
+        mainEntity: person(c),
+      },
+    ],
   };
 }

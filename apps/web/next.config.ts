@@ -23,11 +23,13 @@ const nextConfig: NextConfig = {
     },
   },
   // The site was briefly under /en and /ru; keep those links working.
+  // /ru itself is the Russian page now.
   async redirects() {
-    return ["en", "ru"].flatMap((l) => [
-      { source: `/${l}`, destination: "/", permanent: true },
-      { source: `/${l}/:path*`, destination: "/:path*", permanent: true },
-    ]);
+    return [
+      { source: "/en", destination: "/", permanent: true },
+      { source: "/en/:path+", destination: "/:path+", permanent: true },
+      { source: "/ru/:path+", destination: "/:path+", permanent: true },
+    ];
   },
   async rewrites() {
     return [

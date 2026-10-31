@@ -115,3 +115,17 @@ jobs:
           curl -fsS --retry 10 --retry-delay 3 --retry-all-errors "$site/api/health"
           echo
           curl -fsS --retry 5 --retry-delay 3 --retry-all-errors -o /dev/null -w 'главная: %{http_code}\n' "$site/"
+
+      # Яндекс и Bing узнают о страницах сразу, а не при следующем обходе.
+      # Ключ публичный: он же лежит в apps/web/public/<ключ>.txt.
+      - name: IndexNow
+        continue-on-error: true
+        env:
+          INDEXNOW_KEY: a6aae6bb03875e93cb20746482d01e94
+        run: |
+          site='${{ vars.SITE_URL || 'https://kewldan.ru' }}'
+          urls=$(curl -fsS "$site/sitemap.xml" | grep -o '<loc>[^<]*' | sed 's/<loc>//' | jq -Rsc 'split("\n") | map(select(length > 0))')
+          jq -nc --arg host "${site#https://}" --arg key "$INDEXNOW_KEY" --argjson urls "$urls" \
+            '{host: $host, key: $key, keyLocation: "https://\($host)/\($key).txt", urlList: $urls}' |
+            curl -sS -o /dev/null -w 'indexnow: %{http_code}\n' -X POST https://api.indexnow.org/indexnow \
+              -H 'Content-Type: application/json; charset=utf-8' --data-binary @-
