@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import type { Footer as FooterContent } from "@/lib/api/generated/Footer";
 import { copy } from "@/lib/copy";
 import { type Lang, langName, localize } from "@/lib/i18n";
@@ -13,9 +11,10 @@ export function SiteFooter({ footer, lang }: { footer: FooterContent; lang: Lang
         <span>{footer.thanks}</span>
         <kbd className="hidden font-stage md:inline">{copy[lang].palette.hint}</kbd>
         <span className="flex gap-4">
-          <Link href={localize(other, "/")} lang={other} hrefLang={other} className="text-stage-chip hover:text-white">
+          {/* A full load, like the header switch (see LangSwitch). */}
+          <a href={localize(other, "/")} lang={other} hrefLang={other} className="text-stage-chip hover:text-white">
             {langName[other]}
-          </Link>
+          </a>
           <a href={footer.source.href} className="text-stage-chip hover:text-white">
             {footer.source.label}
           </a>
