@@ -5,6 +5,7 @@ import { About } from "@/components/sections/about";
 import { Contact } from "@/components/sections/contact";
 import { Dropout } from "@/components/sections/dropout";
 import { Hero } from "@/components/sections/hero";
+import { Kidok } from "@/components/sections/kidok";
 import { MoreWork } from "@/components/sections/more-work/more-work";
 import { Numbers } from "@/components/sections/numbers";
 import { OffScreen } from "@/components/sections/off-screen";
@@ -46,6 +47,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
       <main>
         <Hero hero={c.hero} />
         {shown("pixels") && <Pixels section={c.pixels} />}
+        {shown("pixels") && <Kidok t={t.kidok} />}
         <About about={c.about} t={t.about} />
         <Work work={{ ...c.work, projects: c.work.projects.filter((p) => !p.hidden) }} lang={lang} />
         <Numbers numbers={c.numbers} calendar={calendar} />
