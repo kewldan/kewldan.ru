@@ -86,10 +86,7 @@ export const en = {
   kidok: {
     label: { index: "02½", title: "Press review" },
     title: "Someone left a review on the board: _scammer & abuser._",
-    lead: "At first I was offended. Then I looked closer: that's exactly how people sign the car of someone who cheated on them. Wrong surface, same genre. I'll take it as a compliment.",
-    board: "Exhibit A: my pixel battle, around 2 a.m.",
     boardAlt: "The pixel board with «КИДОК & АБЬЮЗЕР» drawn in black pixels, a pink heart and a colourful ZOV below",
-    car: "Exhibit B: the Lambo off Yeat's “Turn Me Up” cover, signed with the same words",
     carAlt: "A matte black Lamborghini Huracán outside Balenciaga with «КИДОК & АБЬЮЗЕР» scratched along its side",
     verdict: "Conclusion: my site is a matte Lambo now. They don't key a Lada.",
     quote: "“They only bark at the strong”",
