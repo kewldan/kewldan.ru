@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { JsonLd, profilePage } from "@/components/json-ld";
 import { About } from "@/components/sections/about";
 import { Contact } from "@/components/sections/contact";
+import { Crypto } from "@/components/sections/crypto/crypto";
 import { Dropout } from "@/components/sections/dropout";
 import { Hero } from "@/components/sections/hero";
 import { Kidok } from "@/components/sections/kidok";
@@ -56,6 +57,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         <Timeline timeline={c.timeline} />
         <OffScreen off={c.offScreen} />
         <Contact contact={c.contact} email={c.profile.email} />
+        <Crypto t={t.crypto} />
         {shown("dropout") && <Dropout dropout={c.dropout} />}
       </main>
       <SiteFooter footer={c.footer} lang={lang} />

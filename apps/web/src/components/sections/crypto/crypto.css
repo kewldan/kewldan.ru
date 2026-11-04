@@ -1,0 +1,200 @@
+/*
+ * The backdrop: coin marks floating at different depths, wireframe
+ * geometry and a running perspective grid. --mx and --my (-1..1) come from
+ * a spring in crypto.tsx, so nothing here transitions the transform:
+ * the spring already eases every frame.
+ */
+.cx-root {
+  --mx: 0;
+  --my: 0;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.cx-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.cx-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(52% 40% at 50% 62%, rgb(0 0 0 / 0.75), transparent 80%);
+}
+
+.cx-grid {
+  position: absolute;
+  left: -30%;
+  right: -30%;
+  bottom: -6%;
+  height: 56%;
+  transform-origin: 50% 100%;
+  transform: perspective(520px) rotateX(64deg) translate3d(calc(var(--mx) * -18px), 0, 0);
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--tint) 55%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--tint) 55%, transparent) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: linear-gradient(to top, #000 10%, transparent 85%);
+  animation: cx-run 6s linear infinite;
+  transition: background-image 0.5s;
+}
+@keyframes cx-run {
+  to {
+    background-position: 0 64px;
+  }
+}
+
+.cx-geo {
+  position: absolute;
+  fill: none;
+  stroke: color-mix(in srgb, var(--tint) 60%, #fff);
+  stroke-width: 1.2;
+  opacity: 0.32;
+  transition: stroke 0.5s;
+  transform: translate3d(calc(var(--mx) * var(--p)), calc(var(--my) * var(--p)), 0);
+  will-change: transform;
+}
+.cx-geo :is(path, circle) {
+  vector-effect: non-scaling-stroke;
+}
+.cx-oct {
+  left: 13%;
+  top: 33%;
+  width: 64px;
+  --p: -16px;
+  animation: cx-spin 26s linear infinite;
+}
+.cx-hex {
+  right: 12%;
+  top: 38%;
+  width: 90px;
+  --p: 20px;
+  animation: cx-spin 40s linear infinite reverse;
+}
+.cx-cube {
+  left: 9%;
+  top: 54%;
+  width: 54px;
+  --p: -24px;
+  opacity: 0.24;
+  animation: cx-spin 34s linear infinite;
+}
+.cx-rings {
+  left: 50%;
+  top: 66%;
+  width: min(1100px, 130%);
+  translate: -50% -50%;
+  opacity: 0.16;
+  --p: 6px;
+}
+@keyframes cx-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+.cx-float {
+  position: absolute;
+  width: var(--s);
+  height: var(--s);
+  margin: calc(var(--s) / -2) 0 0 calc(var(--s) / -2);
+  transform: translate3d(calc(var(--mx) * var(--d) * -36px), calc(var(--my) * var(--d) * -36px), 0);
+  will-change: transform;
+}
+.cx-float > span {
+  width: 100%;
+  height: 100%;
+  border-radius: 24%;
+  overflow: hidden;
+  rotate: var(--r);
+  filter: blur(calc((1 - var(--d)) * 7px)) saturate(0.5) brightness(0.7);
+  opacity: calc(0.14 + var(--d) * 0.38);
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.06),
+    0 30px 60px rgb(0 0 0 / 0.6);
+  animation: cx-bob var(--t) ease-in-out var(--dl) infinite alternate;
+  transition:
+    filter 0.5s,
+    opacity 0.5s,
+    box-shadow 0.5s;
+}
+.cx-float.cx-on > span {
+  filter: blur(calc((1 - var(--d)) * 4px));
+  opacity: calc(0.36 + var(--d) * 0.56);
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.12),
+    0 24px 80px var(--glow);
+}
+@keyframes cx-bob {
+  from {
+    translate: 0 -10px;
+  }
+  to {
+    translate: 0 12px;
+  }
+}
+
+/* The halo in the card's corner. */
+.cx-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(520px circle at 0% 0%, var(--glow), transparent 60%);
+  opacity: 0.5;
+  pointer-events: none;
+  transition: background 0.5s;
+}
+
+.cx-coin > span {
+  opacity: 0.55;
+  box-shadow: 0 0 0 1px #2c2c2e;
+  transition:
+    opacity 0.2s,
+    transform 0.25s cubic-bezier(0.2, 0.7, 0.1, 1),
+    box-shadow 0.25s;
+}
+.cx-coin:hover > span {
+  opacity: 0.85;
+}
+.cx-coin[aria-pressed="true"] > span {
+  opacity: 1;
+  transform: translateY(-3px);
+  box-shadow:
+    0 0 0 1px #3a3a3c,
+    0 14px 40px var(--glow);
+}
+
+.cx-addr > span {
+  margin-right: 0.45em;
+}
+.cx-addr > span:nth-child(even) {
+  color: #a1a1a6;
+}
+
+@media (max-width: 900px) {
+  .cx-float {
+    scale: 0.55;
+  }
+  .cx-float > span {
+    opacity: calc(0.1 + var(--d) * 0.24);
+  }
+  .cx-float.cx-on > span {
+    opacity: calc(0.2 + var(--d) * 0.3);
+  }
+  .cx-oct,
+  .cx-hex,
+  .cx-cube {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cx-grid,
+  .cx-geo,
+  .cx-float > span {
+    animation: none;
+  }
+}
