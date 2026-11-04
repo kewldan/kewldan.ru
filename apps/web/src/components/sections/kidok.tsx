@@ -44,7 +44,6 @@ export function Kidok({ t }: { t: Copy["kidok"] }) {
           </RevealItem>
         </RevealGroup>
 
-
         <Reveal className="mt-4 flex items-end gap-4 md:gap-8">
           <figure className="flex min-w-0 flex-1 flex-col gap-3 border-l-[6px] border-ink pl-5 md:pl-8">
             <blockquote className="flex flex-col gap-2">
