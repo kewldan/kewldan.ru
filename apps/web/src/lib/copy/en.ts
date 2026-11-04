@@ -87,11 +87,11 @@ export const en = {
     lion: "Bald lion",
     lionAlt: "A bald lion covering its face with a paw: facepalm",
     label: { index: "02½", title: "Press review" },
-    title: "Someone left a review on the board: _scammer & abuser._",
+    title: "Someone left a review on the board: _backstabber & abuser._",
     boardAlt: "The pixel board with «КИДОК & АБЬЮЗЕР» drawn in black pixels, a pink heart and a colourful ZOV below",
     carAlt: "A matte black Lamborghini Huracán outside Balenciaga with «КИДОК & АБЬЮЗЕР» scratched along its side",
     quote: "“They only bark at the strong”",
-    quoteTail: "Nobody even looks at the weak. The dogs bark, the pixels stay.",
+    quoteTail: "Nobody even looks at the weak. Dogs bark for a while — fame is forever.",
     author: "Ancient wisdom, painted in seven colours",
   },
   about: {
