@@ -5,10 +5,10 @@
  */
 export type Wallet = { 
 /**
- * `btc`, `eth`, `usdt`, `ton`, `sol`.
+ * `eth`, `usdt`, `ton`.
  */
 coin: string, 
 /**
- * `bitcoin`, `ethereum`, `tron`, `ton`, `solana`.
+ * `ethereum`, `tron`, `ton`.
  */
 net: string, addr: string, };

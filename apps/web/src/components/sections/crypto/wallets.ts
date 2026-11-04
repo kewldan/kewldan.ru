@@ -1,14 +1,12 @@
 import type { IconKey } from "./icons";
 
-export type NetId = "bitcoin" | "ethereum" | "tron" | "ton" | "solana";
-export type CoinId = "btc" | "eth" | "usdt" | "ton" | "sol";
+export type NetId = "ethereum" | "tron" | "ton";
+export type CoinId = "eth" | "usdt" | "ton";
 
 export const NETS: Record<NetId, { name: string; icon: IconKey }> = {
-  bitcoin: { name: "Bitcoin", icon: "net-bitcoin" },
   ethereum: { name: "Ethereum", icon: "net-ethereum" },
   tron: { name: "TRON · TRC-20", icon: "net-tron" },
   ton: { name: "TON", icon: "net-ton" },
-  solana: { name: "Solana", icon: "net-solana" },
 };
 
 export type Coin = {
@@ -30,15 +28,6 @@ export type Coin = {
  * coin × network is in the copy.
  */
 export const COINS: Coin[] = [
-  {
-    id: "btc",
-    name: "Bitcoin",
-    sym: "BTC",
-    icon: "bg-bitcoin",
-    tint: "#f7931a",
-    glow: "rgb(247 147 26 / 0.45)",
-    nets: ["bitcoin"],
-  },
   {
     id: "eth",
     name: "Ethereum",
@@ -65,14 +54,5 @@ export const COINS: Coin[] = [
     tint: "#0098ea",
     glow: "rgb(0 152 234 / 0.5)",
     nets: ["ton"],
-  },
-  {
-    id: "sol",
-    name: "Solana",
-    sym: "SOL",
-    icon: "bg-solana",
-    tint: "#9945ff",
-    glow: "rgb(153 69 255 / 0.45)",
-    nets: ["solana"],
   },
 ];

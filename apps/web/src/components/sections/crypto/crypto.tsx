@@ -56,17 +56,17 @@ function Qr({ text, label, hole = 0.3 }: { text: string; label: string; hole?: n
 // x, y in % of the slide; s size in px; d depth from 0 (far, blurred) to 1
 // (near, sharp); r tilt; the coin it lights up with.
 const FLOAT: { k: IconKey; id: CoinId; x: number; y: number; s: number; d: number; r: number }[] = [
-  { k: "bg-bitcoin", id: "btc", x: 7, y: 16, s: 104, d: 0.85, r: -12 },
+  { k: "bg-usdt", id: "usdt", x: 7, y: 16, s: 104, d: 0.85, r: -12 },
   { k: "bg-ethereum", id: "eth", x: 87, y: 13, s: 76, d: 0.55, r: 10 },
   { k: "bg-ton", id: "ton", x: 91, y: 60, s: 116, d: 0.95, r: 8 },
   { k: "bg-usdt", id: "usdt", x: 4, y: 66, s: 88, d: 0.65, r: -7 },
-  { k: "bg-solana", id: "sol", x: 80, y: 89, s: 60, d: 0.35, r: 14 },
+  { k: "bg-ethereum", id: "eth", x: 80, y: 89, s: 60, d: 0.35, r: 14 },
   { k: "bg-tron", id: "usdt", x: 17, y: 90, s: 50, d: 0.25, r: -18 },
-  { k: "bg-bitcoin", id: "btc", x: 66, y: 5, s: 40, d: 0.15, r: 20 },
+  { k: "bg-ethereum", id: "eth", x: 66, y: 5, s: 40, d: 0.15, r: 20 },
   { k: "bg-ton", id: "ton", x: 28, y: 6, s: 46, d: 0.2, r: -8 },
   { k: "bg-usdt", id: "usdt", x: 96, y: 36, s: 36, d: 0.1, r: 16 },
   { k: "bg-ethereum", id: "eth", x: 13, y: 44, s: 34, d: 0.1, r: -20 },
-  { k: "bg-solana", id: "sol", x: 36, y: 94, s: 30, d: 0.05, r: 6 },
+  { k: "bg-ton", id: "ton", x: 36, y: 94, s: 30, d: 0.05, r: 6 },
 ];
 
 function Backdrop({ active }: { active: CoinId }) {

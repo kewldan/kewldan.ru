@@ -94,12 +94,10 @@ export const ru: Copy = {
     copied: "Скопировано",
     copiedLive: "Адрес скопирован",
     hints: {
-      "btc-bitcoin": "Native SegWit. Только on-chain, не Lightning.",
       "eth-ethereum": "Mainnet. ERC-20 токены на этот же адрес.",
       "usdt-tron": "USDT только в сети TRON. Из других сетей не дойдёт.",
       "usdt-ton": "USDT только в сети TON. Memo не нужен.",
       "ton-ton": "Личный кошелёк. Memo не нужен.",
-      "sol-solana": "SOL и SPL-токены.",
     },
   },
   kidok: {

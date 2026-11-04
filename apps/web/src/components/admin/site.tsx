@@ -14,12 +14,10 @@ type Draft = Blocks & { headline: string | null; marquee: string[] | null; walle
 
 /** The coin × network pairs the crypto block shows; the API checks the same list. */
 const WALLETS: { coin: string; net: string; title: string; hint: string }[] = [
-  { coin: "btc", net: "bitcoin", title: "BTC · Bitcoin", hint: "bc1…" },
   { coin: "eth", net: "ethereum", title: "ETH · Ethereum", hint: "0x…" },
   { coin: "usdt", net: "tron", title: "USDT · TRON (TRC-20)", hint: "T…" },
   { coin: "usdt", net: "ton", title: "USDT · TON", hint: "UQ… or EQ…" },
   { coin: "ton", net: "ton", title: "TON", hint: "UQ… or EQ…" },
-  { coin: "sol", net: "solana", title: "SOL · Solana", hint: "Base58" },
 ];
 
 const BLOCKS: { key: keyof Blocks; title: string; sub: string }[] = [

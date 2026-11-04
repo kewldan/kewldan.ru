@@ -95,12 +95,10 @@ export const en = {
     copied: "Copied",
     copiedLive: "Address copied",
     hints: {
-      "btc-bitcoin": "Native SegWit. On-chain only, not Lightning.",
       "eth-ethereum": "Mainnet. ERC-20 tokens to the same address.",
       "usdt-tron": "USDT on TRON only. Other networks won’t arrive.",
       "usdt-ton": "USDT on TON only. No memo needed.",
       "ton-ton": "Personal wallet. No memo needed.",
-      "sol-solana": "SOL and SPL tokens.",
     } as Record<string, string>,
   },
   kidok: {

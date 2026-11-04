@@ -24,13 +24,11 @@ const MAX_WORDS: usize = 20;
 const MAX_PROJECTS: usize = 64;
 
 /// The coin × network pairs the crypto block knows how to show.
-pub const WALLET_PAIRS: [(&str, &str); 6] = [
-    ("btc", "bitcoin"),
+pub const WALLET_PAIRS: [(&str, &str); 4] = [
     ("eth", "ethereum"),
     ("usdt", "tron"),
     ("usdt", "ton"),
     ("ton", "ton"),
-    ("sol", "solana"),
 ];
 
 /// Where to send one coin on one network.
@@ -38,16 +36,16 @@ pub const WALLET_PAIRS: [(&str, &str); 6] = [
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[ts(export)]
 pub struct Wallet {
-    /// `btc`, `eth`, `usdt`, `ton`, `sol`.
+    /// `eth`, `usdt`, `ton`.
     pub coin: String,
-    /// `bitcoin`, `ethereum`, `tron`, `ton`, `solana`.
+    /// `ethereum`, `tron`, `ton`.
     pub net: String,
     pub addr: String,
 }
 
 impl Wallet {
-    /// Addresses on every supported chain are base58, bech32, hex or
-    /// base64url: letters, digits, `-` and `_`.
+    /// Addresses on every supported chain are hex, base58 or base64url:
+    /// letters, digits, `-` and `_`.
     fn valid(&self) -> bool {
         WALLET_PAIRS.contains(&(self.coin.as_str(), self.net.as_str()))
             && (20..=128).contains(&self.addr.len())
@@ -343,9 +341,9 @@ mod tests {
             project_order: vec!["c".into(), "a".into()],
             hidden_projects: vec!["a".into()],
             wallets: vec![Wallet {
-                coin: "sol".into(),
-                net: "solana".into(),
-                addr: "So11111111111111111111111111111111111111112".into(),
+                coin: "ton".into(),
+                net: "ton".into(),
+                addr: "UQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA".into(),
             }],
             ..Settings::default()
         };
@@ -360,7 +358,7 @@ mod tests {
             json!([{ "id": "c" }, { "id": "a", "hidden": true }, { "id": "b" }])
         );
         assert_eq!(c["hidden"], json!(["pixels", "dropout"]));
-        assert_eq!(c["wallets"][0]["net"], "solana");
+        assert_eq!(c["wallets"][0]["net"], "ton");
     }
 
     #[test]
@@ -389,7 +387,7 @@ mod tests {
         let ok = Settings {
             wallets: vec![
                 wallet("usdt", "tron", " TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf "),
-                wallet("btc", "bitcoin", ""),
+                wallet("eth", "ethereum", ""),
             ],
             ..Settings::default()
         }
@@ -405,8 +403,13 @@ mod tests {
                 "ethereum",
                 "0x0000000000000000000000000000000000000000",
             ),
-            wallet("btc", "bitcoin", "bc1q <script>alert(1)</script>"),
-            wallet("btc", "bitcoin", "short"),
+            wallet("eth", "ethereum", "0x <script>alert(1)</script>"),
+            wallet("eth", "ethereum", "short"),
+            wallet(
+                "btc",
+                "bitcoin",
+                "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq",
+            ),
         ] {
             let s = Settings {
                 wallets: vec![bad],
