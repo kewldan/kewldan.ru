@@ -84,11 +84,12 @@ export const en = {
   },
   offScreen: { lights: "Tail lights" },
   kidok: {
+    lion: "Bald lion",
+    lionAlt: "A bald lion covering its face with a paw: facepalm",
     label: { index: "02½", title: "Press review" },
     title: "Someone left a review on the board: _scammer & abuser._",
     boardAlt: "The pixel board with «КИДОК & АБЬЮЗЕР» drawn in black pixels, a pink heart and a colourful ZOV below",
     carAlt: "A matte black Lamborghini Huracán outside Balenciaga with «КИДОК & АБЬЮЗЕР» scratched along its side",
-    verdict: "Conclusion: my site is a matte Lambo now. They don't key a Lada.",
     quote: "“They only bark at the strong”",
     quoteTail: "Nobody even looks at the weak. The dogs bark, the pixels stay.",
     author: "Ancient wisdom, painted in seven colours",

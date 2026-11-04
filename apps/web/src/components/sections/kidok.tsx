@@ -44,12 +44,9 @@ export function Kidok({ t }: { t: Copy["kidok"] }) {
           </RevealItem>
         </RevealGroup>
 
-        <Reveal>
-          <p className="inline-block -rotate-1 bg-yellow px-3 py-1.5 font-bold text-on-accent brutal">{t.verdict}</p>
-        </Reveal>
 
-        <Reveal>
-          <figure className="mt-4 flex flex-col gap-3 border-l-[6px] border-ink pl-5 md:pl-8">
+        <Reveal className="mt-4 flex items-end gap-4 md:gap-8">
+          <figure className="flex min-w-0 flex-1 flex-col gap-3 border-l-[6px] border-ink pl-5 md:pl-8">
             <blockquote className="flex flex-col gap-2">
               <p className="font-serif text-[clamp(36px,6vw,76px)] leading-[0.95] tracking-[-0.02em] text-balance italic">
                 {t.quote}
@@ -60,6 +57,17 @@ export function Kidok({ t }: { t: Copy["kidok"] }) {
               — {t.author}
             </figcaption>
           </figure>
+          <div className="w-24 shrink-0 rotate-6 bg-white p-1.5 pb-1 text-on-accent shadow-[5px_5px_0_var(--ink)] transition-transform duration-(--dur-fast) brutal hover:scale-110 hover:-rotate-3 md:w-36">
+            <Image
+              src="/media/bald-lion.webp"
+              alt={t.lionAlt}
+              width={400}
+              height={349}
+              sizes="144px"
+              className="block h-auto w-full"
+            />
+            <p className="pt-1 text-center font-mono text-[10px] font-bold uppercase md:text-xs">{t.lion}</p>
+          </div>
         </Reveal>
       </div>
     </section>
