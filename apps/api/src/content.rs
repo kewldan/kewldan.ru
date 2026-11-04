@@ -514,7 +514,6 @@ pub struct Card {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[ts(export)]
 pub struct Contact {
-    pub teaser: String,
     pub title: String,
     pub body: String,
     pub links: Vec<Link>,
