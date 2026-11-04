@@ -12,6 +12,7 @@ import type { PixelsSection } from "./PixelsSection";
 import type { Profile } from "./Profile";
 import type { Stack } from "./Stack";
 import type { Timeline } from "./Timeline";
+import type { Wallet } from "./Wallet";
 import type { WatchedPage } from "./WatchedPage";
 import type { Work } from "./Work";
 
@@ -20,4 +21,9 @@ export type Content = { profile: Profile, nav: Array<Link>, marquee: Array<strin
  * Blocks the admin switched off (`pixels`, `dropout`); set by
  * [`crate::settings`], never in the file.
  */
-hidden?: Array<string>, };
+hidden?: Array<string>, 
+/**
+ * The crypto block's addresses, from [`crate::settings`], never in the
+ * file.
+ */
+wallets?: Array<Wallet>, };

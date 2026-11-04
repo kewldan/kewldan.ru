@@ -1,6 +1,7 @@
 //! What the admin changes about the site without a deploy: which blocks
 //! show, the hero headline and marquee, the featured projects' order and
-//! visibility, the pixel board's rules and whether `ADMIN_TOKEN` still
+//! visibility, the crypto wallets, the pixel board's rules and whether
+//! `ADMIN_TOKEN` still
 //! signs in. One JSON document (`{ns}:settings`) in Valkey, or in memory;
 //! [`Settings::apply`] lays it over the content every response serves.
 
@@ -21,6 +22,41 @@ use crate::{AppState, pixels::Rules};
 
 const MAX_WORDS: usize = 20;
 const MAX_PROJECTS: usize = 64;
+
+/// The coin × network pairs the crypto block knows how to show.
+pub const WALLET_PAIRS: [(&str, &str); 6] = [
+    ("btc", "bitcoin"),
+    ("eth", "ethereum"),
+    ("usdt", "tron"),
+    ("usdt", "ton"),
+    ("ton", "ton"),
+    ("sol", "solana"),
+];
+
+/// Where to send one coin on one network.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[ts(export)]
+pub struct Wallet {
+    /// `btc`, `eth`, `usdt`, `ton`, `sol`.
+    pub coin: String,
+    /// `bitcoin`, `ethereum`, `tron`, `ton`, `solana`.
+    pub net: String,
+    pub addr: String,
+}
+
+impl Wallet {
+    /// Addresses on every supported chain are base58, bech32, hex or
+    /// base64url: letters, digits, `-` and `_`.
+    fn valid(&self) -> bool {
+        WALLET_PAIRS.contains(&(self.coin.as_str(), self.net.as_str()))
+            && (20..=128).contains(&self.addr.len())
+            && self
+                .addr
+                .bytes()
+                .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase", default, deny_unknown_fields)]
@@ -43,6 +79,9 @@ pub struct Settings {
     pub project_order: Vec<String>,
     /// Featured projects left off the slides. Their case pages still work.
     pub hidden_projects: Vec<String>,
+    /// The crypto block's addresses; a coin without one is left out, and
+    /// the block hides when the list is empty.
+    pub wallets: Vec<Wallet>,
     pub board: Rules,
     /// Off means passkeys only: the bearer token no longer opens the admin.
     pub token_sign_in: bool,
@@ -59,6 +98,7 @@ impl Default for Settings {
             marquee: None,
             project_order: Vec::new(),
             hidden_projects: Vec::new(),
+            wallets: Vec::new(),
             board: Rules::default(),
             token_sign_in: true,
         }
@@ -91,6 +131,18 @@ impl Settings {
         };
         if !ids_ok(&self.project_order) || !ids_ok(&self.hidden_projects) {
             return Err("projects");
+        }
+        self.wallets
+            .iter_mut()
+            .for_each(|w| w.addr = w.addr.trim().to_owned());
+        self.wallets.retain(|w| !w.addr.is_empty());
+        let unique = self.wallets.iter().enumerate().all(|(i, w)| {
+            !self.wallets[..i]
+                .iter()
+                .any(|o| (&o.coin, &o.net) == (&w.coin, &w.net))
+        });
+        if !unique || !self.wallets.iter().all(Wallet::valid) {
+            return Err("wallets");
         }
         let b = &self.board;
         if !(1..=500).contains(&b.ink_max) || !(0.1..=50.0).contains(&b.ink_regen) {
@@ -147,6 +199,9 @@ impl Settings {
                     p["hidden"] = json!(true);
                 }
             }
+        }
+        if !self.wallets.is_empty() {
+            content["wallets"] = json!(self.wallets);
         }
         if !hidden.is_empty() {
             content["hidden"] = json!(hidden);
@@ -287,6 +342,11 @@ mod tests {
             marquee: Some(vec!["B".into(), "C".into()]),
             project_order: vec!["c".into(), "a".into()],
             hidden_projects: vec!["a".into()],
+            wallets: vec![Wallet {
+                coin: "sol".into(),
+                net: "solana".into(),
+                addr: "So11111111111111111111111111111111111111112".into(),
+            }],
             ..Settings::default()
         };
         let mut c = content();
@@ -300,6 +360,7 @@ mod tests {
             json!([{ "id": "c" }, { "id": "a", "hidden": true }, { "id": "b" }])
         );
         assert_eq!(c["hidden"], json!(["pixels", "dropout"]));
+        assert_eq!(c["wallets"][0]["net"], "solana");
     }
 
     #[test]
@@ -320,6 +381,55 @@ mod tests {
             (blank.headline, blank.marquee),
             (None, Some(vec!["OK".into()]))
         );
+        let wallet = |coin: &str, net: &str, addr: &str| Wallet {
+            coin: coin.into(),
+            net: net.into(),
+            addr: addr.into(),
+        };
+        let ok = Settings {
+            wallets: vec![
+                wallet("usdt", "tron", " TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf "),
+                wallet("btc", "bitcoin", ""),
+            ],
+            ..Settings::default()
+        }
+        .validate()
+        .unwrap();
+        assert_eq!(
+            ok.wallets,
+            vec![wallet("usdt", "tron", "TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf")]
+        );
+        for bad in [
+            wallet(
+                "usdt",
+                "ethereum",
+                "0x0000000000000000000000000000000000000000",
+            ),
+            wallet("btc", "bitcoin", "bc1q <script>alert(1)</script>"),
+            wallet("btc", "bitcoin", "short"),
+        ] {
+            let s = Settings {
+                wallets: vec![bad],
+                ..Settings::default()
+            };
+            assert_eq!(s.validate(), Err("wallets"));
+        }
+        let twice = Settings {
+            wallets: vec![
+                wallet(
+                    "ton",
+                    "ton",
+                    "UQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                ),
+                wallet(
+                    "ton",
+                    "ton",
+                    "UQBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+                ),
+            ],
+            ..Settings::default()
+        };
+        assert_eq!(twice.validate(), Err("wallets"));
         let mut ink = Settings::default();
         ink.board.ink_max = 0;
         assert_eq!(ink.validate(), Err("board"));

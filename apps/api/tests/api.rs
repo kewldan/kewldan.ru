@@ -516,6 +516,7 @@ async fn site_settings_reach_the_content_and_the_board() {
     settings["projectOrder"] = json!(["tether"]);
     settings["hiddenProjects"] = json!(["goitmo"]);
     settings["board"] = json!({ "locked": true, "inkMax": 10, "inkRegen": 1.5 });
+    settings["wallets"] = json!([{ "coin": "eth", "net": "ethereum", "addr": "0x2222222222222222222222222222222222222222" }]);
     let (status, _) = request(
         addr,
         "PUT",
@@ -535,6 +536,7 @@ async fn site_settings_reach_the_content_and_the_board() {
     let content: Value = serde_json::from_str(&body).unwrap();
     assert_eq!(content["hero"]["headline"], "New ==headline==");
     assert_eq!(content["hidden"], json!(["pixels"]));
+    assert_eq!(content["wallets"][0]["coin"], "eth");
     assert_eq!(content["work"]["projects"][0]["id"], "tether");
     let goitmo = content["work"]["projects"]
         .as_array()

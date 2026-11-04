@@ -191,6 +191,7 @@ const ERRORS: Record<string, string> = {
   headline: "The headline is too long: 120 characters at most.",
   marquee: "Up to 20 marquee words, 40 characters each.",
   board: "Ink from 1 to 500, refill from 0.1 to 50 a second.",
+  wallets: "A wallet address does not look right: 20–128 letters, digits, - and _.",
   no_passkeys: "Add a passkey first, or you could not sign in.",
   last_passkey: "This is the only way in: add another passkey or turn the token back on.",
   name: "Give it a name.",

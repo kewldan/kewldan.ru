@@ -48,6 +48,11 @@ pub struct Content {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub hidden: Option<Vec<String>>,
+    /// The crypto block's addresses, from [`crate::settings`], never in the
+    /// file.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub wallets: Option<Vec<crate::settings::Wallet>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]

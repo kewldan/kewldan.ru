@@ -5,12 +5,13 @@ import qrcode from "qrcode-generator";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Reveal } from "@/components/motion/reveal";
+import type { Wallet } from "@/lib/api/generated/Wallet";
 import type { Copy } from "@/lib/copy";
 import { cn } from "@/lib/utils";
 
 import { Stage } from "../work/stage";
 import { ICONS, type IconKey } from "./icons";
-import { COINS, NETS, type CoinId } from "./wallets";
+import { COINS, NETS, type CoinId, type NetId } from "./wallets";
 
 function Icon({ k, className }: { k: IconKey; className?: string }) {
   return (
@@ -148,14 +149,31 @@ function useParallax(ref: React.RefObject<HTMLElement | null>) {
 
 const chunks = (a: string) => a.match(/.{1,4}/g) ?? [];
 
-export function Crypto({ t }: { t: Copy["crypto"] }) {
-  const [coinId, setCoinId] = useState<CoinId>("usdt");
+/** The coins that have at least one address, each with its addresses. */
+function withAddresses(wallets: Wallet[]) {
+  return COINS.flatMap((c) => {
+    const nets = c.nets.flatMap((net: NetId) => {
+      const addr = wallets.find((w) => w.coin === c.id && w.net === net)?.addr;
+      return addr ? [{ net, addr }] : [];
+    });
+    return nets.length ? [{ ...c, nets }] : [];
+  });
+}
+
+/** Renders nothing until the admin sets an address. */
+export function Crypto({ t, wallets }: { t: Copy["crypto"]; wallets: Wallet[] }) {
+  const coins = useMemo(() => withAddresses(wallets), [wallets]);
+  return coins.length ? <Slide t={t} coins={coins} /> : null;
+}
+
+function Slide({ t, coins }: { t: Copy["crypto"]; coins: ReturnType<typeof withAddresses> }) {
+  const [coinId, setCoinId] = useState<CoinId>(coins.find((c) => c.id === "usdt")?.id ?? coins[0].id);
   const [netIndex, setNetIndex] = useState(0);
   const [copied, setCopied] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const parallax = useParallax(ref);
 
-  const coin = COINS.find((c) => c.id === coinId) ?? COINS[0];
+  const coin = coins.find((c) => c.id === coinId) ?? coins[0];
   const pick = coin.nets[Math.min(netIndex, coin.nets.length - 1)];
   const hint = t.hints[`${coin.id}-${pick.net}`];
 
@@ -199,7 +217,7 @@ export function Crypto({ t }: { t: Copy["crypto"] }) {
           </Reveal>
 
           <div role="group" aria-label={t.coin} className="mt-4 flex flex-wrap justify-center gap-1 md:gap-2.5">
-            {COINS.map((c) => (
+            {coins.map((c) => (
               <button
                 key={c.id}
                 type="button"

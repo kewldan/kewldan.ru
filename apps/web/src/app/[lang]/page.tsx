@@ -57,7 +57,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         <Timeline timeline={c.timeline} />
         <OffScreen off={c.offScreen} />
         <Contact contact={c.contact} email={c.profile.email} />
-        <Crypto t={t.crypto} />
+        <Crypto t={t.crypto} wallets={c.wallets ?? []} />
         {shown("dropout") && <Dropout dropout={c.dropout} />}
       </main>
       <SiteFooter footer={c.footer} lang={lang} />

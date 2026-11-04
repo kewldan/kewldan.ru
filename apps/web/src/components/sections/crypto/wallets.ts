@@ -20,10 +20,15 @@ export type Coin = {
   tint: string;
   /** The halo behind the picked coin and the card. */
   glow: string;
-  nets: { net: NetId; addr: string }[];
+  /** The networks it can arrive on, in the order the switch shows them. */
+  nets: NetId[];
 };
 
-/** Where to send what. The hint for each coin × network is in the copy. */
+/**
+ * What the block can show. The addresses come from the admin (site
+ * settings, `wallets`); a coin with none is left out. The hint for each
+ * coin × network is in the copy.
+ */
 export const COINS: Coin[] = [
   {
     id: "btc",
@@ -32,7 +37,7 @@ export const COINS: Coin[] = [
     icon: "bg-bitcoin",
     tint: "#f7931a",
     glow: "rgb(247 147 26 / 0.45)",
-    nets: [{ net: "bitcoin", addr: "bc1qEXAMPLE0000000000000000000000000kewldan" }],
+    nets: ["bitcoin"],
   },
   {
     id: "eth",
@@ -41,7 +46,7 @@ export const COINS: Coin[] = [
     icon: "bg-ethereum",
     tint: "#8c8cff",
     glow: "rgb(130 140 255 / 0.45)",
-    nets: [{ net: "ethereum", addr: "0xEXAMPLE00000000000000000000000000kewldan" }],
+    nets: ["ethereum"],
   },
   {
     id: "usdt",
@@ -50,10 +55,7 @@ export const COINS: Coin[] = [
     icon: "bg-usdt",
     tint: "#26a17b",
     glow: "rgb(38 161 123 / 0.5)",
-    nets: [
-      { net: "tron", addr: "TEXAMPLE0000000000000000000kewldan" },
-      { net: "ton", addr: "UQEXAMPLE_000000000000000000000000000000_kewldan" },
-    ],
+    nets: ["tron", "ton"],
   },
   {
     id: "ton",
@@ -62,7 +64,7 @@ export const COINS: Coin[] = [
     icon: "bg-ton",
     tint: "#0098ea",
     glow: "rgb(0 152 234 / 0.5)",
-    nets: [{ net: "ton", addr: "UQEXAMPLE_000000000000000000000000000000_kewldan" }],
+    nets: ["ton"],
   },
   {
     id: "sol",
@@ -71,6 +73,6 @@ export const COINS: Coin[] = [
     icon: "bg-solana",
     tint: "#9945ff",
     glow: "rgb(153 69 255 / 0.45)",
-    nets: [{ net: "solana", addr: "EXAMPLE000000000000000000000000000000kewldan" }],
+    nets: ["solana"],
   },
 ];

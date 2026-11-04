@@ -4,12 +4,23 @@ import Image from "next/image";
 import { Fragment, useState } from "react";
 
 import type { SiteSettings } from "@/lib/api/generated/SiteSettings";
+import type { Wallet } from "@/lib/api/generated/Wallet";
 
 import { useAdmin } from "./context";
 import { errorText, Head, Switch, useToast } from "./ui";
 
 type Blocks = Pick<SiteSettings, "openToOffers" | "dropout" | "pixels" | "watchedInNav">;
-type Draft = Blocks & { headline: string | null; marquee: string[] | null };
+type Draft = Blocks & { headline: string | null; marquee: string[] | null; wallets: Wallet[] };
+
+/** The coin × network pairs the crypto block shows; the API checks the same list. */
+const WALLETS: { coin: string; net: string; title: string; hint: string }[] = [
+  { coin: "btc", net: "bitcoin", title: "BTC · Bitcoin", hint: "bc1…" },
+  { coin: "eth", net: "ethereum", title: "ETH · Ethereum", hint: "0x…" },
+  { coin: "usdt", net: "tron", title: "USDT · TRON (TRC-20)", hint: "T…" },
+  { coin: "usdt", net: "ton", title: "USDT · TON", hint: "UQ… or EQ…" },
+  { coin: "ton", net: "ton", title: "TON", hint: "UQ… or EQ…" },
+  { coin: "sol", net: "solana", title: "SOL · Solana", hint: "Base58" },
+];
 
 const BLOCKS: { key: keyof Blocks; title: string; sub: string }[] = [
   { key: "openToOffers", title: "Open to offers", sub: "The live line in the hero" },
@@ -65,11 +76,15 @@ export function Site() {
     watchedInNav: settings.watchedInNav,
     headline: content.hero.headline,
     marquee: content.marquee,
+    wallets: settings.wallets,
   };
   const d = { ...base, ...edited };
   const dirty = Object.keys(edited).length > 0;
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setEdited((e) => ({ ...e, [k]: v }));
   const words = d.marquee ?? [];
+  const addrOf = (coin: string, net: string) => d.wallets.find((w) => w.coin === coin && w.net === net)?.addr ?? "";
+  const setAddr = (coin: string, net: string, addr: string) =>
+    set("wallets", [...d.wallets.filter((w) => !(w.coin === coin && w.net === net)), { coin, net, addr }]);
 
   const add = (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,6 +107,10 @@ export function Site() {
         // following the content file.
         headline: "headline" in edited ? (edited.headline ?? null) : settings.headline,
         marquee: "marquee" in edited ? (edited.marquee ?? null) : settings.marquee,
+        // In the block's order, without the emptied ones.
+        wallets: WALLETS.map((p) => ({ coin: p.coin, net: p.net, addr: addrOf(p.coin, p.net).trim() })).filter(
+          (w) => w.addr,
+        ),
       });
       setEdited({});
       setPublished((n) => n + 1);
@@ -225,6 +244,40 @@ export function Site() {
       <div className="lsheet">
         <div>
           <p className="eyebrow">03</p>
+          <h3>Crypto</h3>
+          <p className="side-p">
+            Addresses for the “Pay me in anything” slide. A coin without one is left out; with none at all the slide
+            hides. Paste carefully: a wrong address loses the money.
+          </p>
+        </div>
+        <div className="card pad">
+          {WALLETS.map((p) => {
+            const id = `w-${p.coin}-${p.net}`;
+            return (
+              <div key={id} className="f">
+                <label className="lbl" htmlFor={id}>
+                  {p.title}
+                </label>
+                <input
+                  id={id}
+                  className="inp mono"
+                  maxLength={128}
+                  spellCheck={false}
+                  autoComplete="off"
+                  autoCapitalize="off"
+                  value={addrOf(p.coin, p.net)}
+                  placeholder={p.hint}
+                  onChange={(e) => setAddr(p.coin, p.net, e.target.value)}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="lsheet">
+        <div>
+          <p className="eyebrow">04</p>
           <h3>Link previews</h3>
           <p className="side-p">What Telegram, X and LinkedIn show when someone pastes the link. 1200×630.</p>
         </div>
