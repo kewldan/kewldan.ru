@@ -26,7 +26,7 @@ export function LangSwitch({ tone = "paper" }: { tone?: Tone }) {
       aria-label={langName[other]}
       title={langName[other]}
       className={cn(
-        "inline-flex items-center justify-center font-mono text-[13px] font-bold tracking-wide uppercase",
+        "inline-flex items-center justify-center font-mono text-[13px] font-bold tracking-wide",
         tone === "paper" ? "w-11" : "w-10",
         trigger[tone],
       )}

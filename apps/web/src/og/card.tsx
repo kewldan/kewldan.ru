@@ -1,4 +1,3 @@
-import { copy } from "@/lib/copy";
 import { type Lang, localize } from "@/lib/i18n";
 import { parseRich } from "@/components/rich";
 import type { Content } from "@/lib/api/generated/Content";
@@ -148,7 +147,6 @@ function Headline({ text }: { text: string }) {
         fontWeight: 600,
         fontSize: 118,
         lineHeight: 1,
-        letterSpacing: -5,
         columnGap: 24,
         rowGap: 4,
       }}
@@ -173,10 +171,7 @@ function Headline({ text }: { text: string }) {
         }
         if (t.kind === "italic") {
           return [
-            <span
-              key={i}
-              style={{ fontFamily: f.serif, fontStyle: "italic", fontWeight: 400, color: c.cobalt, letterSpacing: -2 }}
-            >
+            <span key={i} style={{ fontFamily: f.serif, fontStyle: "italic", fontWeight: 400, color: c.cobalt }}>
               {t.text}
             </span>,
           ];
@@ -215,16 +210,12 @@ export function WatchedCard({ content, domain }: { content: Content; domain: str
         <span style={{ fontWeight: 700 }}>{profile.handle}</span>
         <span style={{ fontWeight: 500, color: "#d2d2d7" }}>{domain}/watched</span>
       </div>
-      <div style={{ display: "flex", marginTop: 74, fontSize: 30, fontWeight: 500, color: "#8a8a90" }}>
-        {watched.eyebrow}
-      </div>
       <div
         style={{
           display: "flex",
-          marginTop: 8,
+          marginTop: 112,
           fontSize: titleSize,
           fontWeight: 700,
-          letterSpacing: -titleSize * 0.06,
           lineHeight: 1,
           backgroundImage: "linear-gradient(100deg, #ffb36b 0%, #ff5f8f 38%, #8a6bff 72%, #3fb6ff 100%)",
           backgroundClip: "text",
@@ -293,15 +284,12 @@ export function CaseCard({
           {localize(lang, `/work/${p.id}`)}
         </span>
       </div>
-      <div style={{ display: "flex", marginTop: 60, fontSize: 28, fontWeight: 500, color: "#8a8a90" }}>
-        {copy[lang].case.eyebrow}
-      </div>
       <div
         style={{
           display: "flex",
+          marginTop: 96,
           fontSize: nameSize,
           fontWeight: 700,
-          letterSpacing: -nameSize * 0.055,
           lineHeight: 1,
           backgroundImage: p.gradient,
           backgroundClip: "text",
@@ -317,7 +305,6 @@ export function CaseCard({
           flexDirection: "column",
           fontSize: 44,
           fontWeight: 700,
-          letterSpacing: -2,
           lineHeight: 1.1,
         }}
       >

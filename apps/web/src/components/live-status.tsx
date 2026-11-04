@@ -85,5 +85,4 @@ export function LiveStatus({ url, variant, fallback, className }: Props) {
   );
 }
 
-const badge =
-  "relative z-10 ml-2 border-2 border-current px-1.75 py-px font-mono text-[11px] whitespace-nowrap uppercase";
+const badge = "relative z-10 ml-2 border-2 border-current px-1.75 py-px font-mono text-[11px] whitespace-nowrap";

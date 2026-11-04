@@ -33,7 +33,7 @@ export const plainRich = (source: string) =>
 
 export const richClass = {
   bold: "font-semibold",
-  italic: "font-serif font-normal italic tracking-[-0.01em] text-cobalt",
+  italic: "font-serif font-normal italic text-cobalt",
   code: "rounded-md bg-black/8 px-[0.3em] py-[0.05em] font-mono text-[0.86em] font-normal tracking-normal",
   mark: "inline-block -rotate-[1.6deg] border-4 border-ink bg-yellow text-on-accent px-[0.08em] pb-[0.02em] leading-[0.92] shadow-[8px_8px_0_var(--ink)]",
 } as const;

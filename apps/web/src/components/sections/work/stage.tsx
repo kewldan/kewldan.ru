@@ -32,7 +32,7 @@ export function Stage({
       ref={ref}
       id={id}
       style={seamless ? undefined : { clipPath }}
-      className="overflow-x-clip bg-stage font-stage tracking-[-0.015em] text-stage-fg"
+      className="overflow-x-clip bg-stage font-stage text-stage-fg"
     >
       {children}
     </motion.section>

@@ -84,9 +84,8 @@ export const en = {
   },
   offScreen: { lights: "Tail lights" },
   crypto: {
-    eyebrow: "Crypto",
     title: "Pay me in",
-    titleDim: "anything.",
+    titleDim: "anything",
     sub: "Pick a coin, scan the code, done. Check the network twice: it’s the one thing you can’t undo.",
     coin: "Coin",
     network: "Network",
@@ -104,8 +103,8 @@ export const en = {
   kidok: {
     lion: "Bald lion",
     lionAlt: "A bald lion covering its face with a paw: facepalm",
-    label: { index: "02½", title: "Press review" },
-    title: "Someone left a review on the board: _backstabber & abuser._",
+    label: { title: "Press review" },
+    title: "Someone left a review on the board: _backstabber & abuser_",
     boardAlt: "The pixel board with «КИДОК & АБЬЮЗЕР» drawn in black pixels, a pink heart and a colourful ZOV below",
     carAlt: "A matte black Lamborghini Huracán outside Balenciaga with «КИДОК & АБЬЮЗЕР» scratched along its side",
     quote: "“They only bark at the strong”",

@@ -171,7 +171,7 @@ function MobileNav({ nav }: { nav: Link[] }) {
                 initial={{ opacity: 0, x: -16 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.04 * i + 0.1, duration: 0.4, ease: ease.out }}
-                className="flex items-baseline justify-between border-b-[1.5px] border-ink py-3 text-[32px] font-semibold tracking-[-0.03em]"
+                className="flex items-baseline justify-between border-b-[1.5px] border-ink py-3 text-[32px] font-semibold"
               >
                 {l.label}
                 <span className="font-mono text-xs text-ink-muted">0{i + 1}</span>

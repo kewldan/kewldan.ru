@@ -205,10 +205,7 @@ function Slide({ t, coins }: { t: Copy["crypto"]; coins: ReturnType<typeof withA
         <Backdrop active={coin.id} />
         <div className="relative z-1 wrap flex flex-col items-center gap-4.5 py-slide text-center">
           <Reveal>
-            <p className="text-eyebrow font-semibold text-stage-dim">{t.eyebrow}</p>
-          </Reveal>
-          <Reveal>
-            <h2 className="text-[clamp(42px,7vw,104px)] leading-none font-bold tracking-[-0.055em] text-balance">
+            <h2 className="text-[clamp(42px,7vw,104px)] leading-none font-bold text-balance">
               {t.title} <span className="text-stage-dim">{t.titleDim}</span>
             </h2>
           </Reveal>
@@ -253,7 +250,7 @@ function Slide({ t, coins }: { t: Copy["crypto"]; coins: ReturnType<typeof withA
             </div>
 
             <div className="relative flex w-full min-w-0 flex-col gap-3.5">
-              <h3 className="text-[clamp(28px,3.4vw,44px)] leading-none font-bold tracking-[-0.045em]">
+              <h3 className="text-[clamp(28px,3.4vw,44px)] leading-none font-bold">
                 {coin.name} <span className="text-stage-dim">{coin.sym}</span>
               </h3>
               <div

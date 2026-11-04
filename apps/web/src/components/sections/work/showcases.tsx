@@ -191,7 +191,7 @@ function Tiles({ tiles }: { tiles: { title: string; body: string }[] }) {
           transition={spring.layout}
           className="flex flex-col gap-2.5 rounded-tile bg-white p-7 shadow-[0_1px_0_rgb(0_0_0/0.04)] hover:shadow-[0_24px_60px_rgb(0_0_0/0.08)]"
         >
-          <b className="gradient-text text-2xl leading-[1.1] font-bold tracking-[-0.035em]">{t.title}</b>
+          <b className="gradient-text text-2xl leading-[1.1] font-bold">{t.title}</b>
           <p className="text-[15.5px] leading-[1.45] text-stage-body">{t.body}</p>
         </motion.div>
       ))}
@@ -210,10 +210,7 @@ function BigNumbers({ items, theme }: { items: { value: string; label: string }[
     >
       {items.map((s) => (
         <motion.div key={s.label} variants={rise}>
-          <CountUp
-            value={s.value}
-            className="block gradient-text pb-[0.04em] text-huge font-bold tracking-[-0.065em]"
-          />
+          <CountUp value={s.value} className="block gradient-text pb-[0.04em] text-huge font-bold" />
           <span className={cn("text-[15px]", theme.dim)}>{s.label}</span>
         </motion.div>
       ))}

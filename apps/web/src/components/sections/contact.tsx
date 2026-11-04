@@ -31,7 +31,7 @@ export function Contact({ contact, email }: { contact: ContactContent; email: st
               hidden: { opacity: 0, scale: 0.9, filter: "blur(16px)" },
               shown: { opacity: 1, scale: 1, filter: "blur(0px)", transition: { duration: 1.1, ease: ease.out } },
             }}
-            className="gradient-text pb-[0.06em] text-final font-bold tracking-[-0.055em]"
+            className="gradient-text pb-[0.06em] text-final font-bold"
           >
             {contact.title}
           </motion.h2>

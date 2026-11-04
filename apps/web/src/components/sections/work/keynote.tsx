@@ -95,7 +95,7 @@ export function Specs({ items, dimClass }: { items: Spec[]; dimClass: string }) 
     >
       {items.map((s) => (
         <motion.div key={s.label} variants={rise} className="flex flex-col items-center gap-1.5">
-          <CountUp value={s.value} className="gradient-text text-spec font-bold tracking-[-0.045em]" />
+          <CountUp value={s.value} className="gradient-text text-spec font-bold" />
           <span className={cn("max-w-[19ch] text-sm leading-[1.35]", dimClass)}>{s.label}</span>
         </motion.div>
       ))}

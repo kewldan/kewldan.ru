@@ -31,11 +31,7 @@ export function MoreWork({ more }: { more: More }) {
       <div className="grid-index">
         <SectionLabel label={more.label} />
         <div className="col-span-12 flex min-w-0 flex-col gap-3.5 md:col-span-9 md:col-start-4">
-          <RichReveal
-            text={more.pull}
-            each={0.03}
-            className="text-pull-sm font-medium tracking-[-0.03em] text-pretty"
-          />
+          <RichReveal text={more.pull} each={0.03} className="text-pull-sm font-medium text-pretty" />
           <div role="group" aria-label={t.more.filter} className="flex flex-wrap gap-x-5.5 gap-y-0.5">
             {chips.map((c) => {
               const on = filter === c.id;
@@ -94,7 +90,7 @@ function Row({ item: x, index }: { item: WorkItem; index: number }) {
       )}
     >
       <div>
-        <b className="text-lg font-semibold tracking-[-0.015em]">{x.name}</b>
+        <b className="text-lg font-semibold">{x.name}</b>
         {x.media && (
           <Image
             src={x.media.src}
@@ -116,7 +112,7 @@ function Row({ item: x, index }: { item: WorkItem; index: number }) {
           <LiveStatus url={x.probe} variant="badge" fallback={x.status} />
         ) : (
           x.status && (
-            <span className="ml-2 border-2 border-current px-1.75 py-px font-mono text-[11px] whitespace-nowrap uppercase">
+            <span className="ml-2 border-2 border-current px-1.75 py-px font-mono text-[11px] whitespace-nowrap">
               {x.status}
             </span>
           )

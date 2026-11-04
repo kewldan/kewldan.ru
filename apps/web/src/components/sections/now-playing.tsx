@@ -70,7 +70,7 @@ export function NowPlaying({ t }: { t: Copy["about"] }) {
           />
         )}
         <span className="flex min-w-0 flex-1 flex-col gap-1">
-          <span className="flex items-center gap-2 font-mono text-xs font-bold tracking-wide text-ink-muted uppercase">
+          <span className="flex items-center gap-2 font-mono text-xs font-bold tracking-wide text-ink-muted">
             {playing ? (
               <span aria-hidden className="flex h-3 items-end gap-0.5">
                 {[0, 0.25, 0.5].map((d) => (

@@ -2,7 +2,7 @@
 import type { Package } from "./Package";
 import type { Spec } from "./Spec";
 
-export type Numbers = { eyebrow: string, 
+export type Numbers = { 
 /**
  * Counted up from zero when the slide scrolls into view. Usually a
  * stats placeholder such as `{gh.contributions}`.

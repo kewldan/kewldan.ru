@@ -16,13 +16,7 @@ export function Numbers({ numbers, calendar }: { numbers: NumbersContent; calend
         className="wrap flex flex-col items-center gap-5 py-slide text-center"
         style={{ "--g": GRADIENT } as React.CSSProperties}
       >
-        <Reveal>
-          <p className="text-eyebrow font-semibold text-stage-dim">{numbers.eyebrow}</p>
-        </Reveal>
-        <CountUp
-          value={numbers.value}
-          className="block gradient-text pb-[0.05em] text-mega font-bold tracking-[-0.065em]"
-        />
+        <CountUp value={numbers.value} className="block gradient-text pb-[0.05em] text-mega font-bold" />
         <KeynoteTitle
           as="p"
           title={numbers.title}
@@ -37,7 +31,7 @@ export function Numbers({ numbers, calendar }: { numbers: NumbersContent; calend
         >
           {numbers.trio.map((s) => (
             <RevealItem key={s.label}>
-              <CountUp value={s.value} className="block text-trio font-bold tracking-[-0.05em]" />
+              <CountUp value={s.value} className="block text-trio font-bold" />
               <span className="text-sm text-stage-dim">{s.label}</span>
             </RevealItem>
           ))}

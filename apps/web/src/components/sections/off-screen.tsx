@@ -17,7 +17,7 @@ import { Casings } from "./casings";
 
 const box =
   "brutal flex min-w-0 flex-col gap-3 bg-surface p-5.5 shadow-[7px_7px_0_var(--ink)] transition-[translate,box-shadow] duration-(--dur-fast) hover:-translate-y-1 hover:shadow-[7px_11px_0_var(--ink)]";
-const kicker = "font-mono text-xs tracking-[0.06em] uppercase";
+const kicker = "font-mono text-xs";
 
 export function OffScreen({ off }: { off: OffScreenContent }) {
   return (
@@ -43,7 +43,7 @@ export function OffScreen({ off }: { off: OffScreenContent }) {
         >
           <div className="flex flex-col gap-2 border-r-3 border-dashed border-ink p-5.5">
             <span className={kicker}>{off.trip.kicker}</span>
-            <p className="flex items-center gap-1 text-[clamp(30px,12cqi,58px)] leading-none font-bold tracking-[-0.05em] whitespace-nowrap">
+            <p className="flex items-center gap-1 text-[clamp(30px,12cqi,58px)] leading-none font-bold whitespace-nowrap">
               {off.trip.from}
               <motion.span
                 aria-hidden
@@ -112,8 +112,7 @@ export function OffScreen({ off }: { off: OffScreenContent }) {
               className={cn(box, accentBg[c.accent], casings && "relative isolate min-h-72 overflow-hidden")}
             >
               {casings && <Casings />}
-              <span className={cn(kicker, "relative")}>{c.kicker}</span>
-              <h3 className="relative text-box leading-[0.95] font-bold tracking-[-0.045em]">{c.title}</h3>
+              <h3 className="relative text-box leading-[0.95] font-bold">{c.title}</h3>
               <p className="relative text-[16.5px] leading-[1.45] font-medium">{c.body}</p>
             </RevealItem>
           );

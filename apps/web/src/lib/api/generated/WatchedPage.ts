@@ -3,4 +3,4 @@
 /**
  * Copy for `/watched`; the titles themselves come from `/api/watched`.
  */
-export type WatchedPage = { eyebrow: string, title: string, description: string, emptyTitle: string, emptyBody: string, };
+export type WatchedPage = { title: string, description: string, emptyTitle: string, emptyBody: string, };

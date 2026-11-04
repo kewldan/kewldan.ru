@@ -8,7 +8,7 @@ import type { StageTheme } from "./StageTheme";
 
 export type Project = { id: string, name: string, theme: StageTheme, 
 /**
- * CSS gradient used for the eyebrow, numbers and glow.
+ * CSS gradient used for the name, numbers and glow.
  */
 gradient: string, icon: Media | null, title: string, titleDim: string, 
 /**

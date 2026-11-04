@@ -215,10 +215,8 @@
   /* fluid type: clamp(min, preferred, max) so nothing needs breakpoints */
   --text-display: clamp(52px, 11vw, 176px);
   --text-display--line-height: 0.9;
-  --text-display--letter-spacing: -0.05em;
   --text-keynote: clamp(42px, 7vw, 104px);
   --text-keynote--line-height: 1;
-  --text-keynote--letter-spacing: -0.055em;
   --text-mega: clamp(88px, 21vw, 300px);
   --text-mega--line-height: 0.9;
   --text-huge: clamp(64px, 11vw, 160px);
@@ -227,7 +225,6 @@
   --text-final--line-height: 0.98;
   --text-pull: clamp(26px, 3.4vw, 46px);
   --text-pull--line-height: 1.12;
-  --text-pull--letter-spacing: -0.03em;
   --text-pull-sm: clamp(24px, 2.8vw, 36px);
   --text-pull-sm--line-height: 1.15;
   --text-spec: clamp(30px, 4vw, 50px);

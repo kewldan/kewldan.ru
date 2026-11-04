@@ -42,10 +42,7 @@ export function CaseView({ project: p, next, lang }: { project: Project; next: P
             </Reveal>
           )}
           <Reveal>
-            <p className="text-eyebrow font-bold">
-              <span className="gradient-text">{p.name}</span>
-              <span className="text-stage-dim"> · {t.case.eyebrow}</span>
-            </p>
+            <p className="gradient-text text-eyebrow font-bold">{p.name}</p>
           </Reveal>
           {p.probe && <LiveStatus url={p.probe} variant="pill" />}
           <KeynoteTitle as="h1" title={p.title} dim={p.titleDim} dimClass="text-stage-dim" />
@@ -62,7 +59,7 @@ export function CaseView({ project: p, next, lang }: { project: Project; next: P
         <section className="border-t border-stage-rule">
           <div className="wrap flex flex-col items-center gap-8 py-20 text-center">
             <Reveal>
-              <h2 className="text-sm font-semibold tracking-[0.12em] text-stage-dim uppercase">{t.case.flow}</h2>
+              <h2 className="text-sm font-semibold tracking-[0.12em] text-stage-dim">{t.case.flow}</h2>
             </Reveal>
             <Pipeline steps={c.pipeline} />
           </div>
@@ -106,9 +103,7 @@ export function CaseView({ project: p, next, lang }: { project: Project; next: P
               className="group flex flex-col gap-1 md:items-end md:text-right"
             >
               <span className="text-sm text-stage-dim">{t.case.next}</span>
-              <span className="gradient-text text-[clamp(32px,5vw,64px)] leading-none font-bold tracking-[-0.05em]">
-                {next.name}
-              </span>
+              <span className="gradient-text text-[clamp(32px,5vw,64px)] leading-none font-bold">{next.name}</span>
               <span className="text-stage-dim transition-colors group-hover:text-stage-fg">
                 {next.title} {next.titleDim} ›
               </span>
@@ -125,9 +120,7 @@ function Section({ section: s, index }: { section: CaseSection; index: number })
     <section className="grid gap-5 border-t border-stage-rule py-14 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] md:gap-12 md:py-20">
       <Reveal className="md:sticky md:top-24 md:self-start">
         <span className="font-mono text-sm text-stage-dim tabular-nums">{String(index + 1).padStart(2, "0")}</span>
-        <h2 className="mt-2 text-[clamp(26px,3vw,36px)] leading-[1.1] font-bold tracking-[-0.04em] text-balance">
-          {s.title}
-        </h2>
+        <h2 className="mt-2 text-[clamp(26px,3vw,36px)] leading-[1.1] font-bold text-balance">{s.title}</h2>
       </Reveal>
       <div className="flex flex-col gap-5 text-[clamp(17px,1.5vw,19px)] leading-[1.6] text-stage-note">
         {s.body.map((para, i) => (

@@ -47,14 +47,10 @@ export function Kidok({ t }: { t: Copy["kidok"] }) {
         <Reveal className="mt-4 flex items-end gap-4 md:gap-8">
           <figure className="flex min-w-0 flex-1 flex-col gap-3 border-l-[6px] border-ink pl-5 md:pl-8">
             <blockquote className="flex flex-col gap-2">
-              <p className="font-serif text-[clamp(36px,6vw,76px)] leading-[0.95] tracking-[-0.02em] text-balance italic">
-                {t.quote}
-              </p>
+              <p className="font-serif text-[clamp(36px,6vw,76px)] leading-[0.95] text-balance italic">{t.quote}</p>
               <p className="max-w-[44ch] text-lg text-ink-muted">{t.quoteTail}</p>
             </blockquote>
-            <figcaption className="font-mono text-xs tracking-[0.06em] text-ink-muted uppercase">
-              — {t.author}
-            </figcaption>
+            <figcaption className="font-mono text-xs tracking-[0.06em] text-ink-muted">— {t.author}</figcaption>
           </figure>
           <div className="w-24 shrink-0 rotate-6 bg-white p-1.5 pb-1 text-on-accent shadow-[5px_5px_0_var(--ink)] transition-transform duration-(--dur-fast) brutal hover:scale-110 hover:-rotate-3 md:w-36">
             <Image
@@ -65,7 +61,7 @@ export function Kidok({ t }: { t: Copy["kidok"] }) {
               sizes="144px"
               className="block h-auto w-full"
             />
-            <p className="pt-1 text-center font-mono text-[10px] font-bold uppercase md:text-xs">{t.lion}</p>
+            <p className="pt-1 text-center font-mono text-[10px] font-bold md:text-xs">{t.lion}</p>
           </div>
         </Reveal>
       </div>

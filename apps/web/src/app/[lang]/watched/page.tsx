@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/watched">)
 export default async function WatchedPage({ params }: PageProps<"/[lang]/watched">) {
   const { profile } = await getContent();
   return (
-    <div data-surface="stage" className="min-h-dvh bg-stage font-stage tracking-[-0.015em] text-stage-fg">
+    <div data-surface="stage" className="min-h-dvh bg-stage font-stage text-stage-fg">
       <StageHeader handle={profile.handle} />
       <Suspense fallback={<div className="min-h-dvh" />}>
         <List params={params} />

@@ -37,10 +37,10 @@
       { "title": "ITMO, Software Engineering", "sub": "group M3105, class of 2030" },
       { "title": "Open to offers", "sub": "internships, freelance", "live": true }
     ],
-    "headline": "I build from the ==kernel== up to the _UI._",
+    "headline": "I build from the ==kernel== up to the _UI_",
     "photo": { "src": "/media/daniel.webp", "alt": "Daniil Tenishev (kewldan) on the embankment, Moscow City towers behind", "width": 460, "height": 460 },
     "photoPlaceholder": "[your photo]",
-    "label": { "index": "01", "title": "Hi, I’m Daniel" },
+    "label": { "title": "Hi, I’m Daniel" },
     "lead": "I build things from the kernel up to the UI: XDP filters, Go backends, desktop apps and Telegram Mini Apps. In production, used by real people.",
     "stickers": [
       { "label": "18 Y.O.", "accent": "pink", "tilt": 8 },
@@ -58,11 +58,11 @@
     ]
   },
   "pixels": {
-    "label": { "index": "02", "title": "Pixel battle" },
+    "label": { "title": "Pixel battle" },
     "title": "One board. _Everyone at once._"
   },
   "about": {
-    "label": { "index": "03", "title": "About" },
+    "label": { "title": "About" },
     "pull": "I'm Daniel, Daniil Tenishev on paper. 18, first year of Software Engineering at ITMO, group M3105, class of 2030. I live in Pushkin and ride into Saint Petersburg every day.",
     "now": [
       "Studying at ITMO",
@@ -79,9 +79,8 @@
     "desk": "MacBook Pro M4 Pro. _best buy ever!_"
   },
   "work": {
-    "eyebrow": "Selected work",
-    "title": "Seven projects.",
-    "titleDim": "Seven launches.",
+    "title": "Seven projects",
+    "titleDim": "Seven launches",
     "lead": "Each one gets its own stage. Jump straight to one, or scroll through all seven.",
     "projects": [
       {
@@ -91,7 +90,7 @@
         "gradient": "linear-gradient(100deg,#5b7cfa 0%,#8a6bff 48%,#f2a33a 100%)",
         "icon": { "src": "/media/se-icon.webp", "alt": "Sector app icon", "width": 160, "height": 160 },
         "title": "What ate my disk?",
-        "titleDim": "Found in 6.5 seconds.",
+        "titleDim": "Found in 6.5 seconds",
         "lead": "A native macOS disk analyzer and cleaner. Its own parallel scanner walks two million files **5× faster than du**, with byte-identical totals.",
         "showcase": {
           "kind": "race",
@@ -176,8 +175,8 @@
         "theme": "dark",
         "gradient": "linear-gradient(100deg,#ffb36b 0%,#ff5f8f 34%,#8a6bff 68%,#3fb6ff 100%)",
         "icon": null,
-        "title": "Cloudflare.",
-        "titleDim": "But self-hosted.",
+        "title": "Cloudflare",
+        "titleDim": "But self-hosted",
         "lead": "A bot filter in front of Traefik that reads **every layer** of a connection and asks one question: does this stack match the browser it claims to be?",
         "showcase": {
           "kind": "device",
@@ -292,8 +291,8 @@
         "theme": "light",
         "gradient": "linear-gradient(100deg,#7b5cff 0%,#b05cff 50%,#ff5fb8 100%)",
         "icon": null,
-        "title": "A whole VPN business.",
-        "titleDim": "One open platform.",
+        "title": "A whole VPN business",
+        "titleDim": "One open platform",
         "lead": "My own VPN business, turned into an open product: Telegram bot, subscriptions, payments, support, marketing and an admin panel on top of Remnawave, without owning Xray.",
         "showcase": { "kind": "flow", "steps": ["Telegram bot", "Billing", "Outbox", "Remnawave"] },
         "specs": [
@@ -385,8 +384,8 @@
         "theme": "dark",
         "gradient": "linear-gradient(90deg,#5ef0c2 0%,#3fb6ff 100%)",
         "icon": { "src": "/media/te-icon.webp", "alt": "", "width": 128, "height": 128 },
-        "title": "adb.",
-        "titleDim": "Without the text file.",
+        "title": "adb",
+        "titleDim": "Without the text file",
         "lead": "Every Android developer keeps a text file of adb commands. Tether puts all of it in one quiet, keyboard-first window.",
         "showcase": {
           "kind": "duo",
@@ -482,15 +481,15 @@
         "theme": "light",
         "gradient": "linear-gradient(90deg,#ff9f1c 0%,#ff5f5f 100%)",
         "icon": null,
-        "title": "My group's site.",
-        "titleDim": "The whole year opens it.",
+        "title": "My group's site",
+        "titleDim": "The whole year opens it",
         "lead": "Deadlines, labs, lecture notes, quizzes and lab-defence sign-ups in one place. The whole year uses it.",
         "showcase": {
           "kind": "tiles",
           "tiles": [
-            { "title": "Notes write themselves.", "body": "MDX notes with formulas, generated from voice recordings of lectures: transcript, diagrams and a quiz." },
-            { "title": "/cpp checks your code.", "body": "A Monaco editor where clang-tidy and clang-format check it against Google Style." },
-            { "title": "Works in the metro.", "body": "A PWA: notes open with no signal. Calendar with week parity and an ICS feed." }
+            { "title": "Notes write themselves", "body": "MDX notes with formulas, generated from voice recordings of lectures: transcript, diagrams and a quiz." },
+            { "title": "/cpp checks your code", "body": "A Monaco editor where clang-tidy and clang-format check it against Google Style." },
+            { "title": "Works in the metro", "body": "A PWA: notes open with no signal. Calendar with week parity and an ICS feed." }
           ]
         },
         "specs": [],
@@ -579,8 +578,8 @@
         "theme": "dark",
         "gradient": "linear-gradient(90deg,#ffe14d 0%,#ffb36b 100%)",
         "icon": null,
-        "title": "Logic gates.",
-        "titleDim": "All the way to a computer.",
+        "title": "Logic gates",
+        "titleDim": "All the way to a computer",
         "lead": "My oldest living project: released on itch.io in 2021 (rated 4.0/5), then remastered in C++20.",
         "showcase": {
           "kind": "logicDemo",
@@ -676,8 +675,8 @@
         "theme": "dark",
         "gradient": "linear-gradient(90deg,#3fd5ff 0%,#5a7bff 100%)",
         "icon": null,
-        "title": "All of ITMO.",
-        "titleDim": "One Go import.",
+        "title": "All of ITMO",
+        "titleDim": "One Go import",
         "lead": "Plus the full ITMO.ID login: Keycloak, PKCE, OTP, SSO and refresh-token rotation. **Dependencies: just x/oauth2 and x/net.**",
         "showcase": {
           "kind": "bigNumbers",
@@ -754,10 +753,9 @@
     ]
   },
   "numbers": {
-    "eyebrow": "The last twelve months",
     "value": "{gh.contributions}",
-    "title": "contributions.",
-    "titleDim": "{gh.public} public. About {gh.private} private.",
+    "title": "contributions in the last twelve months",
+    "titleDim": "{gh.public} public. About {gh.private} private",
     "trio": [
       { "value": "{gh.years}", "label": "years on GitHub" },
       { "value": "{gh.prs}", "label": "pull requests" },
@@ -774,7 +772,7 @@
     ]
   },
   "more": {
-    "label": { "index": "04", "title": "More work" },
+    "label": { "title": "More work" },
     "pull": "Thirty-odd smaller things, from a life simulation in 2020 to client work in 2026. _Client code is closed; descriptions only._",
     "categories": [
       { "id": "sys", "label": "Systems & Graphics" },
@@ -819,7 +817,7 @@
     ]
   },
   "stack": {
-    "label": { "index": "05", "title": "Stack" },
+    "label": { "title": "Stack" },
     "headline": ["C++", "Go", "TypeScript", "Python", "Next.js", "Docker"],
     "note": "No skill bars. Grouped by where I've actually used it.",
     "groups": [
@@ -833,7 +831,7 @@
     ]
   },
   "timeline": {
-    "label": { "index": "06", "title": "Timeline" },
+    "label": { "title": "Timeline" },
     "host": "kewldan@pushkin: ~",
     "command": "git log --since=2018",
     "commits": [
@@ -849,10 +847,10 @@
     ]
   },
   "offScreen": {
-    "label": { "index": "07", "title": "Off-screen" },
+    "label": { "title": "Off-screen" },
     "car": {
       "kicker": "Dream car · status: someday",
-      "name": "Porsche 911 GT3.",
+      "name": "Porsche 911 GT3",
       "note": "huge wing!",
       "image": { "src": "/media/gt3.webp", "alt": "Black Porsche 911 GT3 from the rear three-quarter, big swan-neck wing", "width": 1320, "height": 560 },
       "imageLit": { "src": "/media/gt3-lit.webp", "alt": "", "width": 1320, "height": 560 }
@@ -879,12 +877,12 @@
       ]
     },
     "cards": [
-      { "kicker": "Plan B", "title": "Pilot.", "body": "If I weren’t a programmer, I’d be a pilot.", "accent": "yellow" },
-      { "kicker": "Range day", "title": "Real range, real guns.", "body": "Shooting real guns at the range is one of my favourite ways to switch off.", "accent": "green", "widget": "casings" }
+      { "title": "Pilot", "body": "If I weren’t a programmer, I’d be a pilot.", "accent": "yellow" },
+      { "title": "Real range, real guns", "body": "Shooting real guns at the range is one of my favourite ways to switch off.", "accent": "green", "widget": "casings" }
     ]
   },
   "contact": {
-    "title": "I'm open to offers.",
+    "title": "I'm open to offers",
     "body": "Internships in backend, systems or full-stack. Freelance: sites, Telegram bots and Mini Apps. Have a project, an internship or just a weird bug? Let’s talk.",
     "links": [
       { "label": "Message on Telegram", "href": "https://t.me/kewldan", "primary": true },
@@ -912,10 +910,9 @@
     "source": { "label": "Source", "href": "https://github.com/kewldan/kewldan.ru" }
   },
   "watched": {
-    "eyebrow": "Films & series, rated by Daniel",
-    "title": "Watched.",
+    "title": "Watched",
     "description": "Every film and series I have watched lately, scored from 1 to 10 with one line on why.",
-    "emptyTitle": "Nothing rated yet.",
+    "emptyTitle": "Nothing rated yet",
     "emptyBody": "Daniel hasn’t rated anything yet. Check back soon."
   }
 }

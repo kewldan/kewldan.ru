@@ -131,7 +131,7 @@ export function TitleForm({ token, editing, onSaved, onCancel }: Props) {
       className="overflow-hidden"
     >
       <div className="grid grid-cols-1 gap-4.5 rounded-[28px] border border-stage-frame bg-stage-tile p-[clamp(18px,3vw,32px)] text-left md:grid-cols-12">
-        <h3 className="text-[clamp(24px,2.6vw,32px)] font-bold tracking-[-0.04em] md:col-span-12">
+        <h3 className="text-[clamp(24px,2.6vw,32px)] font-bold md:col-span-12">
           {editing === "new" ? t.watched.add : t.watched.edit}
         </h3>
 

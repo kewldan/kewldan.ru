@@ -38,7 +38,7 @@ export function About({ about, t }: { about: AboutContent; t: Copy["about"] }) {
                 <li
                   key={t}
                   className={cn(
-                    "px-2.75 py-1.25 font-mono text-sm font-bold uppercase transition-transform duration-(--dur-fast) brutal hover:scale-110 hover:rotate-0",
+                    "px-2.75 py-1.25 font-mono text-sm font-bold transition-transform duration-(--dur-fast) brutal hover:scale-110 hover:rotate-0",
                     STAMPS[i % STAMPS.length],
                   )}
                 >
@@ -86,7 +86,7 @@ function LoveHate({
         className,
       )}
     >
-      <h4 className="text-[30px] leading-none font-bold tracking-[-0.04em]">{title}</h4>
+      <h4 className="text-[30px] leading-none font-bold">{title}</h4>
       <ul>
         {items.map((x) => (
           <li key={x} className="font-semibold">

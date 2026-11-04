@@ -156,19 +156,11 @@ export function WatchedView({ page, initial }: { page: WatchedPage; initial: Tit
   return (
     <>
       <section className="wrap flex flex-col items-center gap-4.5 py-[clamp(72px,10vw,140px)] text-center">
-        <motion.p
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: ease.out }}
-          className="text-eyebrow font-semibold text-stage-dim"
-        >
-          {page.eyebrow}
-        </motion.p>
         <motion.h1
           initial={{ opacity: 0, y: 24, scale: 0.97, filter: "blur(8px)" }}
           animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
           transition={{ duration: 1.2, ease: ease.out }}
-          className="gradient-text pb-[0.06em] text-[clamp(64px,14vw,200px)] leading-[0.92] font-bold tracking-[-0.065em] [--g:var(--title-gradient)]"
+          className="gradient-text pb-[0.06em] text-[clamp(64px,14vw,200px)] leading-[0.92] font-bold [--g:var(--title-gradient)]"
         >
           {page.title}
         </motion.h1>
@@ -176,7 +168,7 @@ export function WatchedView({ page, initial }: { page: WatchedPage; initial: Tit
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4, duration: 0.6 }}
-          className="text-[clamp(28px,4.4vw,58px)] leading-[1.06] font-semibold tracking-[-0.04em]"
+          className="text-[clamp(28px,4.4vw,58px)] leading-[1.06] font-semibold"
         >
           {plural(stats.seen, t.watched.titles)}
           <br />
@@ -203,7 +195,7 @@ export function WatchedView({ page, initial }: { page: WatchedPage; initial: Tit
             ] as const
           ).map(([n, label]) => (
             <motion.div key={label} variants={rise}>
-              <CountUp value={String(n)} className="block text-trio font-bold tracking-[-0.05em]" />
+              <CountUp value={String(n)} className="block text-trio font-bold" />
               <span className="text-sm text-stage-dim">{label}</span>
             </motion.div>
           ))}
@@ -410,12 +402,10 @@ function Spotlight({ best }: { best: Title }) {
         <div style={{ ["--g" as string]: tier(best.rating).gradient }}>
           <CountUp
             value={fmtScore(best.rating)}
-            className="gradient-text pb-[0.04em] text-[clamp(96px,16vw,200px)] leading-[0.85] font-bold tracking-[-0.07em]"
+            className="gradient-text pb-[0.04em] text-[clamp(96px,16vw,200px)] leading-[0.85] font-bold"
           />
         </div>
-        <h2 className="text-[clamp(32px,5vw,64px)] leading-none font-bold tracking-[-0.05em] [overflow-wrap:anywhere]">
-          {best.title}
-        </h2>
+        <h2 className="text-[clamp(32px,5vw,64px)] leading-none font-bold [overflow-wrap:anywhere]">{best.title}</h2>
         <p className="max-w-[46ch] text-[clamp(16px,1.7vw,20px)] leading-[1.45] text-stage-dim">
           {meta(best)} · {fmt(t.watched.watchedOn, { date: fmtWhen(best.watched) })}
         </p>
@@ -452,7 +442,7 @@ function Credit({
       className="grid grid-cols-[78px_minmax(0,1fr)] items-start gap-x-4 gap-y-2 rounded-sm border-b border-stage-frame px-2 py-6 transition-colors hover:bg-stage-device md:grid-cols-[120px_minmax(0,1fr)_110px_auto] md:items-center md:gap-6"
     >
       <p
-        className="gradient-text pb-[0.04em] text-right text-[52px] leading-[0.9] font-bold tracking-[-0.07em] tabular-nums md:text-[clamp(52px,6vw,80px)]"
+        className="gradient-text pb-[0.04em] text-right text-[52px] leading-[0.9] font-bold tabular-nums md:text-[clamp(52px,6vw,80px)]"
         style={{ ["--g" as string]: tier(x.rating).gradient }}
         aria-label={x.rating === null ? t.watched.noScore : fmt(t.watched.scoreLabel, { n: x.rating })}
       >
@@ -470,7 +460,7 @@ function Credit({
           />
         )}
         <div className="min-w-0">
-          <h3 className="text-[clamp(22px,2.6vw,32px)] leading-[1.1] font-semibold tracking-[-0.035em] [overflow-wrap:anywhere]">
+          <h3 className="text-[clamp(22px,2.6vw,32px)] leading-[1.1] font-semibold [overflow-wrap:anywhere]">
             {x.title}
           </h3>
           <p className="mt-1.5 flex flex-wrap gap-x-2.5 gap-y-1 text-sm text-stage-dim">
@@ -542,7 +532,7 @@ function Blank({ title, body }: { title: string; body: string }) {
       transition={{ duration: 0.6, ease: ease.out }}
       className="mt-7 flex flex-col items-center gap-3.5 rounded-[28px] bg-stage-tile px-6 py-[clamp(36px,6vw,72px)] text-center"
     >
-      <h3 className="text-[clamp(28px,4vw,48px)] font-bold tracking-[-0.045em]">{title}</h3>
+      <h3 className="text-[clamp(28px,4vw,48px)] font-bold">{title}</h3>
       <p className="max-w-[48ch] text-md leading-normal text-stage-dim">{body}</p>
     </motion.div>
   );

@@ -25,9 +25,6 @@ export function Work({ work, lang }: { work: WorkContent; lang: Lang }) {
         className="wrap flex flex-col items-center gap-5 py-slide text-center"
         style={{ "--g": first?.gradient ?? "none" } as Vars}
       >
-        <Reveal>
-          <p className="text-eyebrow font-semibold text-stage-dim">{work.eyebrow}</p>
-        </Reveal>
         <KeynoteTitle title={work.title} dim={work.titleDim} dimClass="text-stage-dim" />
         <Reveal delay={0.2}>
           <p className="max-w-[42ch] text-sub font-medium text-stage-dim">{work.lead}</p>

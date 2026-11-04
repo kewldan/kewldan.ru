@@ -112,7 +112,6 @@ pub struct Media {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[ts(export)]
 pub struct SectionLabel {
-    pub index: String,
     pub title: String,
 }
 
@@ -193,7 +192,6 @@ pub struct About {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[ts(export)]
 pub struct Work {
-    pub eyebrow: String,
     pub title: String,
     pub title_dim: String,
     pub lead: String,
@@ -215,7 +213,7 @@ pub struct Project {
     pub id: String,
     pub name: String,
     pub theme: StageTheme,
-    /// CSS gradient used for the eyebrow, numbers and glow.
+    /// CSS gradient used for the name, numbers and glow.
     pub gradient: String,
     pub icon: Option<Media>,
     pub title: String,
@@ -341,7 +339,6 @@ pub struct Spec {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[ts(export)]
 pub struct Numbers {
-    pub eyebrow: String,
     /// Counted up from zero when the slide scrolls into view. Usually a
     /// stats placeholder such as `{gh.contributions}`.
     pub value: String,
@@ -500,7 +497,6 @@ pub struct Game {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[ts(export)]
 pub struct Card {
-    pub kicker: String,
     pub title: String,
     pub body: String,
     pub accent: Accent,
@@ -538,7 +534,6 @@ pub struct Dropout {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[ts(export)]
 pub struct WatchedPage {
-    pub eyebrow: String,
     pub title: String,
     pub description: String,
     pub empty_title: String,

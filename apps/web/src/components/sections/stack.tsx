@@ -16,7 +16,7 @@ export function Stack({ stack, usedIn }: { stack: StackContent; usedIn: string }
               key={s}
               as="span"
               className={cn(
-                "px-4.5 py-2 text-chip-xl font-bold tracking-[-0.03em] shadow-[5px_5px_0_var(--ink)] transition-transform duration-(--dur-fast) ease-snap brutal hover:scale-105 hover:-rotate-4",
+                "px-4.5 py-2 text-chip-xl font-bold shadow-[5px_5px_0_var(--ink)] transition-transform duration-(--dur-fast) ease-snap brutal hover:scale-105 hover:-rotate-4",
                 FILLS[i % FILLS.length],
               )}
             >
