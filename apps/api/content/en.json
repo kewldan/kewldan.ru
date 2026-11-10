@@ -79,9 +79,9 @@
     "desk": "MacBook Pro M4 Pro. _best buy ever!_"
   },
   "work": {
-    "title": "Seven projects",
-    "titleDim": "Seven launches",
-    "lead": "Each one gets its own stage. Jump straight to one, or scroll through all seven.",
+    "title": "Nine projects",
+    "titleDim": "Nine launches",
+    "lead": "Each one gets its own stage. Jump straight to one, or scroll through all nine.",
     "projects": [
       {
         "id": "sector",
@@ -475,6 +475,154 @@
         }
       },
       {
+        "id": "hexa",
+        "name": "Hexa",
+        "theme": "dark",
+        "gradient": "linear-gradient(95deg,#3b82ff 0%,#a78bfa 52%,#f472b6 100%)",
+        "icon": {
+          "src": "/media/hx-icon.webp",
+          "alt": "",
+          "width": 160,
+          "height": 160
+        },
+        "title": "A hex editor",
+        "titleDim": "For 100 GB files",
+        "lead": "Opens 100 GB as fast as 100 bytes. Disks, process memory and the network too, and **the original stays untouched until you save**.",
+        "showcase": {
+          "kind": "duo",
+          "back": {
+            "src": "/media/hx-structure.webp",
+            "alt": "Hexa: a PNG's structure tree synced with the hex grid and the inspector",
+            "width": 1200,
+            "height": 734
+          },
+          "front": {
+            "src": "/media/hx-diff.webp",
+            "alt": "Hexa: two versions side by side, the differences highlighted",
+            "width": 880,
+            "height": 538
+          }
+        },
+        "specs": [
+          {
+            "value": "108k",
+            "label": "lines of Rust in 12 crates"
+          },
+          {
+            "value": "730+",
+            "label": "tests, and a fuzzed core"
+          },
+          {
+            "value": "60 fps",
+            "label": "scrolling a 100 GB file"
+          },
+          {
+            "value": "28",
+            "label": "file formats built in"
+          }
+        ],
+        "points": [
+          "Undo is a tree with branches, and it still works after saving, thanks to a write journal",
+          "ImHex-style templates plus Kaitai, 010 Editor, C header, DWARF and PDB importers; a live tree synced with the grid",
+          "Diff and three-way merge, disassembly for every Capstone architecture, YARA, 100+ hashes, a sandboxed Lua console"
+        ],
+        "chips": [],
+        "links": [
+          {
+            "label": "Download",
+            "href": "https://github.com/kewldan/hexa/releases/latest",
+            "primary": true
+          },
+          {
+            "label": "GitHub ›",
+            "href": "https://github.com/kewldan/hexa"
+          }
+        ],
+        "case": {
+          "summary": "A cross-platform hex editor in Rust and React on Tauri 2. It opens a file of any size instantly, edits it without touching the original and goes **well past files**: raw disks, process memory, S3 and SFTP.",
+          "facts": [
+            {
+              "value": "2026",
+              "label": "v1.0, macOS · Windows · Linux"
+            },
+            {
+              "value": "Rust",
+              "label": "Tauri 2, React 19"
+            },
+            {
+              "value": "108k",
+              "label": "lines of Rust, 26k of TypeScript"
+            },
+            {
+              "value": "730+",
+              "label": "tests, a fuzzed core"
+            }
+          ],
+          "pipeline": [
+            "Provider",
+            "Piece tree",
+            "Snapshot",
+            "Visible pages",
+            "Canvas grid"
+          ],
+          "sections": [
+            {
+              "title": "Any size, instantly",
+              "body": [
+                "Hexa never reads a whole file. The UI asks Rust for the visible window as a raw `ArrayBuffer` and keeps a small page cache, so a 100 GB file opens as fast as a 100-byte one and scrolls at 60 fps."
+              ],
+              "bullets": [
+                "Edits live in a **persistent B+-tree of pieces**, `{source, offset, length}`, with path copying: every edit costs O(log n) memory.",
+                "Copying a gigabyte is a reference. Fills and random data are never materialised.",
+                "Search, hashes, diff and analysis run on a snapshot, without locks, while you keep editing."
+              ]
+            },
+            {
+              "title": "Saves you can trust",
+              "body": [
+                "Undo is a tree: branches, and reverting one edit from the middle of history. A write journal keeps undo working even after you save."
+              ],
+              "bullets": [
+                "Atomic save keeps permissions and xattrs.",
+                "In-place writes are ordered by a dependency graph, need no free disk space and roll back after a crash."
+              ]
+            },
+            {
+              "title": "Structures and reverse engineering",
+              "body": [],
+              "bullets": [
+                "An ImHex-style template language with an LSP and a debugger, importers for Kaitai, 010 Editor, C headers, DWARF and PDB, and 28 formats built in.",
+                "PE, ELF and Mach-O, disassembly for every Capstone architecture, inline assembly patches with NOP padding, cross-references.",
+                "Shift-aware diff, N-way and three-way merge, IPS, UPS, BPS, VCDIFF and bsdiff patches.",
+                "Entropy maps, Hilbert curves, strings, embedded files, YARA rules and 100+ hashes, ssdeep and TLSH included."
+              ]
+            },
+            {
+              "title": "Beyond files",
+              "body": [
+                "Raw disks, partitions and file systems (FAT, exFAT, ext, NTFS, ISO), disk images from VHDX to E01, the memory of a running process with a scanner and pointer search, and files over HTTP, S3 and SFTP."
+              ],
+              "bullets": []
+            },
+            {
+              "title": "Scriptable, and sandboxed",
+              "body": [
+                "A Lua console with memory, instruction and time limits, WASM plugins with fuel caps, a local HTTP API on 127.0.0.1 behind a token, and `hexa-cli`: the same engine headless, with exit codes for CI."
+              ],
+              "bullets": [],
+              "code": "hexa-cli diff old.bin new.bin --stats -f json\nhexa-cli search dump.bin --hex \"DE AD ?? EF\" --count"
+            },
+            {
+              "title": "Stack",
+              "body": [
+                "Twelve Rust crates with no UI, from `hexa-core` to `hexa-wasm`, a Tauri 2 shell and React 19 drawing the grid on a canvas. The core also ships as a WebAssembly npm package. Russian and English, Vim and Emacs keymaps, a screen reader mode."
+              ],
+              "bullets": []
+            }
+          ]
+        }
+      },
+      {
         "id": "m3105",
         "probe": "https://m3105.ru",
         "name": "m3105.ru",
@@ -566,6 +714,132 @@
               "title": "Stack",
               "body": [
                 "Next.js 16, React 19, Tailwind 4 and MDX; Go (chi), PostgreSQL, Valkey, MinIO, imgproxy and nginx."
+              ],
+              "bullets": []
+            }
+          ]
+        }
+      },
+      {
+        "id": "nitpick",
+        "probe": "https://nitpick.m3105.ru",
+        "name": "Nitpick",
+        "theme": "dark",
+        "gradient": "linear-gradient(90deg,#34c759 0%,#5e5ce6 100%)",
+        "icon": null,
+        "title": "Code review",
+        "titleDim": "For mentors, in one link",
+        "lead": "Paste code or drop a `.zip`, comment line by line, send **one short link**. The mentee opens it with no account and ticks the comments off.",
+        "showcase": {
+          "kind": "device",
+          "media": {
+            "src": "/media/np-mentee.webp",
+            "alt": "Nitpick: the mentee's page with progress, a file tree, comments with suggested changes and a checklist",
+            "width": 1200,
+            "height": 817
+          },
+          "label": "nitpick.m3105.ru",
+          "version": "MIT"
+        },
+        "specs": [
+          {
+            "value": "0",
+            "label": "accounts. The link is the login"
+          },
+          {
+            "value": "4",
+            "label": "real formatters in WebAssembly"
+          },
+          {
+            "value": "5",
+            "label": "levels, from Blocker to Praise"
+          },
+          {
+            "value": "300",
+            "label": "files per review, from a .zip"
+          }
+        ],
+        "points": [
+          "clang-format, Ruff, gofmt and Prettier compiled to WebAssembly: you review logic, not whitespace",
+          "Comments keep their lines when the fixed version is uploaded: an LCS line diff maps every old line to its new place",
+          "The edit key lives in the URL fragment, so it never reaches the server; the server keeps only its SHA-256"
+        ],
+        "chips": [],
+        "links": [
+          {
+            "label": "Open nitpick.m3105.ru",
+            "href": "https://nitpick.m3105.ru",
+            "primary": true
+          },
+          {
+            "label": "GitHub ›",
+            "href": "https://github.com/kewldan/nitpick"
+          }
+        ],
+        "case": {
+          "summary": "A code review tool for teaching. The mentor comments on the code line by line and sends one short link; the mentee works through the comments and ticks them off. **No accounts on either side.**",
+          "facts": [
+            {
+              "value": "2026",
+              "label": "launched"
+            },
+            {
+              "value": "Live",
+              "label": "nitpick.m3105.ru"
+            },
+            {
+              "value": "Node 24",
+              "label": "Hono, React 19, SQLite"
+            },
+            {
+              "value": "6.6k",
+              "label": "lines of TypeScript"
+            }
+          ],
+          "pipeline": [
+            "Paste or .zip",
+            "WASM formatter",
+            "Comments",
+            "Short link",
+            "Ticks and replies"
+          ],
+          "sections": [
+            {
+              "title": "Review logic, not whitespace",
+              "body": [
+                "Code arrives already formatted: clang-format for C++, C, Java and C# in any of the usual styles, Ruff for Python, gofmt for Go, Prettier for TypeScript and JSON. All of them are compiled to WebAssembly and load only for the language in use. A diff view shows exactly what the formatter changed."
+              ],
+              "bullets": []
+            },
+            {
+              "title": "Comments that say how much they matter",
+              "body": [
+                "Five fixed levels: Blocker, Issue, Suggestion, Nit and Praise. Click a line number, Shift-click for a range, or select code and right-click to quote it or turn it into a suggested change."
+              ],
+              "bullets": []
+            },
+            {
+              "title": "One link, no accounts",
+              "body": [
+                "Publishing gives a short link for the mentee and a private edit link for the mentor."
+              ],
+              "bullets": [
+                "The edit key sits in the URL fragment, so it never reaches the server's logs. The server stores only its SHA-256 and compares it in constant time.",
+                "Links expire after 1, 7 or 30 days, or never.",
+                "The mentee gets a progress bar, a checklist sorted blockers first, reply threads and a `.zip` of the formatted project."
+              ]
+            },
+            {
+              "title": "Iterations keep their place",
+              "body": [
+                "Upload the fixed version, and every comment stays on its line: an LCS line diff maps each old line to its new place. The mentee's ticks and replies are merged back by comment id, so republishing loses nothing."
+              ],
+              "bullets": []
+            },
+            {
+              "title": "Stack",
+              "body": [
+                "React 19 and Vite in the browser; Hono on Node 24 with the built-in `node:sqlite` and no build step for the server. Russian and English with proper plurals, down to the Telegram link preview. GitHub Actions deploys it with a key that can run exactly one script."
               ],
               "bullets": []
             }
@@ -808,6 +1082,7 @@
       { "name": "C++ Example Checker", "categories": ["tools", "itmo"], "year": "2026", "status": null, "what": "One button checks your solution.", "detail": "Runs it against the example from the lab brief, right in VS Code.", "stack": "VS Code extension", "href": "https://github.com/kewldan/cpp-example-check", "media": null, "widget": null },
       { "name": "claude-lobotomy", "categories": ["tools"], "year": null, "status": null, "what": "Edit Claude Code session history locally.", "detail": "“Change the memory, change the mind.” Zero dependencies.", "stack": "Local web app", "href": "https://github.com/kewldan/claude-lobotomy", "media": null, "widget": null },
       { "name": "claude-xray-test", "categories": ["tools"], "year": null, "status": null, "what": "Claude Code plugin for Xray configs.", "detail": "Runs one config on ~6 core versions in parallel and explains breakages with links to git history.", "stack": "Claude Code plugin", "href": "https://github.com/kewldan/claude-xray-test", "media": null, "widget": null },
+      { "name": "vanity-ssh", "categories": ["tools", "sys"], "year": "2026", "status": null, "what": "An SSH key whose fingerprint spells your name.", "detail": "Searches Ed25519 keys on the Mac's GPU in Metal: 5.5 million a second on an M4 Pro, 8× a 12-core CPU. SHA256:KewLdAn… took 48 minutes.", "stack": "Swift 6 · Metal", "href": "https://github.com/kewldan/vanity-ssh", "media": null, "widget": null },
       { "name": "algs-lab1", "categories": ["itmo", "tools"], "year": "2026", "status": null, "what": "Starter kit for algorithms lab 1.", "detail": "Sorting and a music-streaming task: solution templates, tests and make commands. Made for the whole group.", "stack": "Python · make", "href": "https://github.com/kewldan/algs-lab1", "media": null, "widget": null },
       { "name": "algs-lab2", "categories": ["itmo", "tools"], "year": "2026", "status": null, "what": "Starter kit for algorithms lab 2.", "detail": "Heaps and the NIGHTBUILD build scheduler: solution templates, tests and make commands.", "stack": "Python · make", "href": "https://github.com/kewldan/algs-lab2", "media": null, "widget": null },
       { "name": "ИСК «ВИТА»", "categories": ["client"], "year": "2026", "status": "client", "what": "A developer’s site moved from WordPress to Next.js.", "detail": "A catalogue of 4,220 units, picking a flat on the floor plan, a unit grid, facades, construction photo reports.", "stack": "Next.js", "href": null, "media": null, "widget": null },
@@ -821,10 +1096,10 @@
     "headline": ["C++", "Go", "TypeScript", "Python", "Next.js", "Docker"],
     "note": "No skill bars. Grouped by where I've actually used it.",
     "groups": [
-      { "id": "systems", "name": "Systems & graphics", "items": ["C++20", "C", "Rust", "CMake", "vcpkg", "OpenGL", "Vulkan", "GLSL/SPIR-V", "Bullet", "ImGui", "XDP/eBPF", "BoringSSL", "QUIC/HTTP3"], "usedIn": "LarpGuard, Logical System, ShooterGame" },
-      { "id": "backend", "name": "Backend", "items": ["Go (chi, pgx, sqlc, River)", "Python (FastAPI, aiogram, MTProto)", "Node / Bun"], "usedIn": "Omniflow, m3105.ru, go-itmo, itmo-bot" },
-      { "id": "frontend", "name": "Frontend", "items": ["TypeScript", "React 19", "Next.js 16", "Tailwind 4", "shadcn/ui", "Three.js", "MDX", "Framer Motion"], "usedIn": "m3105.ru, tsar-trava, Mini Apps" },
-      { "id": "desktop", "name": "Desktop & mobile", "items": ["Tauri 2", "Kotlin + Jetpack Compose", "VS Code extensions"], "usedIn": "Tether, YASC, ZagranRead, Lab Kit" },
+      { "id": "systems", "name": "Systems & graphics", "items": ["C++20", "C", "Rust", "CMake", "vcpkg", "OpenGL", "Vulkan", "GLSL/SPIR-V", "Bullet", "ImGui", "XDP/eBPF", "BoringSSL", "QUIC/HTTP3"], "usedIn": "LarpGuard, Hexa, Logical System" },
+      { "id": "backend", "name": "Backend", "items": ["Go (chi, pgx, sqlc, River)", "Python (FastAPI, aiogram, MTProto)", "Node / Bun"], "usedIn": "Omniflow, m3105.ru, Nitpick, go-itmo" },
+      { "id": "frontend", "name": "Frontend", "items": ["TypeScript", "React 19", "Next.js 16", "Tailwind 4", "shadcn/ui", "Three.js", "MDX", "Framer Motion"], "usedIn": "m3105.ru, Nitpick, tsar-trava, Mini Apps" },
+      { "id": "desktop", "name": "Desktop & mobile", "items": ["Tauri 2", "Kotlin + Jetpack Compose", "VS Code extensions"], "usedIn": "Hexa, Tether, YASC, ZagranRead" },
       { "id": "data", "name": "Data", "items": ["PostgreSQL", "ClickHouse", "MongoDB", "Valkey/Redis", "MinIO (S3)"], "usedIn": "LarpGuard, Omniflow, m3105.ru" },
       { "id": "infra", "name": "Infra", "items": ["Docker", "Traefik", "nginx", "Linux", "GitHub Actions", "Prometheus", "OpenTelemetry", "Xray / VLESS Reality"], "usedIn": "self-hosted infra, Open Balancer, selfsteal" },
       { "id": "ai", "name": "AI tooling", "items": ["LLM integrations (parsing, support, RAG)", "MCP servers", "Claude Code plugins"], "usedIn": "GeorgianCars, Open Balancer, claude-xray-test" }
@@ -836,7 +1111,7 @@
     "command": "git log --since=2018",
     "commits": [
       { "hash": "e7c1a09", "year": "2026", "message": "feat(life): enter ITMO", "body": "Passed the EGE (and wrote a bot for the results). Got into ITMO; itmo-bot was counting my own chances." },
-      { "hash": "d41f3b8", "year": "2026", "message": "feat: ship LarpGuard, Omniflow, Tether, m3105.ru", "body": "Plus the ITMO C++ Lab Kit, and client work for ИСК «ВИТА» and ЖК «Экспоград»." },
+      { "hash": "d41f3b8", "year": "2026", "message": "feat: ship LarpGuard, Omniflow, Tether, m3105.ru", "body": "Then Hexa and Nitpick. Plus the ITMO C++ Lab Kit, and client work for ИСК «ВИТА» and ЖК «Экспоград»." },
       { "hash": "4b91d2e", "year": "2025", "message": "chore(school): 11th grade", "body": "GradesTracker and more Telegram projects, between exam prep." },
       { "hash": "a3f9c21", "year": "2024", "message": "perf: 3,257 contributions", "body": "The peak year: the OGE and a bot for its results, Mini Apps (Dnevnik, Sudooky), the first npm and PyPI packages, the first paid orders." },
       { "hash": "9d02b7f", "year": "2023", "message": "feat(engine): roll my own", "body": "An OpenGL framework, VulkanEngine, MinecraftServerCore, the Logical System remaster, Lua for CC: Tweaked, and the first Telegram bots." },
