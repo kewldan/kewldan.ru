@@ -23,7 +23,19 @@ const pace = (lanes: Lane[]) => 8 / Math.max(...lanes.map((l) => l.seconds));
  * usual tool. Both bars run at the true ratio of their times, and the
  * clocks show the measured seconds, not the shortened ones.
  */
-export function Race({ media, task, lanes, theme }: { media: Media; task: string; lanes: Lane[]; theme: Theme }) {
+export function Race({
+  media,
+  video,
+  task,
+  lanes,
+  theme,
+}: {
+  media: Media;
+  video: string[];
+  task: string;
+  lanes: Lane[];
+  theme: Theme;
+}) {
   const t = useT();
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-15% 0px" });
@@ -58,14 +70,18 @@ export function Race({ media, task, lanes, theme }: { media: Media; task: string
         // The recording is the window itself; only its corners need trimming.
         className="overflow-hidden rounded-[1.6%/2.6%] shadow-[0_40px_120px_rgb(91_124_250/0.25),0_0_0_1px_rgb(255_255_255/0.06)]"
       >
-        <Image
-          src={media.src}
-          alt={media.alt}
-          width={media.width}
-          height={media.height}
-          unoptimized
-          className="block h-auto w-full"
-        />
+        {video.length ? (
+          <Recording media={media} video={video} />
+        ) : (
+          <Image
+            src={media.src}
+            alt={media.alt}
+            width={media.width}
+            height={media.height}
+            unoptimized
+            className="block h-auto w-full"
+          />
+        )}
       </motion.div>
 
       <div className="flex flex-col gap-3 text-left">
@@ -117,5 +133,47 @@ export function Race({ media, task, lanes, theme }: { media: Media; task: string
         </p>
       </div>
     </div>
+  );
+}
+
+const TYPES: Record<string, string> = { webm: "video/webm", mp4: "video/mp4" };
+
+/**
+ * The recording as a muted video: the still until it nears the screen, then
+ * it loads and plays, and it pauses whenever it scrolls away. An animated
+ * image would cost several times the bytes and keep decoding off screen.
+ */
+function Recording({ media, video }: { media: Media; video: string[] }) {
+  const ref = useRef<HTMLVideoElement>(null);
+  const near = useInView(ref, { once: true, margin: "50% 0px" });
+  const visible = useInView(ref);
+
+  // The sources render once it is near; a video only reads them on load().
+  useEffect(() => {
+    if (near) ref.current?.load();
+  }, [near]);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !near) return;
+    if (visible && !matchMedia("(prefers-reduced-motion: reduce)").matches) void el.play().catch(() => {});
+    else el.pause();
+  }, [near, visible]);
+
+  return (
+    <video
+      ref={ref}
+      poster={media.src}
+      width={media.width}
+      height={media.height}
+      muted
+      loop
+      playsInline
+      preload="none"
+      aria-label={media.alt}
+      className="block h-auto w-full"
+    >
+      {near && video.map((src) => <source key={src} src={src} type={TYPES[src.split(".").pop() ?? ""]} />)}
+    </video>
   );
 }

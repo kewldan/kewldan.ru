@@ -32,7 +32,7 @@ export function Showcase({ data, theme }: { data: ShowcaseData; theme: Theme }) 
     case "logicDemo":
       return <LogicDemo examples={data.examples} theme={theme} />;
     case "race":
-      return <Race media={data.media} task={data.task} lanes={data.lanes} theme={theme} />;
+      return <Race media={data.media} video={data.video} task={data.task} lanes={data.lanes} theme={theme} />;
     case "bigNumbers":
       return <BigNumbers items={data.items} theme={theme} />;
   }

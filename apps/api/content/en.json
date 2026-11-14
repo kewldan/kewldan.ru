@@ -93,7 +93,8 @@
         "lead": "A native macOS disk analyzer and cleaner. Its own parallel scanner walks two million files **5× faster than du**, with byte-identical totals.",
         "showcase": {
           "kind": "race",
-          "media": { "src": "/media/se-disk-map.webp", "alt": "Sector: zooming into a folder on the disk map, switching between rings and tiles", "width": 800, "height": 500 },
+          "media": { "src": "/media/se-disk-map-poster.webp", "alt": "Sector: zooming into a folder on the disk map, switching between rings and tiles", "width": 800, "height": 500 },
+          "video": ["/media/se-disk-map.webm", "/media/se-disk-map.mp4"],
           "task": "Scan ~/projects · 2.06 M files and folders · M4 Pro",
           "lanes": [
             { "name": "Sector", "seconds": 6.5 },

@@ -189,11 +189,15 @@
         "showcase": {
           "kind": "race",
           "media": {
-            "src": "/media/se-disk-map.webp",
+            "src": "/media/se-disk-map-poster.webp",
             "alt": "Sector: приближение к папке на карте диска и переключение между кольцами и плитками",
             "width": 800,
             "height": 500
           },
+          "video": [
+            "/media/se-disk-map.webm",
+            "/media/se-disk-map.mp4"
+          ],
           "task": "Скан ~/projects · 2,06 млн файлов и папок · M4 Pro",
           "lanes": [
             {

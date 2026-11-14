@@ -2,7 +2,7 @@
 
 import { motion, useScroll, useTransform } from "motion/react";
 import Image from "next/image";
-import { useRef } from "react";
+import { type CSSProperties, useRef } from "react";
 
 import { RichReveal } from "@/components/motion/rich-reveal";
 import { SectionLabel } from "@/components/section-label";
@@ -10,13 +10,16 @@ import { Button } from "@/components/ui/button";
 import { useT } from "@/components/lang";
 import { accentBg } from "@/lib/accent";
 import type { Hero as HeroContent } from "@/lib/api/generated/Hero";
-import { ease, spring } from "@/lib/motion";
+import { spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
+/**
+ * The first screen enters in CSS, so it shows up with the first paint
+ * instead of after hydration: on a slow phone that is seconds sooner.
+ */
 const enter = (delay: number) => ({
-  initial: { opacity: 0, y: 18 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.8, ease: ease.out, delay },
+  className: "animate-enter",
+  style: { animationDelay: `${delay}s` },
 });
 
 export function Hero({ hero }: { hero: HeroContent }) {
@@ -33,13 +36,13 @@ export function Hero({ hero }: { hero: HeroContent }) {
     >
       <dl className="grid grid-cols-2 gap-4 border-t-[1.5px] border-ink pt-3 text-[13.5px] leading-[1.4] md:grid-cols-4">
         {hero.meta.map((m, i) => (
-          <motion.div key={m.title} {...enter(0.05 * i)}>
+          <div key={m.title} {...enter(0.05 * i)}>
             <dt>
               {m.live && <i aria-hidden className="mr-1.75 inline-block size-2.25 animate-live rounded-full bg-live" />}
               {m.title}
             </dt>
             <dd className="text-ink-muted">{m.sub}</dd>
-          </motion.div>
+          </div>
         ))}
       </dl>
 
@@ -58,11 +61,11 @@ export function Hero({ hero }: { hero: HeroContent }) {
 
       <div className="grid-index">
         <SectionLabel label={hero.label} />
-        <motion.p {...enter(0.5)} className="col-span-12 text-lead text-pretty md:col-span-5 md:col-start-4">
-          {hero.lead}
-        </motion.p>
+        {/* No entrance: it is the largest text on a phone, so it is what the
+            page is judged by. Everything around it still moves. */}
+        <p className="col-span-12 text-lead text-pretty md:col-span-5 md:col-start-4">{hero.lead}</p>
         <Stickers stickers={hero.stickers} />
-        <motion.div {...enter(0.6)} className="col-span-12 flex flex-col gap-0.5 md:col-span-2 md:col-start-11">
+        <div {...enter(0.6)} className="col-span-12 flex animate-enter flex-col gap-0.5 md:col-span-2 md:col-start-11">
           {hero.links.map((l) => (
             <a
               key={l.label}
@@ -75,16 +78,16 @@ export function Hero({ hero }: { hero: HeroContent }) {
               </span>
             </a>
           ))}
-        </motion.div>
+        </div>
       </div>
 
-      <motion.div {...enter(0.7)} className="flex flex-wrap gap-3.5">
+      <div {...enter(0.7)} className="flex animate-enter flex-wrap gap-3.5">
         {hero.ctas.map((c) => (
           <Button key={c.label} asChild variant="brutal" size="brutal" className={cn(c.accent && accentBg[c.accent])}>
             <a href={c.href}>{c.label}</a>
           </Button>
         ))}
-      </motion.div>
+      </div>
     </section>
   );
 }
@@ -92,35 +95,34 @@ export function Hero({ hero }: { hero: HeroContent }) {
 function Photo({ hero }: { hero: HeroContent }) {
   const t = useT();
   return (
-    <motion.div
-      initial={{ opacity: 0, rotate: 12, scale: 0.8, y: 30 }}
-      animate={{ opacity: 1, rotate: 2, scale: 1, y: 0 }}
-      transition={{ ...spring.toss, delay: 0.35 }}
-      whileHover={{ rotate: -1, scale: 1.03 }}
-      className="mt-6 w-47.5 md:absolute md:top-[2%] md:right-[1%] md:mt-0 md:w-[min(24%,290px)]"
+    <div
+      style={{ animationDelay: "0.35s" }}
+      className="mt-6 w-47.5 rotate-2 animate-toss md:absolute md:top-[2%] md:right-[1%] md:mt-0 md:w-[min(24%,290px)]"
     >
-      <div className="relative flex aspect-square items-end overflow-hidden bg-blue bg-[repeating-linear-gradient(135deg,rgb(0_0_0/0.06)_0_10px,rgb(0_0_0/0.13)_10px_20px)] p-2 shadow-brutal brutal">
-        {hero.photo ? (
-          <Image
-            src={hero.photo.src}
-            alt={hero.photo.alt}
-            fill
-            priority
-            unoptimized
-            sizes="(min-width: 768px) 290px, 190px"
-            className="object-cover"
-          />
-        ) : (
-          <span
-            role="img"
-            aria-label={t.photoPlaceholder}
-            className="border-2 border-ink bg-surface px-1.5 py-0.5 font-mono text-[11px]"
-          >
-            {hero.photoPlaceholder}
-          </span>
-        )}
-      </div>
-    </motion.div>
+      <motion.div whileHover={{ rotate: -3, scale: 1.03 }} transition={spring.toss}>
+        <div className="relative flex aspect-square items-end overflow-hidden bg-blue bg-[repeating-linear-gradient(135deg,rgb(0_0_0/0.06)_0_10px,rgb(0_0_0/0.13)_10px_20px)] p-2 shadow-brutal brutal">
+          {hero.photo ? (
+            <Image
+              src={hero.photo.src}
+              alt={hero.photo.alt}
+              fill
+              priority
+              unoptimized
+              sizes="(min-width: 768px) 290px, 190px"
+              className="object-cover"
+            />
+          ) : (
+            <span
+              role="img"
+              aria-label={t.photoPlaceholder}
+              className="border-2 border-ink bg-surface px-1.5 py-0.5 font-mono text-[11px]"
+            >
+              {hero.photoPlaceholder}
+            </span>
+          )}
+        </div>
+      </motion.div>
+    </div>
   );
 }
 
@@ -132,24 +134,35 @@ function Stickers({ stickers }: { stickers: HeroContent["stickers"] }) {
       className="col-span-12 flex flex-row flex-wrap items-start gap-4 pt-1 md:col-span-2 md:col-start-9 md:flex-col"
     >
       {stickers.map((s, i) => (
-        <motion.span
+        <span
           key={s.label}
-          drag
-          dragSnapToOrigin
-          dragElastic={0.6}
-          dragTransition={{ bounceStiffness: 300, bounceDamping: 14 }}
-          initial={{ opacity: 0, scale: 1.6, rotate: s.tilt * 3 }}
-          animate={{ opacity: 1, scale: 1, rotate: s.tilt }}
-          transition={{ ...spring.toss, delay: 0.55 + i * 0.12 }}
-          whileHover={{ rotate: 0, scale: 1.06 }}
-          whileDrag={{ rotate: 0, scale: 1.12, boxShadow: "10px 12px 0 var(--ink)", zIndex: 30 }}
-          className={cn(
-            "relative z-20 cursor-grab touch-none px-3.5 py-2.25 font-mono text-md font-bold whitespace-nowrap shadow-[5px_5px_0_var(--ink)] select-none brutal active:cursor-grabbing",
-            accentBg[s.accent],
-          )}
+          className="animate-toss"
+          style={
+            {
+              animationDelay: `${0.55 + i * 0.12}s`,
+              "--toss-y": "0px",
+              "--toss-r": `${s.tilt * 2}deg`,
+              "--toss-s": 1.6,
+            } as CSSProperties
+          }
         >
-          {s.label}
-        </motion.span>
+          <motion.span
+            drag
+            dragSnapToOrigin
+            dragElastic={0.6}
+            dragTransition={{ bounceStiffness: 300, bounceDamping: 14 }}
+            style={{ rotate: s.tilt }}
+            transition={spring.toss}
+            whileHover={{ rotate: 0, scale: 1.06 }}
+            whileDrag={{ rotate: 0, scale: 1.12, boxShadow: "10px 12px 0 var(--ink)", zIndex: 30 }}
+            className={cn(
+              "relative z-20 inline-block cursor-grab touch-none px-3.5 py-2.25 font-mono text-md font-bold whitespace-nowrap shadow-[5px_5px_0_var(--ink)] select-none brutal active:cursor-grabbing",
+              accentBg[s.accent],
+            )}
+          >
+            {s.label}
+          </motion.span>
+        </span>
       ))}
     </div>
   );

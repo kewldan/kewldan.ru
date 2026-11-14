@@ -292,7 +292,11 @@ pub enum Showcase {
     /// A screen recording in a Mac window, then the same job raced against
     /// the usual tool, at the true ratio of their times.
     Race {
+        /// The still shown until the recording plays.
         media: Media,
+        /// The recording itself, best format first (`.webm`, `.mp4`); it
+        /// plays muted and only while on screen.
+        video: Vec<String>,
         /// What both lanes do, e.g. "Scan ~/projects · 2.06 M files".
         task: String,
         lanes: Vec<Lane>,

@@ -29,28 +29,25 @@ export function CaseView({ project: p, next, lang }: { project: Project; next: P
           className="pointer-events-none absolute -top-40 left-1/2 h-120 w-[min(1100px,140vw)] -translate-x-1/2 rounded-full bg-(image:--g) opacity-[0.16] blur-[120px]"
         />
         <div className="relative wrap flex flex-col items-center gap-5 py-slide text-center">
+          {/* The first screen enters in CSS, so it does not wait for hydration;
+              the summary, the largest text on a phone, shows at once. */}
           {p.icon && (
-            <Reveal>
-              <Image
-                src={p.icon.src}
-                alt={p.icon.alt}
-                width={72}
-                height={72}
-                unoptimized
-                className="size-18 rounded-[18px]"
-              />
-            </Reveal>
+            <Image
+              src={p.icon.src}
+              alt={p.icon.alt}
+              width={72}
+              height={72}
+              unoptimized
+              priority
+              className="size-18 animate-enter rounded-[18px]"
+            />
           )}
-          <Reveal>
-            <p className="gradient-text text-eyebrow font-bold">{p.name}</p>
-          </Reveal>
+          <p className="animate-enter gradient-text text-eyebrow font-bold">{p.name}</p>
           {p.probe && <LiveStatus url={p.probe} variant="pill" />}
-          <KeynoteTitle as="h1" title={p.title} dim={p.titleDim} dimClass="text-stage-dim" />
-          <Reveal delay={0.15}>
-            <p className="max-w-[52ch] text-sub font-medium text-stage-dim">
-              <Rich text={c.summary} classes={onStage} />
-            </p>
-          </Reveal>
+          <KeynoteTitle immediate as="h1" title={p.title} dim={p.titleDim} dimClass="text-stage-dim" />
+          <p className="max-w-[52ch] text-sub font-medium text-stage-dim">
+            <Rich text={c.summary} classes={onStage} />
+          </p>
           {c.facts.length > 0 && <Specs items={c.facts} dimClass="text-stage-dim" />}
         </div>
       </section>

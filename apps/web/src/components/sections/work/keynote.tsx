@@ -21,13 +21,32 @@ export function KeynoteTitle({
   dimClass,
   as: Tag = "h2",
   className,
+  immediate = false,
 }: {
   title: string;
   dim: string;
   dimClass: string;
   as?: "h1" | "h2" | "p";
   className?: string;
+  /** Top of the page: slide in with CSS from the first paint, not on scroll after hydration. */
+  immediate?: boolean;
 }) {
+  if (immediate) {
+    return (
+      <Tag className={cn("text-keynote font-bold text-balance", className)}>
+        {[title, dim].map((line, i) => (
+          <span key={i} className="block overflow-hidden pb-[0.06em]">
+            <span
+              className={cn("block origin-bottom-left animate-word", i === 1 && dimClass)}
+              style={{ animationDelay: `${i * 0.12}s` }}
+            >
+              {line}
+            </span>
+          </span>
+        ))}
+      </Tag>
+    );
+  }
   const M = motion[Tag];
   return (
     <M

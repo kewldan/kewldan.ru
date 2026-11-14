@@ -270,7 +270,31 @@
   --animate-ring: ring 1.4s infinite;
   --animate-flow: flow 2.6s var(--motion-ease-out) infinite;
   --animate-eq: eq 0.9s ease-in-out infinite;
+  /* Above-the-fold entrances run in CSS from the first paint, without
+     waiting for hydration; the delay comes from an inline style. */
+  --animate-enter: enter 0.8s var(--motion-ease-out) backwards;
+  --animate-word: word 0.9s var(--motion-ease-out) backwards;
+  --animate-toss: toss 0.75s var(--motion-ease-snap) backwards;
 
+  @keyframes enter {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+  }
+  /* A word sliding up out of its mask. */
+  @keyframes word {
+    from {
+      transform: translateY(105%);
+    }
+  }
+  /* Dropped in with a little overshoot; ends at the element's own transform. */
+  @keyframes toss {
+    from {
+      opacity: 0;
+      transform: translateY(var(--toss-y, 30px)) rotate(var(--toss-r, 12deg)) scale(var(--toss-s, 0.8));
+    }
+  }
   @keyframes marquee {
     to {
       transform: translateX(-50%);

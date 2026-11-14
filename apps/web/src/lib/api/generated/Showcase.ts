@@ -8,7 +8,16 @@ import type { Tile } from "./Tile";
 /**
  * The bespoke centrepiece of a project slide.
  */
-export type Showcase = { "kind": "device", media: Media, label: string, version: string, } | { "kind": "duo", back: Media, front: Media, } | { "kind": "flow", steps: Array<string>, } | { "kind": "tiles", tiles: Array<Tile>, } | { "kind": "logicDemo", examples: Array<LogicExample>, } | { "kind": "race", media: Media, 
+export type Showcase = { "kind": "device", media: Media, label: string, version: string, } | { "kind": "duo", back: Media, front: Media, } | { "kind": "flow", steps: Array<string>, } | { "kind": "tiles", tiles: Array<Tile>, } | { "kind": "logicDemo", examples: Array<LogicExample>, } | { "kind": "race", 
+/**
+ * The still shown until the recording plays.
+ */
+media: Media, 
+/**
+ * The recording itself, best format first (`.webm`, `.mp4`); it
+ * plays muted and only while on screen.
+ */
+video: Array<string>, 
 /**
  * What both lanes do, e.g. "Scan ~/projects · 2.06 M files".
  */

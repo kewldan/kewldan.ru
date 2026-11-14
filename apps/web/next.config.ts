@@ -21,6 +21,16 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  // Media files keep their name until they change; a new version gets a new
+  // name. A week's cache spares repeat visits a revalidation per image.
+  async headers() {
+    return [
+      {
+        source: "/media/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=604800, stale-while-revalidate=2592000" }],
+      },
+    ];
+  },
   async redirects() {
     return [
       // English lives at the root; /en was its address for a while.

@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, type Variants } from "motion/react";
+import type { CSSProperties } from "react";
 
 import { parseRich, richClass } from "@/components/rich";
 import { ease, spring } from "@/lib/motion";
@@ -31,6 +32,7 @@ type Props = {
  * ==mark== box tosses itself into place instead.
  */
 export function RichReveal({ text, className, as = "h2", each = 0.07, immediate = false }: Props) {
+  if (immediate) return <CssReveal text={text} className={className} as={as} each={each} />;
   const Tag = motion[as];
   const trigger = immediate
     ? { animate: "shown" as const }
@@ -59,6 +61,52 @@ export function RichReveal({ text, className, as = "h2", each = 0.07, immediate 
               <motion.span variants={line} className={cn("inline-block", cls)}>
                 {word}
               </motion.span>
+            </span>
+          );
+        });
+      })}
+    </Tag>
+  );
+}
+
+/**
+ * The same entrance in CSS, for the first screen: the words are in the
+ * server HTML with their animation, so they show up with the first paint
+ * rather than once React has hydrated.
+ */
+function CssReveal({ text, className, as: Tag = "h2", each }: Required<Pick<Props, "as" | "each">> & Props) {
+  let n = 0;
+  return (
+    <Tag className={className}>
+      {parseRich(text).map((t, ti) => {
+        if (t.kind === "mark") {
+          return (
+            <span
+              key={ti}
+              className={cn(richClass.mark, "relative z-10 animate-toss")}
+              style={
+                {
+                  animationDelay: "0.15s",
+                  "--toss-y": "40%",
+                  "--toss-r": "8deg",
+                  "--toss-s": 0.6,
+                } as CSSProperties
+              }
+            >
+              {t.text}
+            </span>
+          );
+        }
+        const cls = t.kind === "text" ? undefined : richClass[t.kind];
+        return t.text.split(/(\s+)/).map((word, wi) => {
+          if (!word) return null;
+          if (/^\s+$/.test(word)) return " ";
+          const delay = n++ * each;
+          return (
+            <span key={`${ti}-${wi}`} className="-mb-[0.08em] inline-block overflow-hidden pb-[0.08em] align-bottom">
+              <span className={cn("inline-block animate-word", cls)} style={{ animationDelay: `${delay}s` }}>
+                {word}
+              </span>
             </span>
           );
         });
