@@ -16,8 +16,7 @@
     { "label": "More", "href": "#more" },
     { "label": "Stack", "href": "#stack" },
     { "label": "Log", "href": "#log" },
-    { "label": "Contact", "href": "#contact" },
-    { "label": "Watched ↗", "href": "/watched" }
+    { "label": "Contact", "href": "#contact" }
   ],
   "marquee": [
     "OPEN TO INTERNSHIPS",
@@ -1182,11 +1181,5 @@
     "copyright": "© 2026 Daniil Tenishev (kewldan)",
     "thanks": "Thanks for reading!",
     "source": { "label": "Source", "href": "https://github.com/kewldan/kewldan.ru" }
-  },
-  "watched": {
-    "title": "Watched",
-    "description": "Every film and series I have watched lately, scored from 1 to 10 with one line on why.",
-    "emptyTitle": "Nothing rated yet",
-    "emptyBody": "Daniel hasn’t rated anything yet. Check back soon."
   }
 }

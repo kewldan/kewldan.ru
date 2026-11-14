@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { ago, device, fmtDate, fmtTime, type LogEntry, panel, type Session } from "@/lib/admin";
-import { deviceName, type PasskeyInfo, passkeys as webauthn } from "@/lib/watched";
+import { deviceName, type PasskeyInfo, passkeys as webauthn } from "@/lib/admin-auth";
 
 import { useAdmin } from "./context";
 import { errorText, Head, KeyIcon, Sheet, Switch, useArmed, useToast } from "./ui";
@@ -84,7 +84,7 @@ export function Security() {
 
   return (
     <section>
-      <Head n="06 · Access" title="Security" lead="Sign in with passkeys. Keep at least two, on different devices.">
+      <Head n="05 · Access" title="Security" lead="Sign in with passkeys. Keep at least two, on different devices.">
         <button className="btn pri" onClick={() => setAdding({ step: "name", name: deviceName() })}>
           Add a passkey
         </button>

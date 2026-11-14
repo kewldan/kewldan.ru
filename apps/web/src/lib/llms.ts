@@ -55,7 +55,6 @@ export function llms(c: Content, full: boolean) {
     "",
     `- [Home](${url("/")}): the whole site, in English`,
     `- [Главная по-русски](${url("/ru")}): the whole site, in Russian`,
-    `- [Watched](${url("/watched")}): films and series I have rated`,
     full ? "" : `- [Everything in full](${url("/llms-full.txt")}): this file with every case study`,
   ];
 

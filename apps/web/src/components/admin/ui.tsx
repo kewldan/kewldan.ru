@@ -3,18 +3,6 @@
 import { cn } from "cn";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 
-import type { WatchStatus } from "@/lib/api/generated/WatchStatus";
-
-export const STATUS: Record<WatchStatus, string> = {
-  watched: "Watched",
-  watching: "Watching now",
-  paused: "On pause",
-  dropped: "Dropped",
-  want: "Want to watch",
-};
-
-export const Chip = ({ st }: { st: WatchStatus }) => <span className={`chip st-${st}`}>{STATUS[st]}</span>;
-
 export function Switch({
   on,
   set,
@@ -182,12 +170,6 @@ export const SearchIcon = () => (
 /** API error codes → what to tell the admin. */
 const ERRORS: Record<string, string> = {
   token: "Signed out: sign in again.",
-  title: "Add a title first.",
-  rating: "Scores go from 1 to 10 in halves.",
-  year: "That year does not look right.",
-  too_long: "Something is too long.",
-  full: "The list is full.",
-  poster: "That poster path is not from TMDB.",
   headline: "The headline is too long: 120 characters at most.",
   marquee: "Up to 20 marquee words, 40 characters each.",
   board: "Ink from 1 to 500, refill from 0.1 to 50 a second.",
@@ -195,7 +177,6 @@ const ERRORS: Record<string, string> = {
   no_passkeys: "Add a passkey first, or you could not sign in.",
   last_passkey: "This is the only way in: add another passkey or turn the token back on.",
   name: "Give it a name.",
-  tmdb: "TMDB is not answering.",
   telegram: "Telegram did not take it. Has the bot had /start from you?",
 };
 

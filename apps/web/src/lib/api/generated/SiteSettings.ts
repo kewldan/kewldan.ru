@@ -16,10 +16,6 @@ dropout: boolean,
  */
 pixels: boolean, 
 /**
- * Watched in the menu.
- */
-watchedInNav: boolean, 
-/**
  * Replaces the hero headline, same markup: `==box==`, `_dim_`.
  */
 headline: string | null, 

@@ -334,19 +334,6 @@
   }
 }
 
-/* Watched: score tiers, worst to best. */
-:root {
-  --score-top: linear-gradient(100deg, #5ef0c2 0%, #3fb6ff 100%);
-  --score-good: linear-gradient(100deg, #3fb6ff 0%, #8a6bff 100%);
-  --score-mid: linear-gradient(100deg, #ffd36b 0%, #ff8a5f 100%);
-  --score-low: linear-gradient(100deg, #ff5f8f 0%, #ff3b30 100%);
-  --score-top-solid: #5ef0c2;
-  --score-good-solid: #6f8dff;
-  --score-mid-solid: #ffb36b;
-  --score-low-solid: #ff5f8f;
-  --title-gradient: linear-gradient(100deg, #ffb36b 0%, #ff5f8f 38%, #8a6bff 72%, #3fb6ff 100%);
-}
-
 /*
  * Dark theme (src/lib/theme.ts sets data-theme on <html>). Only semantic tokens
  * move: ink turns light, so borders and the hard shadows glow on the dark
@@ -364,9 +351,9 @@
   --link-hover: #8c95ff;
 }
 
-/* Watched is a keynote page: a light theme the visitor picked makes it a light
-   keynote; the fixed default keeps it dark, as designed. Pages Next.js keeps
-   hidden after you leave them do not count (see globals.css). */
+/* Case studies are keynote pages: a light theme the visitor picked makes them
+   light keynotes; the fixed default keeps them dark, as designed. Pages Next.js
+   keeps hidden after you leave them do not count (see globals.css). */
 :root[data-theme="light"]:not([data-theme-fixed]):has(
     [data-surface="stage"]:not([style*="display: none"], [style*="display: none"] *)
   ) {

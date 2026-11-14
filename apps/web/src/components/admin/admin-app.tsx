@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 
 
 import { live, panel } from "@/lib/admin";
 import type { SiteSettings } from "@/lib/api/generated/SiteSettings";
-import { adminApi, adminHint, adminToken, type Credential, passkeys } from "@/lib/watched";
+import { adminApi, adminHint, adminToken, type Credential, passkeys } from "@/lib/admin-auth";
 
 import { AdminContext, type Admin, type Data, type Section } from "./context";
 import { Overview } from "./overview";
@@ -15,11 +15,9 @@ import { Security } from "./security";
 import { SignIn } from "./sign-in";
 import { Site } from "./site";
 import { Mark, ToastProvider, useToast } from "./ui";
-import { Watched } from "./watched";
 
 const SECTIONS: { id: Section; label: string }[] = [
   { id: "overview", label: "Overview" },
-  { id: "watched", label: "Watched" },
   { id: "pixels", label: "Pixel board" },
   { id: "projects", label: "Projects" },
   { id: "site", label: "Site" },
@@ -71,7 +69,7 @@ function useTheme() {
   return [theme, set] as const;
 }
 
-const EMPTY: Data = { titles: null, board: null, settings: null, content: null, status: null, health: null };
+const EMPTY: Data = { board: null, settings: null, content: null, status: null, health: null };
 
 /**
  * `/admin`: everything on the site that changes without a deploy. Signs in
@@ -134,12 +132,10 @@ function Panel({
   const section = useSection();
   const toast = useToast();
   const [data, setData] = useState<Data>(EMPTY);
-  const [wantsNew, setWantsNew] = useState(false);
 
   const reload = useCallback(
     (what: keyof Data) => {
       const load = {
-        titles: live.titles,
         board: live.board,
         settings: () => panel.settings(cred),
         content: live.content,
@@ -171,18 +167,14 @@ function Panel({
       cred,
       data,
       reload,
-      setTitles: (f) => setData((d) => ({ ...d, titles: f(d.titles ?? []) })),
       saveSettings: async (next: SiteSettings) => {
         const saved = await panel.saveSettings(cred, next);
         setData((d) => ({ ...d, settings: saved }));
         void reload("content");
       },
-      go: (s, then) => {
+      go: (s) => {
         location.hash = s;
-        if (then === "new") setWantsNew(true);
       },
-      wantsNew,
-      clearWantsNew: () => setWantsNew(false),
       expired: (err) => {
         if ((err as Error)?.message !== "token") return false;
         toast("Signed out: sign in again.");
@@ -190,10 +182,8 @@ function Panel({
         return true;
       },
     }),
-    [cred, data, reload, wantsNew, toast, signOut],
+    [cred, data, reload, toast, signOut],
   );
-
-  const badge: Partial<Record<Section, number>> = { watched: data.titles?.length };
 
   return (
     <AdminContext.Provider value={admin}>
@@ -209,7 +199,6 @@ function Panel({
             {SECTIONS.map((s) => (
               <a key={s.id} href={`#${s.id}`} aria-current={section === s.id ? "page" : undefined}>
                 {s.label}
-                {badge[s.id] != null && <em>{badge[s.id]}</em>}
               </a>
             ))}
           </nav>
@@ -222,7 +211,6 @@ function Panel({
               ))}
             </div>
             <Link href="/">kewldan.ru ↗</Link>
-            <Link href="/watched">Watched ↗</Link>
             <button className="txt" onClick={signOut}>
               Sign out
             </button>
@@ -231,7 +219,6 @@ function Panel({
         <main className="main">
           <div className="inner">
             {section === "overview" && <Overview />}
-            {section === "watched" && <Watched />}
             {section === "pixels" && <Pixels />}
             {section === "projects" && <Projects />}
             {section === "site" && <Site />}

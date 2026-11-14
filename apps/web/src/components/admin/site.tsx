@@ -9,7 +9,7 @@ import type { Wallet } from "@/lib/api/generated/Wallet";
 import { useAdmin } from "./context";
 import { errorText, Head, Switch, useToast } from "./ui";
 
-type Blocks = Pick<SiteSettings, "openToOffers" | "dropout" | "pixels" | "watchedInNav">;
+type Blocks = Pick<SiteSettings, "openToOffers" | "dropout" | "pixels">;
 type Draft = Blocks & { headline: string | null; marquee: string[] | null; wallets: Wallet[] };
 
 /** The coin × network pairs the crypto block shows; the API checks the same list. */
@@ -24,7 +24,6 @@ const BLOCKS: { key: keyof Blocks; title: string; sub: string }[] = [
   { key: "openToOffers", title: "Open to offers", sub: "The live line in the hero" },
   { key: "dropout", title: "Meme button", sub: "“❤️ — Отчислиться” at the bottom" },
   { key: "pixels", title: "Pixel battle", sub: "The shared board after the hero, and its menu link" },
-  { key: "watchedInNav", title: "Watched in the menu", sub: "The link to the films page" },
 ];
 
 /** `==box==` and `_dim_`, the way the hero renders them. */
@@ -61,7 +60,7 @@ export function Site() {
   if (!settings || !content) {
     return (
       <section>
-        <Head n="05 · Settings" title="Site" lead="Loading…" />
+        <Head n="04 · Settings" title="Site" lead="Loading…" />
       </section>
     );
   }
@@ -71,7 +70,6 @@ export function Site() {
     openToOffers: settings.openToOffers,
     dropout: settings.dropout,
     pixels: settings.pixels,
-    watchedInNav: settings.watchedInNav,
     headline: content.hero.headline,
     marquee: content.marquee,
     wallets: settings.wallets,
@@ -100,7 +98,6 @@ export function Site() {
         openToOffers: d.openToOffers,
         dropout: d.dropout,
         pixels: d.pixels,
-        watchedInNav: d.watchedInNav,
         // Only what was touched becomes an override; the rest keeps
         // following the content file.
         headline: "headline" in edited ? (edited.headline ?? null) : settings.headline,
@@ -123,7 +120,7 @@ export function Site() {
   return (
     <section>
       <Head
-        n="05 · Settings"
+        n="04 · Settings"
         title="Site"
         lead="Switches and copy on the main page. Nothing goes live until you publish."
       >
@@ -281,8 +278,8 @@ export function Site() {
         </div>
         <div className="g2 grid">
           {[
-            ["/opengraph-image", "Main page"],
-            ["/watched/opengraph-image", "Watched"],
+            ["/en/opengraph-image", "Main page"],
+            ["/ru/opengraph-image", "Main page, Russian"],
           ].map(([src, label]) => (
             <div key={src} className="f">
               <Image

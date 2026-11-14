@@ -1,8 +1,7 @@
 import type { Content } from "@/lib/api/generated/Content";
 import type { ProbeStatus } from "@/lib/api/generated/ProbeStatus";
 import type { SiteSettings } from "@/lib/api/generated/SiteSettings";
-import type { Title } from "@/lib/api/generated/Title";
-import { call, type Credential, type PasskeyInfo } from "@/lib/watched";
+import { call, type Credential, type PasskeyInfo } from "@/lib/admin-auth";
 
 export type Session = {
   id: string;
@@ -27,13 +26,12 @@ const read = async <T>(path: string): Promise<T> => {
 /** What anyone can read, fetched fresh for the admin. */
 export const live = {
   content: () => read<Content>("/api/content"),
-  titles: async () => (await read<{ items: Title[] }>("/api/watched")).items,
   board: () => read<Board>("/api/pixels"),
   status: () => read<Record<string, ProbeStatus>>("/api/status"),
   health: () => read<{ status: string; board: string }>("/api/health"),
 };
 
-/** The admin's own endpoints, beyond Watched and the pixel moderation. */
+/** The admin's own endpoints, beyond the pixel moderation. */
 export const panel = {
   settings: (c: Credential) => call<SiteSettings>(c, "GET", "/settings"),
   saveSettings: (c: Credential, s: SiteSettings) => call<SiteSettings>(c, "PUT", "/settings", s),

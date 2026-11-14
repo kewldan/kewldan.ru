@@ -15,8 +15,8 @@ export const ogLocale: Record<Lang, string> = { en: "en_US", ru: "ru_RU" };
 export const langName: Record<Lang, string> = { en: "English", ru: "Русский" };
 
 /**
- * A site path in `lang`: `/watched` stays as is in English and becomes
- * `/ru/watched` in Russian; anchors and other sites pass through.
+ * A site path in `lang`: `/work/x` stays as is in English and becomes
+ * `/ru/work/x` in Russian; anchors and other sites pass through.
  */
 export function localize(lang: Lang, href: string) {
   if (lang === "en" || !href.startsWith("/") || href.startsWith("//")) return href;

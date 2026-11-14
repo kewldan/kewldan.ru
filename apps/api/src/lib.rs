@@ -1,4 +1,4 @@
-//! Portfolio API: site content, the live pixel board and the Watched list.
+//! Portfolio API: site content, the live pixel board and the admin.
 
 pub mod auth;
 pub mod config;
@@ -9,8 +9,6 @@ pub mod settings;
 pub mod spotify;
 pub mod stats;
 pub mod status;
-pub mod tmdb;
-pub mod watched;
 
 use std::{
     net::{IpAddr, SocketAddr},
@@ -39,10 +37,8 @@ pub struct AppState {
     pub stats: Arc<stats::Stats>,
     pub status: Arc<status::Monitor>,
     pub hub: Arc<Hub>,
-    pub watched: Arc<watched::Store>,
     pub auth: Arc<auth::Auth>,
     pub contact: Arc<contact::Contact>,
-    pub tmdb: Option<Arc<tmdb::Tmdb>>,
     pub spotify: Option<Arc<spotify::Spotify>>,
     pub settings: Arc<settings::Store>,
     pub guard: Arc<pixels::Guard>,
@@ -65,8 +61,6 @@ impl AppState {
         let settings =
             settings::Store::open(config.valkey_url.as_deref(), &config.valkey_namespace).await?;
         hub.load_rules(settings.get().board);
-        let watched =
-            watched::Store::open(config.valkey_url.as_deref(), &config.valkey_namespace).await?;
         let auth = auth::Auth::open(
             &config.webauthn_origin,
             config.valkey_url.as_deref(),
@@ -89,10 +83,6 @@ impl AppState {
             )
             .await?,
         );
-        let tmdb = match config.tmdb_token.clone() {
-            Some(token) => Some(Arc::new(tmdb::Tmdb::new(token)?)),
-            None => None,
-        };
         let spotify = match config.spotify.clone() {
             Some(creds) => Some(Arc::new(spotify::Spotify::new(creds)?)),
             None => None,
@@ -109,7 +99,6 @@ impl AppState {
         let state = Self {
             guard: Arc::new(guard),
             settings: Arc::new(settings),
-            tmdb,
             spotify,
             contact,
             config: Arc::new(config),
@@ -117,7 +106,6 @@ impl AppState {
             stats,
             status,
             hub,
-            watched: Arc::new(watched),
             auth: Arc::new(auth),
         };
         // The bot's buttons reach the board, so it starts with everything.
@@ -141,15 +129,8 @@ pub fn router(state: AppState) -> Router {
         .route("/auth/log", get(auth::log))
         .route("/settings", get(settings::get).put(settings::put))
         .route("/content/reload", post(reload_content))
-        .route("/watched", post(watched::create))
-        .route(
-            "/watched/{id}",
-            put(watched::update).delete(watched::delete),
-        )
         .route("/pixels/clear", post(pixels::clear))
         .route("/pixels/reset", post(pixels::reset))
-        .route("/tmdb/search", get(tmdb::search))
-        .route("/watched/posters", post(tmdb::backfill))
         .route("/pixels/rewind", post(pixels::rewind))
         .route("/pixels/erase", post(pixels::erase))
         .route("/pixels/painters", post(pixels::guard::painters))
@@ -176,7 +157,6 @@ pub fn router(state: AppState) -> Router {
         .route("/pixels", get(pixels::board))
         .route("/pixels/ws", get(pixels::ws))
         .route("/pixels/history", get(pixels::history))
-        .route("/watched", get(watched::list))
         .route("/contact/challenge", get(contact::challenge))
         .route("/contact", post(contact::send))
         .nest("/admin", admin);

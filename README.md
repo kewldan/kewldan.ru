@@ -25,19 +25,18 @@
 
 - 🎨 **Two worlds on one page.** Neo-brutal *paper* (who I am) and a black keynote *stage* (the work), with a design-token system underneath.
 - 🟨 **Pixel battle.** One shared 64×32 board, live for everyone on the page: optimistic painting, server-side ink limits, other people's cursors.
-- 🎬 **Watched.** Films and series I've rated from 1 to 10, at [`/watched`](https://kewldan.ru/watched), editable from the site with an admin token.
-- 🛠️ **Admin panel.** `/admin`, behind passkeys: the Watched list, pixel-board moderation and rules, project order, the hero and page blocks, sessions and a sign-in log. Changes go live without a deploy.
+- 🛠️ **Admin panel.** `/admin`, behind passkeys: pixel-board moderation and rules, project order, the hero and page blocks, sessions and a sign-in log. Changes go live without a deploy.
 - 🦀 **Rust content API.** Every word of the site lives in one JSON file, checked against typed structs at startup; the TypeScript types are generated from Rust.
 - 🌀 **Smooth by default.** Lenis scrolling, Motion springs and scroll-linked scenes, and all of it respects `prefers-reduced-motion`.
 - 📱 **Adaptive.** Fluid type and layout from 320 px phones to wide screens.
 - 📊 **Live numbers.** GitHub contributions, repos and PRs, Steam games and hours: the API refreshes them every 6 hours.
-- 🖼️ **Share cards.** Open Graph images for both pages and both languages, rendered from the same content.
+- 🖼️ **Share cards.** Open Graph images for the home page and every case study, in both languages, rendered from the same content.
 
 ## 🗺️ Layout
 
 ```
 apps/
-  api/   🦀 Rust (axum): /api/content, /api/watched, /api/pixels/ws, admin routes
+  api/   🦀 Rust (axum): /api/content, /api/pixels/ws, admin routes
          content/en.json   ← all site copy lives here
          content/ru.json   ← the same in Russian (served at /ru)
   web/   ⚛️ Next.js 16, React 19, Tailwind 4, shadcn/ui, Motion, Lenis
@@ -75,15 +74,6 @@ ink (40, refilling 5 per second) and rolls back what it rejects. With Valkey a
 Lua script writes the cell and publishes the event atomically, so every
 instance applies changes in the same order. Without `VALKEY_URL` the board
 lives in memory. Protocol: `apps/api/src/pixels/protocol.rs`.
-
-</details>
-
-<details>
-<summary><b>🎬 Watched</b></summary>
-
-Titles are kept in a Valkey hash. Anyone can read `/api/watched`; creating,
-editing and deleting need `Authorization: Bearer $ADMIN_TOKEN`. On the page,
-the footer's **Admin** link takes the token once and keeps it on that device.
 
 </details>
 
@@ -159,11 +149,9 @@ cd apps/api && cargo fmt --check && cargo clippy --all-targets -- -D warnings &&
 | `GET /api/health` | `{"status":"ok","board":"valkey"}` |
 | `GET /api/content` | Site content with stats filled in, with `ETag` |
 | `GET /api/stats` | The live (or fallback) numbers behind the placeholders |
-| `GET /api/watched` | Rated titles, newest first |
 | `GET /api/spotify` | The track playing now, or the last one; `204` without Spotify |
 | `GET /api/pixels` | Board snapshot |
 | `GET /api/pixels/ws` | Pixel battle WebSocket |
-| `POST /api/admin/watched` · `PUT` / `DELETE /api/admin/watched/{id}` | Edit the Watched list |
 | `POST /api/admin/content/reload` | Re-read `CONTENT_PATH`; rejects an invalid file |
 | `POST /api/admin/pixels/clear` · `/reset` | Empty the board / restore the seed |
 | `GET` / `PUT /api/admin/settings` | Page blocks, hero, project order, board rules, token sign-in |

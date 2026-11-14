@@ -60,7 +60,7 @@
     outline-offset: 3px;
   }
   /*
-   * Dark pages (Watched, case studies) also darken the overscroll area. Next.js
+   * Dark pages (case studies) also darken the overscroll area. Next.js
    * keeps pages you have left in the DOM under `display: none`, so only a
    * surface that is shown counts; otherwise home stays dark after a visit.
    */

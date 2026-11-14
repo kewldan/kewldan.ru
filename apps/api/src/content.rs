@@ -42,7 +42,6 @@ pub struct Content {
     pub contact: Contact,
     pub dropout: Dropout,
     pub footer: Footer,
-    pub watched: WatchedPage,
     /// Blocks the admin switched off (`pixels`, `dropout`); set by
     /// [`crate::settings`], never in the file.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -527,17 +526,6 @@ pub struct Dropout {
     pub meme: Media,
     /// Audio file played (looped) while the call rings.
     pub ringtone: String,
-}
-
-/// Copy for `/watched`; the titles themselves come from `/api/watched`.
-#[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[ts(export)]
-pub struct WatchedPage {
-    pub title: String,
-    pub description: String,
-    pub empty_title: String,
-    pub empty_body: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]

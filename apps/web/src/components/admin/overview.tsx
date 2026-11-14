@@ -1,22 +1,19 @@
 "use client";
 
 import { ago } from "@/lib/admin";
-import { fmtScore } from "@/lib/watched";
 
 import { useAdmin } from "./context";
-import { Chip, Head } from "./ui";
+import { Head } from "./ui";
 
 export function Overview() {
   const { data, go, reload } = useAdmin();
-  const titles = data.titles ?? [];
-  const rated = titles.filter((t) => t.rating !== null && t.status !== "want");
-  const avg = rated.length ? (rated.reduce((s, t) => s + (t.rating ?? 0), 0) / rated.length).toFixed(1) : "—";
-  const hist = Array.from({ length: 10 }, (_, k) => rated.filter((t) => Math.floor(t.rating ?? 0) === k + 1).length);
-  const hmax = Math.max(1, ...hist);
   const board = data.board;
   const cells = board ? board.width * board.height : 0;
   const painted = board ? [...board.board].filter((c) => c !== ".").length : 0;
   const settings = data.settings;
+  const projects = data.content?.work.projects ?? [];
+  const hidden = projects.filter((p) => settings?.hiddenProjects.includes(p.id)).length;
+  const probes = Object.values(data.status ?? {});
 
   // Probe URL → the project it belongs to.
   const names = new Map<string, string>();
@@ -32,18 +29,21 @@ export function Overview() {
       />
       <div className="g4 grid">
         <div className="card pad">
-          <p className="lbl">Titles</p>
-          <p className="stat">{data.titles ? titles.length : "—"}</p>
+          <p className="lbl">Projects</p>
+          <p className="stat">{data.content ? projects.length - hidden : "—"}</p>
           <p className="lbl">
-            average <span className="mono">{avg}</span>
+            on the slides
+            {hidden > 0 && (
+              <>
+                , <span className="mono">{hidden}</span> hidden
+              </>
+            )}
           </p>
         </div>
         <div className="card pad">
-          <p className="lbl">Watching now</p>
-          <p className="stat">{titles.filter((t) => t.status === "watching").length}</p>
-          <p className="lbl">
-            <span className="mono">{titles.filter((t) => t.status === "want").length}</span> on the want list
-          </p>
+          <p className="lbl">Live sites</p>
+          <p className="stat">{data.status ? `${probes.filter((p) => p.up).length}/${probes.length}` : "—"}</p>
+          <p className="lbl">answering their probes</p>
         </div>
         <div className="card pad">
           <p className="lbl">Pixel board</p>
@@ -63,27 +63,6 @@ export function Overview() {
 
         <div className="card span2">
           <div className="card-h">
-            <h2 className="h2">How I score</h2>
-            <button className="btn ghost sm" onClick={() => go("watched")}>
-              Open Watched
-            </button>
-          </div>
-          <div className="pad">
-            <div className="bars" aria-label={`Scores: ${hist.map((n, k) => `${k + 1}: ${n}`).join(", ")}`}>
-              {hist.map((n, k) => (
-                <i key={k} className={n ? "" : "z"} style={{ height: `${(n / hmax) * 100}%` }} />
-              ))}
-            </div>
-            <div className="axis" aria-hidden>
-              {hist.map((_, k) => (
-                <span key={k}>{k + 1}</span>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="card span2">
-          <div className="card-h">
             <h2 className="h2">Site health</h2>
             <button
               className="btn ghost sm"
@@ -98,7 +77,6 @@ export function Overview() {
             value={data.health ? `up · ${data.health.board}` : "checking…"}
           />
           <Health label="Pixel room" state={board ? "ok" : "off"} value={board ? `${board.peers} online` : "—"} />
-          <Health label="Watched" state={data.titles ? "ok" : "off"} value={`${titles.length} titles`} />
           {Object.entries(data.status ?? {}).map(([url, p]) => (
             <Health
               key={url}
@@ -114,12 +92,6 @@ export function Overview() {
             <h2 className="h2">Quick actions</h2>
           </div>
           <div className="li">
-            <span>Rate something you just watched</span>
-            <button className="btn pri sm" onClick={() => go("watched", "new")}>
-              Add a title
-            </button>
-          </div>
-          <div className="li">
             <span>Wipe part of the pixel board</span>
             <button className="btn sec sm" onClick={() => go("pixels")}>
               Moderate
@@ -131,25 +103,6 @@ export function Overview() {
               Projects
             </button>
           </div>
-        </div>
-
-        <div className="card span2">
-          <div className="card-h">
-            <h2 className="h2">Recently added</h2>
-          </div>
-          {titles
-            .toSorted((a, b) => b.createdAt - a.createdAt)
-            .slice(0, 4)
-            .map((t) => (
-              <div key={t.id} className="li">
-                <span className="ttl">{t.title}</span>
-                <span className="row" style={{ flexWrap: "nowrap" }}>
-                  {t.rating !== null && <span className="mono t2">{fmtScore(t.rating)}/10</span>}
-                  <Chip st={t.status} />
-                </span>
-              </div>
-            ))}
-          {data.titles && !titles.length && <p className="empty">Nothing yet.</p>}
         </div>
       </div>
     </section>

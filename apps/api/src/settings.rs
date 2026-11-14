@@ -66,8 +66,6 @@ pub struct Settings {
     pub dropout: bool,
     /// The pixel battle after the hero, and its menu link.
     pub pixels: bool,
-    /// Watched in the menu.
-    pub watched_in_nav: bool,
     /// Replaces the hero headline, same markup: `==box==`, `_dim_`.
     pub headline: Option<String>,
     /// Replaces the marquee words.
@@ -91,7 +89,6 @@ impl Default for Settings {
             open_to_offers: true,
             dropout: true,
             pixels: true,
-            watched_in_nav: true,
             headline: None,
             marquee: None,
             project_order: Vec::new(),
@@ -174,7 +171,6 @@ impl Settings {
         if let Some(nav) = content["nav"].as_array_mut() {
             nav.retain(|l| match l["href"].as_str() {
                 Some("#pixels") => self.pixels,
-                Some("/watched") => self.watched_in_nav,
                 _ => true,
             });
         }
@@ -315,7 +311,7 @@ mod tests {
 
     fn content() -> Value {
         json!({
-            "nav": [{ "href": "#pixels" }, { "href": "#work" }, { "href": "/watched" }],
+            "nav": [{ "href": "#pixels" }, { "href": "#work" }],
             "marquee": ["A"],
             "hero": { "headline": "old", "meta": [{ "title": "x" }, { "title": "Open", "live": true }] },
             "work": { "projects": [{ "id": "a" }, { "id": "b" }, { "id": "c" }] }
@@ -335,7 +331,6 @@ mod tests {
             open_to_offers: false,
             pixels: false,
             dropout: false,
-            watched_in_nav: false,
             headline: Some("new ==one==".into()),
             marquee: Some(vec!["B".into(), "C".into()]),
             project_order: vec!["c".into(), "a".into()],

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { adminApi, type Credential, passkeys } from "@/lib/watched";
+import { adminApi, type Credential, passkeys } from "@/lib/admin-auth";
 
 import { KeyIcon, Mark } from "./ui";
 

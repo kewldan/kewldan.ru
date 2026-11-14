@@ -9,7 +9,7 @@ const KEY = "theme";
 
 /**
  * The theme switch is hidden for now: the site shows its original look, light
- * paper with the dark keynote on /watched. Flip to true to bring the switch
+ * paper with dark keynotes for the case studies. Flip to true to bring the switch
  * (light, dark, system) back.
  */
 export const THEME_SWITCH = false;

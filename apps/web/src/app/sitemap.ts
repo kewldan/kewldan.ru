@@ -10,7 +10,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const pages: Page[] = [
     ["/", "weekly", 1],
     ...work.projects.filter((p) => p.case).map((p): Page => [`/work/${p.id}`, "monthly", 0.8]),
-    ["/watched", "weekly", 0.5],
   ];
   // Every page in both languages, each pointing at its twin.
   return pages.flatMap(([path, changeFrequency, priority]) =>

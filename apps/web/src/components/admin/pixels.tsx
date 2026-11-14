@@ -8,7 +8,7 @@ import type { Painter } from "@/lib/api/generated/Painter";
 import type { PainterMeta } from "@/lib/api/generated/PainterMeta";
 import type { PixelBan } from "@/lib/api/generated/PixelBan";
 import type { PixelLinked } from "@/lib/api/generated/PixelLinked";
-import { pixelAdmin } from "@/lib/watched";
+import { pixelAdmin } from "@/lib/admin-auth";
 
 import { useAdmin } from "./context";
 import { errorText, Head, Switch, useArmed, useToast } from "./ui";
@@ -180,7 +180,7 @@ export function Pixels() {
   return (
     <section>
       <Head
-        n="03 · Moderation"
+        n="02 · Moderation"
         title="Pixel board"
         lead={`The shared ${w}×${h} board on the main page. Wipe an area, lock it, or change how fast people paint.`}
       >

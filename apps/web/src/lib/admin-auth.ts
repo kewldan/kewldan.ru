@@ -1,51 +1,6 @@
+/** The admin's session: the token or passkey, and the calls that use it. */
 import type { Painter } from "@/lib/api/generated/Painter";
 import type { PixelBan } from "@/lib/api/generated/PixelBan";
-import type { Title } from "@/lib/api/generated/Title";
-import type { TmdbHit } from "@/lib/api/generated/TmdbHit";
-import type { TitleInput } from "@/lib/api/generated/TitleInput";
-
-/** Score tier → gradient and solid colour tokens; no score is grey. */
-export function tier(rating: number | null) {
-  if (rating === null) return { gradient: "linear-gradient(#5a5a60,#5a5a60)", solid: "#5a5a60" };
-  const t = rating >= 9 ? "top" : rating >= 7 ? "good" : rating >= 5 ? "mid" : "low";
-  return { gradient: `var(--score-${t})`, solid: `var(--score-${t}-solid)` };
-}
-
-/** 7.5 → "7.5", 9 → "9", none → "—". */
-export const fmtScore = (rating: number | null) => (rating === null ? "—" : String(rating));
-
-/** "When" as written; an ISO date from older entries reads as 28.10.2026. */
-export const fmtWhen = (s: string) => {
-  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  return iso ? `${iso[3]}.${iso[2]}.${iso[1]}` : s || "—";
-};
-
-/**
- * A sortable number from a free-form "when": "01.10.2026", "2024",
- * "winter 2023/24 – spring 2026" (the latest year counts), "a few years ago"
- * (unknown, sorts last).
- */
-export function whenKey(s: string) {
-  const dmy = s.match(/(\d{2})\.(\d{2})\.(\d{4})/);
-  if (dmy) return Number(dmy[3]) * 10000 + Number(dmy[2]) * 100 + Number(dmy[1]);
-  const iso = s.match(/(\d{4})-(\d{2})-(\d{2})/);
-  if (iso) return Number(iso[1]) * 10000 + Number(iso[2]) * 100 + Number(iso[3]);
-  const years = [...s.matchAll(/(19|20)\d\d/g)].map((m) => Number(m[0]));
-  // A year alone counts as its start, so a known exact date in it ranks higher.
-  return years.length ? Math.max(...years) * 10000 : 0;
-}
-
-/** Today as 29.10.2026, the format new entries use. */
-export const today = () => {
-  const d = new Date();
-  return `${String(d.getDate()).padStart(2, "0")}.${String(d.getMonth() + 1).padStart(2, "0")}.${d.getFullYear()}`;
-};
-
-/** An error code from the API (or a network failure) → the key of a message. */
-export function errorKey<T extends Record<string, string>>(err: unknown, messages: T): keyof T {
-  const code = (err as Error)?.message;
-  return code in messages ? code : "save";
-}
 
 const TOKEN_KEY = "kd-admin-token";
 
@@ -103,7 +58,7 @@ async function request<T>(url: string, method: string, token: Credential, body?:
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
-  // Errors carry a code (`rating`, `full`, `passkey`...) that the page translates.
+  // Errors carry a code (`passkey`, `headline`...) that the page translates.
   if (res.status === 401 && url.startsWith("/api/admin")) throw new Error("token");
   if (!res.ok) {
     const err = (await res.json().catch(() => null)) as { error?: string } | null;
@@ -118,16 +73,7 @@ export const call = <T>(token: Credential, method: string, path: string, body?: 
 
 export const adminApi = {
   check: (token: Credential) => call<void>(token, "GET", "/check"),
-  create: (token: Credential, t: TitleInput) => call<Title>(token, "POST", "/watched", t),
-  update: (token: Credential, id: string, t: TitleInput) => call<Title>(token, "PUT", `/watched/${id}`, t),
-  remove: (token: Credential, id: string) => call<void>(token, "DELETE", `/watched/${id}`),
-  tmdb: (token: Credential, q: string) => call<TmdbHit[]>(token, "GET", `/tmdb/search?q=${encodeURIComponent(q)}`),
-  findPosters: (token: Credential) => call<{ filled: number; missed: string[] }>(token, "POST", "/watched/posters"),
 };
-
-/** A TMDB poster, resized by TMDB; Next.js re-encodes it from there. */
-export const posterUrl = (path: string, size: "w92" | "w185" | "w342" = "w185") =>
-  `https://image.tmdb.org/t/p/${size}${path}`;
 
 /** Moderation for the pixel board. */
 export const pixelAdmin = {

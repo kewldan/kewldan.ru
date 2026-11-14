@@ -57,7 +57,7 @@ export function Projects() {
   return (
     <section>
       <Head
-        n="04 · Content"
+        n="03 · Content"
         title="Projects"
         lead="Order and visibility of the featured projects. A hidden one leaves the slides; its case page stays up."
       >

@@ -11,7 +11,7 @@ import { fmt } from "@/lib/copy";
 import { useI18n } from "@/components/lang";
 import { ease, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
-import { adminApi, adminHint, adminToken, type Credential, pixelAdmin } from "@/lib/watched";
+import { adminApi, adminHint, adminToken, type Credential, pixelAdmin } from "@/lib/admin-auth";
 
 import { CELLS, EMPTY, HEIGHT, usePixelBoard, WIDTH } from "./use-pixel-board";
 import { useTimelapse } from "./use-timelapse";
