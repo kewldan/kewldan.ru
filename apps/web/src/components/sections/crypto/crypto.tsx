@@ -273,12 +273,13 @@ function Slide({ t, coins }: { t: Copy["crypto"]; coins: ReturnType<typeof withA
                 ))}
               </div>
               <p
-                aria-label={pick.addr}
                 className={cn(
                   "cx-addr",
                   "font-mono text-[clamp(14px,1.5vw,17px)] leading-[1.6] tracking-normal break-all",
                 )}
               >
+                {/* Read whole, shown in groups of four. */}
+                <span className="sr-only">{pick.addr}</span>
                 {chunks(pick.addr).map((c, i) => (
                   <span key={i} aria-hidden>
                     {c}

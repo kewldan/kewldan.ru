@@ -23,7 +23,8 @@ export function LangSwitch({ tone = "paper" }: { tone?: Tone }) {
       href={localize(other, path)}
       hrefLang={other}
       lang={other}
-      aria-label={langName[other]}
+      // Starts with the visible "RU" so voice control finds it by what it shows.
+      aria-label={`${other.toUpperCase()}, ${langName[other]}`}
       title={langName[other]}
       className={cn(
         "inline-flex items-center justify-center font-mono text-[13px] font-bold tracking-wide",
