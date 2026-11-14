@@ -1579,20 +1579,6 @@
         "probe": "https://kewldan.github.io/tsar-trava"
       },
       {
-        "name": "selfsteal",
-        "categories": [
-          "web"
-        ],
-        "year": null,
-        "status": null,
-        "what": "10 сайтов-масок для VLESS Reality.",
-        "detail": "По одному index.html на каждый, ноль внешних запросов, вся графика в inline SVG.",
-        "stack": "HTML · SVG",
-        "href": "https://github.com/kewldan/selfsteal",
-        "media": null,
-        "widget": null
-      },
-      {
         "name": "GeorgianCars",
         "categories": [
           "web"
@@ -1960,7 +1946,7 @@
           "OpenTelemetry",
           "Xray / VLESS Reality"
         ],
-        "usedIn": "своя инфраструктура, Open Balancer, selfsteal"
+        "usedIn": "своя инфраструктура, Open Balancer"
       },
       {
         "id": "ai",
