@@ -417,7 +417,7 @@ async fn site_settings_reach_the_content_and_the_board() {
     settings["headline"] = json!("New ==headline==");
     settings["pixels"] = json!(false);
     settings["projectOrder"] = json!(["tether"]);
-    settings["hiddenProjects"] = json!(["goitmo"]);
+    settings["hiddenProjects"] = json!(["logical"]);
     settings["board"] = json!({ "locked": true, "inkMax": 10, "inkRegen": 1.5 });
     settings["wallets"] = json!([{ "coin": "eth", "net": "ethereum", "addr": "0x2222222222222222222222222222222222222222" }]);
     let (status, _) = request(
@@ -441,13 +441,13 @@ async fn site_settings_reach_the_content_and_the_board() {
     assert_eq!(content["hidden"], json!(["pixels"]));
     assert_eq!(content["wallets"][0]["coin"], "eth");
     assert_eq!(content["work"]["projects"][0]["id"], "tether");
-    let goitmo = content["work"]["projects"]
+    let logical = content["work"]["projects"]
         .as_array()
         .unwrap()
         .iter()
-        .find(|p| p["id"] == "goitmo")
+        .find(|p| p["id"] == "logical")
         .unwrap();
-    assert_eq!(goitmo["hidden"], json!(true));
+    assert_eq!(logical["hidden"], json!(true));
 
     // Turning the token off needs a passkey to fall back on.
     settings["tokenSignIn"] = json!(false);

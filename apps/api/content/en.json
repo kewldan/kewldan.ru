@@ -78,9 +78,9 @@
     "desk": "MacBook Pro M4 Pro. _best buy ever!_"
   },
   "work": {
-    "title": "Nine projects",
-    "titleDim": "Nine launches",
-    "lead": "Each one gets its own stage. Jump straight to one, or scroll through all nine.",
+    "title": "Eight projects",
+    "titleDim": "Eight launches",
+    "lead": "Each one gets its own stage. Jump straight to one, or scroll through all eight.",
     "projects": [
       {
         "id": "sector",
@@ -942,87 +942,6 @@
             }
           ]
         }
-      },
-      {
-        "id": "goitmo",
-        "name": "go-itmo",
-        "theme": "dark",
-        "gradient": "linear-gradient(90deg,#3fd5ff 0%,#5a7bff 100%)",
-        "icon": null,
-        "title": "All of ITMO",
-        "titleDim": "One Go import",
-        "lead": "Plus the full ITMO.ID login: Keycloak, PKCE, OTP, SSO and refresh-token rotation. **Dependencies: just x/oauth2 and x/net.**",
-        "showcase": {
-          "kind": "bigNumbers",
-          "items": [
-            { "value": "452", "label": "routes of my.itmo.ru" },
-            { "value": "809", "label": "typed methods" },
-            { "value": "81", "label": "routes of the BARS REST API" }
-          ],
-          "command": "go get github.com/kewldan/go-itmo"
-        },
-        "specs": [],
-        "points": [],
-        "chips": [],
-        "links": [{ "label": "View on GitHub ›", "href": "https://github.com/kewldan/go-itmo" }],
-        "case": {
-          "summary": "An unofficial Go library for the whole ITMO ecosystem: every route of my.itmo.ru and the BARS gradebook, plus the full ITMO.ID login. **Two dependencies.**",
-          "facts": [
-            {
-              "value": "452",
-              "label": "my.itmo.ru routes"
-            },
-            {
-              "value": "809",
-              "label": "typed methods"
-            },
-            {
-              "value": "81",
-              "label": "BARS REST routes"
-            },
-            {
-              "value": "2",
-              "label": "dependencies"
-            }
-          ],
-          "pipeline": [
-            "ITMO.ID",
-            "my.itmo.ru",
-            "BARS"
-          ],
-          "sections": [
-            {
-              "title": "Why",
-              "body": [
-                "Every student tool around ITMO re-implements the same login and scrapes the same pages. I wanted one typed client that does it right, so my own bots and sites could stop doing it badly."
-              ],
-              "bullets": []
-            },
-            {
-              "title": "Coverage",
-              "body": [],
-              "bullets": [
-                "All **452** routes of my.itmo.ru as **809** typed methods.",
-                "All **81** routes of the BARS REST API."
-              ]
-            },
-            {
-              "title": "The login, all of it",
-              "body": [
-                "ITMO.ID is Keycloak. The library handles PKCE, one-time codes, single sign-on across ITMO services and refresh-token rotation, so a session just keeps working."
-              ],
-              "bullets": []
-            },
-            {
-              "title": "Small on purpose",
-              "body": [
-                "The only dependencies are `golang.org/x/oauth2` and `golang.org/x/net`."
-              ],
-              "bullets": [],
-              "code": "go get github.com/kewldan/go-itmo"
-            }
-          ]
-        }
       }
     ]
   },
@@ -1096,7 +1015,7 @@
     "note": "No skill bars. Grouped by where I've actually used it.",
     "groups": [
       { "id": "systems", "name": "Systems & graphics", "items": ["C++20", "C", "Rust", "CMake", "vcpkg", "OpenGL", "Vulkan", "GLSL/SPIR-V", "Bullet", "ImGui", "XDP/eBPF", "BoringSSL", "QUIC/HTTP3"], "usedIn": "LarpGuard, Hexa, Logical System" },
-      { "id": "backend", "name": "Backend", "items": ["Go (chi, pgx, sqlc, River)", "Python (FastAPI, aiogram, MTProto)", "Node / Bun"], "usedIn": "Omniflow, m3105.ru, Nitpick, go-itmo" },
+      { "id": "backend", "name": "Backend", "items": ["Go (chi, pgx, sqlc, River)", "Python (FastAPI, aiogram, MTProto)", "Node / Bun"], "usedIn": "Omniflow, m3105.ru, Nitpick" },
       { "id": "frontend", "name": "Frontend", "items": ["TypeScript", "React 19", "Next.js 16", "Tailwind 4", "shadcn/ui", "Three.js", "MDX", "Framer Motion"], "usedIn": "m3105.ru, Nitpick, tsar-trava, Mini Apps" },
       { "id": "desktop", "name": "Desktop & mobile", "items": ["Tauri 2", "Kotlin + Jetpack Compose", "VS Code extensions"], "usedIn": "Hexa, Tether, YASC, ZagranRead" },
       { "id": "data", "name": "Data", "items": ["PostgreSQL", "ClickHouse", "MongoDB", "Valkey/Redis", "MinIO (S3)"], "usedIn": "LarpGuard, Omniflow, m3105.ru" },

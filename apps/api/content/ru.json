@@ -168,9 +168,9 @@
     "desk": "MacBook Pro M4 Pro. _лучшая покупка в жизни!_"
   },
   "work": {
-    "title": "Девять проектов",
-    "titleDim": "Девять запусков",
-    "lead": "У каждого своя сцена. Перейди сразу к нужному или пролистай все девять.",
+    "title": "Восемь проектов",
+    "titleDim": "Восемь запусков",
+    "lead": "У каждого своя сцена. Перейди сразу к нужному или пролистай все восемь.",
     "projects": [
       {
         "id": "sector",
@@ -1222,101 +1222,6 @@
             }
           ]
         }
-      },
-      {
-        "id": "goitmo",
-        "name": "go-itmo",
-        "theme": "dark",
-        "gradient": "linear-gradient(90deg,#3fd5ff 0%,#5a7bff 100%)",
-        "icon": null,
-        "title": "Весь ИТМО",
-        "titleDim": "Одним импортом в Go",
-        "lead": "Плюс полный логин через ITMO.ID: Keycloak, PKCE, OTP, SSO и ротация refresh-токенов. **Зависимости: только x/oauth2 и x/net.**",
-        "showcase": {
-          "kind": "bigNumbers",
-          "items": [
-            {
-              "value": "452",
-              "label": "роута my.itmo.ru"
-            },
-            {
-              "value": "809",
-              "label": "типизированных методов"
-            },
-            {
-              "value": "81",
-              "label": "роут в REST API БАРС"
-            }
-          ],
-          "command": "go get github.com/kewldan/go-itmo"
-        },
-        "specs": [],
-        "points": [],
-        "chips": [],
-        "links": [
-          {
-            "label": "Смотреть на GitHub ›",
-            "href": "https://github.com/kewldan/go-itmo"
-          }
-        ],
-        "case": {
-          "summary": "Неофициальная Go-библиотека для всей экосистемы ИТМО: все роуты my.itmo.ru и электронного журнала БАРС, плюс полный логин через ITMO.ID. **Две зависимости.**",
-          "facts": [
-            {
-              "value": "452",
-              "label": "роута my.itmo.ru"
-            },
-            {
-              "value": "809",
-              "label": "типизированных методов"
-            },
-            {
-              "value": "81",
-              "label": "роут REST API БАРС"
-            },
-            {
-              "value": "2",
-              "label": "зависимости"
-            }
-          ],
-          "pipeline": [
-            "ITMO.ID",
-            "my.itmo.ru",
-            "БАРС"
-          ],
-          "sections": [
-            {
-              "title": "Зачем",
-              "body": [
-                "Каждый студенческий сервис вокруг ИТМО заново пишет тот же логин и парсит те же страницы. Мне нужен был один типизированный клиент, который делает это правильно, чтобы мои боты и сайты перестали делать это криво."
-              ],
-              "bullets": []
-            },
-            {
-              "title": "Покрытие",
-              "body": [],
-              "bullets": [
-                "Все **452** роута my.itmo.ru в виде **809** типизированных методов.",
-                "Все **81** роут REST API БАРС."
-              ]
-            },
-            {
-              "title": "Логин целиком",
-              "body": [
-                "ITMO.ID построен на Keycloak. Библиотека берёт на себя PKCE, одноразовые коды, единый вход во все сервисы ИТМО и ротацию refresh-токенов, так что сессия просто не отваливается."
-              ],
-              "bullets": []
-            },
-            {
-              "title": "Маленькая намеренно",
-              "body": [
-                "Из зависимостей только `golang.org/x/oauth2` и `golang.org/x/net`."
-              ],
-              "bullets": [],
-              "code": "go get github.com/kewldan/go-itmo"
-            }
-          ]
-        }
       }
     ]
   },
@@ -1894,7 +1799,7 @@
           "Python (FastAPI, aiogram, MTProto)",
           "Node / Bun"
         ],
-        "usedIn": "Omniflow, m3105.ru, Nitpick, go-itmo"
+        "usedIn": "Omniflow, m3105.ru, Nitpick"
       },
       {
         "id": "frontend",
