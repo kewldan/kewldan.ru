@@ -293,26 +293,59 @@
         "icon": null,
         "title": "A whole VPN business",
         "titleDim": "One open platform",
-        "lead": "My own VPN business, turned into an open product: Telegram bot, subscriptions, payments, support, marketing and an admin panel on top of Remnawave, without owning Xray.",
-        "showcase": { "kind": "flow", "steps": ["Telegram bot", "Billing", "Outbox", "Remnawave"] },
+        "lead": "My own VPN business, turned into an open product: a Telegram bot, customer and operator web panels, 29 payment providers, support, marketing and analytics on top of Remnawave, without owning Xray.",
+        "showcase": {
+          "kind": "duo",
+          "back": {
+            "src": "/media/of-smart-rules.webp",
+            "alt": "Omniflow operator panel: smart subscription service rules, Gosuslugi and banks without the VPN, AI assistants through it, MAX blocked",
+            "width": 1200,
+            "height": 750
+          },
+          "front": {
+            "src": "/media/of-customer.webp",
+            "alt": "Omniflow customer panel on a phone: the subscription, servers by country with ping and the services each opens, and routing cards",
+            "width": 1100,
+            "height": 794
+          }
+        },
         "specs": [
-          { "value": "3", "label": "payment providers: Telegram Stars, CryptoBot, YooKassa" },
-          { "value": "6", "label": "admin roles with an audit log" },
-          { "value": "4", "label": "ways to sign in: Argon2id, passkeys, TOTP, OIDC" },
-          { "value": "Go", "label": "1.26 with chi, pgx, sqlc and River" }
+          {
+            "value": "29",
+            "label": "payment providers, from YooKassa to Telegram Stars"
+          },
+          {
+            "value": "5",
+            "label": "languages: RU, EN, UK, ZH and right-to-left FA"
+          },
+          {
+            "value": "1.5k",
+            "label": "Go tests, money invariants included"
+          },
+          {
+            "value": "0",
+            "label": "subscription links, HWIDs or customer IPs kept"
+          }
         ],
         "points": [
-          "Plans, renewals and upgrades via Telegram Stars, CryptoBot or YooKassa; promo codes, wallet, referrals, tickets",
-          "RBAC admin: Argon2id, passkeys, TOTP, OIDC, 6 roles, audit log",
-          "Immutable plan versions, refunds, a wallet ledger, durable fulfilment through a transactional outbox"
+          "Bot, web panel and Mini App share one cart; 29 payment providers, a Stars shop through Fragment, gifts, referrals, games",
+          "Smart subscription: servers by country, ping through the VPN, routing cards customers switch themselves",
+          "Idempotent orders, replay-safe webhooks, a double-entry wallet ledger, fulfilment through a transactional outbox"
         ],
         "chips": [],
         "links": [
-          { "label": "Read the docs", "href": "https://omniflow-vpn.mintlify.site", "primary": true },
-          { "label": "GitHub ›", "href": "https://github.com/kewldan/omniflow" }
+          {
+            "label": "Read the docs",
+            "href": "https://omniflow-vpn.mintlify.site",
+            "primary": true
+          },
+          {
+            "label": "GitHub ›",
+            "href": "https://github.com/kewldan/omniflow"
+          }
         ],
         "case": {
-          "summary": "My own VPN business, turned into an open platform: the Telegram bot customers buy from, the billing behind it, support, marketing and an admin panel, all on top of Remnawave, **without owning Xray**.",
+          "summary": "My own VPN business, turned into an open platform: the Telegram bot customers buy from, a customer panel and Mini App that mirror it, the billing behind them, support, marketing, analytics and an operator panel, all on top of Remnawave, **without owning Xray**.",
           "facts": [
             {
               "value": "2026",
@@ -323,11 +356,11 @@
               "label": "runs a real VPN service"
             },
             {
-              "value": "Go 1.26",
+              "value": "Go 1.27",
               "label": "chi, pgx, sqlc, River"
             },
             {
-              "value": "3",
+              "value": "29",
               "label": "payment providers"
             }
           ],
@@ -349,29 +382,45 @@
               "title": "A whole shop inside Telegram",
               "body": [],
               "bullets": [
-                "A plan catalogue with purchase, renewal and upgrade.",
-                "Payments through **Telegram Stars**, **CryptoBot** and **YooKassa**.",
-                "Promo codes, a wallet, referrals and support tickets, in Russian and English."
+                "Plans sold for several periods, with traffic packs, device slots and server add-ons, and a prorated credit when a customer changes them mid-period.",
+                "**29 payment providers**: YooKassa with 54-FZ receipts, **Telegram Stars**, **CryptoBot** and 25 regional collectors; saved cards renew only with explicit consent.",
+                "A Telegram Stars and Premium shop delivered through Fragment from the operator's own TON wallet.",
+                "Promo codes, gifts, two-level referrals, win-back offers, a fortune wheel and daily games.",
+                "The customer panel and Telegram Mini App mirror the bot, so a cart started in the chat is the cart the browser shows. Five languages, Persian right to left."
               ]
             },
             {
-              "title": "Money done carefully",
+              "title": "A subscription customers tune themselves",
               "body": [
-                "Plans are immutable versions, so changing a price never rewrites what someone already paid for. Refunds and top-ups go through a wallet ledger, and access is granted through a **transactional outbox**: the payment and the job that provisions the subscription commit together, and River retries the job until Remnawave confirms it."
+                "Servers are grouped by country with a Fastest group that picks its own server, and ping is estimated through the VPN. Customers pin their own server, hide countries and switch routing cards: Gosuslugi and banks around the VPN, AI assistants through the servers where they work, ads blocked. Which services work through which server comes from Remnawave's geocheck, and the bot tells customers when a country goes down and comes back."
               ],
               "bullets": []
             },
             {
-              "title": "An admin panel with real access control",
+              "title": "Money done carefully",
               "body": [
-                "Staff sign in with Argon2id passwords, passkeys, TOTP or OIDC. Six roles decide who sees what, and every action lands in an audit log."
+                "Plans are immutable versions, so changing a price never rewrites what someone already paid for. Every order and payment mutation carries an idempotency key, provider webhooks are stored raw and processed once, and wallet balances come from an append-only **double-entry ledger**. Access is granted through a **transactional outbox**: the payment and the job that provisions the subscription commit together, and River retries the job until Remnawave confirms it."
+              ],
+              "bullets": []
+            },
+            {
+              "title": "An operator panel that needs no SQL",
+              "body": [
+                "Staff sign in with Argon2id passwords, passkeys, TOTP or OIDC. Custom roles are built from compiled-in permissions, every adverse action needs a reason, and all of it lands in an append-only audit log. The panel covers a support desk with SLA timers, campaigns with UTM attribution, cohorts, unit economics and churn reasons, and an automation API with scoped tokens and an MCP server."
+              ],
+              "bullets": []
+            },
+            {
+              "title": "Coming from Bedolaga",
+              "body": [
+                "Operators of the Bedolaga bot move over with a scripted, rehearsable cutover: convert the .env, plan the import and see every conflict, apply it, verify totals and balances, switch the bot and roll back if needed."
               ],
               "bullets": []
             },
             {
               "title": "Stack",
               "body": [
-                "Go 1.26 with chi, pgx, sqlc and River; PostgreSQL 18, Valkey 9, OpenTelemetry; Next.js and shadcn/ui for the admin; documentation on Mintlify."
+                "Go 1.27 with chi, pgx, sqlc and River; PostgreSQL 19, Valkey 9, an S3-compatible store, OpenTelemetry; Next.js 16, React 19 and shadcn/ui for both panels; Release Please and Cosign-signed images; documentation on Mintlify in English and Russian."
               ],
               "bullets": []
             }
